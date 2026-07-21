@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+export NO_COLOR=1
+export FORCE_COLOR=0
+
+# Use local .bin shims — avoids Git Bash failing on Windows `npx` path
+# (`C:/Program Files/nodejs/npx: No such file or directory`)
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+# --quiet: stop Cursor from treating lint-staged stderr/warnings as Git errors
+"$ROOT/node_modules/.bin/lint-staged" --no-stash --quiet --concurrent false

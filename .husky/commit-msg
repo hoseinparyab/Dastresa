@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+export NO_COLOR=1
+export FORCE_COLOR=0
+
+MSG_FILE="$1"
+if [ -z "$MSG_FILE" ] || [ ! -f "$MSG_FILE" ]; then
+  MSG_FILE="$(git rev-parse --git-path COMMIT_EDITMSG 2>/dev/null)"
+fi
+
+if [ -z "$MSG_FILE" ] || [ ! -f "$MSG_FILE" ]; then
+  echo "commit-msg: commit message file not found" >&2
+  exit 1
+fi
+
+# Use local .bin shims — avoids Git Bash failing on Windows `npx` path
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+# Pipe the file so commitlint never opens interactive stdin ("--- input ---")
+"$ROOT/node_modules/.bin/commitlint" < "$MSG_FILE"

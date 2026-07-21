@@ -1,0 +1,14 @@
+{
+  "extName": {
+    "message": "Dastresa",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Make every website easier to read and use.",
+    "description": "Extension description"
+  },
+  "actionTitle": {
+    "message": "Dastresa — Accessibility controls",
+    "description": "Browser action tooltip"
+  }
+}
