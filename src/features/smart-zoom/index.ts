@@ -234,6 +234,7 @@ export class SmartZoomFeature implements IFeature {
 
   dispose(): void {
     this.unsubs.forEach((u) => u());
+    this.unsubs = [];
     this.controller?.reset();
   }
 

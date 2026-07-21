@@ -178,6 +178,7 @@ export class TextToSpeechFeature implements IFeature {
   dispose(): void {
     this.engine?.stop();
     this.unsubs.forEach((u) => u());
+    this.unsubs = [];
     this.enabled = false;
   }
 

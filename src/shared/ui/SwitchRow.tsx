@@ -51,6 +51,7 @@ export function SwitchRow({
         onCheckedChange={onCheckedChange}
         disabled={disabled}
         aria-labelledby={labelId}
+        aria-describedby={descId}
       />
     </div>
   );

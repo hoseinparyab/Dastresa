@@ -15,16 +15,30 @@ interface ToolbarBtn {
   aria: string;
   danger?: boolean;
   soft?: boolean;
+  pressed?: boolean;
 }
 
-function primaryButtons(locale: AppLocale): ToolbarBtn[] {
+function primaryButtons(
+  locale: AppLocale,
+  state: { readerMode: boolean; readingFocus: boolean },
+): ToolbarBtn[] {
   return [
-    { command: 'reader', label: t(locale, 'cmdReader'), aria: t(locale, 'ariaReader') },
+    {
+      command: 'reader',
+      label: t(locale, 'cmdReader'),
+      aria: t(locale, 'ariaReader'),
+      pressed: state.readerMode,
+    },
     { command: 'read', label: t(locale, 'cmdSpeak'), aria: t(locale, 'ariaSpeak') },
     { command: 'zoom-in', label: t(locale, 'cmdZoomIn'), aria: t(locale, 'ariaZoomIn') },
     { command: 'zoom-out', label: t(locale, 'cmdZoomOut'), aria: t(locale, 'ariaZoomOut') },
     { command: 'contrast', label: t(locale, 'cmdTheme'), aria: t(locale, 'ariaTheme') },
-    { command: 'focus', label: t(locale, 'cmdFocus'), aria: t(locale, 'ariaFocus') },
+    {
+      command: 'focus',
+      label: t(locale, 'cmdFocus'),
+      aria: t(locale, 'ariaFocus'),
+      pressed: state.readingFocus,
+    },
   ];
 }
 
@@ -244,6 +258,11 @@ const TOOLBAR_CSS = `
     background: rgba(56, 189, 248, 0.14);
     color: #fff;
   }
+  .btn.pressed {
+    background: rgba(56, 189, 248, 0.22);
+    border-color: rgba(56, 189, 248, 0.55);
+    color: #fff;
+  }
   .btn:focus-visible {
     outline: 3px solid #38bdf8;
     outline-offset: 2px;
@@ -280,6 +299,8 @@ interface ToolbarProps {
   y: number;
   locale: AppLocale;
   dir: 'ltr' | 'rtl';
+  readerMode: boolean;
+  readingFocus: boolean;
   onCommand: (command: Command) => void;
   onMoved: (x: number, y: number) => void;
 }
@@ -299,8 +320,9 @@ function BtnGrid({
         <button
           key={btn.command}
           type="button"
-          className={`btn${btn.danger ? ' danger' : ''}${btn.soft ? ' soft' : ''}`}
+          className={`btn${btn.danger ? ' danger' : ''}${btn.soft ? ' soft' : ''}${btn.pressed ? ' pressed' : ''}`}
           aria-label={btn.aria}
+          aria-pressed={btn.pressed === undefined ? undefined : btn.pressed}
           title={btn.aria}
           onClick={() => onCommand(btn.command)}
         >
@@ -311,14 +333,27 @@ function BtnGrid({
   );
 }
 
-function ToolbarApp({ x, y, locale, dir, onCommand, onMoved }: ToolbarProps) {
+function ToolbarApp({
+  x,
+  y,
+  locale,
+  dir,
+  readerMode,
+  readingFocus,
+  onCommand,
+  onMoved,
+}: ToolbarProps) {
+  const dockRef = useRef<HTMLDivElement | null>(null);
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [open, setOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const dragging = useRef<{ ox: number; oy: number } | null>(null);
   const reduceMotion = useMemo(() => prefersReducedMotion(), []);
   const pos = useMemo(() => dragPos ?? { x, y }, [dragPos, x, y]);
-  const primary = useMemo(() => primaryButtons(locale), [locale]);
+  const primary = useMemo(
+    () => primaryButtons(locale, { readerMode, readingFocus }),
+    [locale, readerMode, readingFocus],
+  );
   const speech = useMemo(() => speechButtons(locale), [locale]);
   const system = useMemo(() => systemButtons(locale), [locale]);
 
@@ -394,10 +429,19 @@ function ToolbarApp({ x, y, locale, dir, onCommand, onMoved }: ToolbarProps) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
+      const dock = dockRef.current;
+      const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+      const insideDock = Boolean(dock && (path.includes(dock) || dock.contains(e.target as Node)));
+      if (!insideDock) return;
+
       if (e.key === 'Escape') {
         e.preventDefault();
         collapseToolbar();
+        return;
       }
+
+      // Arrow move only when focus is on the dock shell (not a command button).
+      if (e.target !== dock) return;
       const step = e.shiftKey ? 24 : 12;
       let nx = pos.x;
       let ny = pos.y;
@@ -411,14 +455,15 @@ function ToolbarApp({ x, y, locale, dir, onCommand, onMoved }: ToolbarProps) {
       setDragPos(next);
       onMoved(next.x, next.y);
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
   }, [open, onMoved, pos.x, pos.y]);
 
   const moreId = 'dastresa-toolbar-more';
 
   return (
     <div
+      ref={dockRef}
       role="toolbar"
       aria-label={t(locale, 'toolbarAria')}
       className={`dock${open ? '' : ' collapsed'}`}
@@ -534,6 +579,8 @@ export class ToolbarFeature implements IFeature {
   private pos = { x: 24, y: 24 };
   private locale: AppLocale = 'fa';
   private dir: 'ltr' | 'rtl' = 'rtl';
+  private readerMode = false;
+  private readingFocus = false;
   private unsubs: Array<() => void> = [];
   private migrated = false;
 
@@ -546,23 +593,25 @@ export class ToolbarFeature implements IFeature {
 
     this.unsubs.push(
       ctx.bus.on(EVENTS.SETTINGS_CHANGED, ({ settings }) => {
-        this.applyLocale(settings);
+        this.applySettings(settings);
         this.pos = resolveToolbarPosition(ctx.window, settings.toolbarPosition, false);
         this.render();
       }),
     );
   }
 
-  private applyLocale(settings: DastresaSettings): void {
+  private applySettings(settings: DastresaSettings): void {
     this.locale = settings.locale === 'en' ? 'en' : 'fa';
     this.dir = settings.dir === 'ltr' ? 'ltr' : 'rtl';
+    this.readerMode = settings.readerMode;
+    this.readingFocus = settings.readingFocus;
   }
 
   private async hydrateFromStorage(): Promise<void> {
     if (!this.ctx) return;
     const raw = await this.ctx.storage.get<unknown>(STORAGE_KEYS.SETTINGS);
     const settings = parseSettings(raw);
-    this.applyLocale(settings);
+    this.applySettings(settings);
     const resolved = resolveToolbarPosition(this.ctx.window, settings.toolbarPosition, false);
     this.pos = resolved;
 
@@ -605,6 +654,8 @@ export class ToolbarFeature implements IFeature {
         y={this.pos.y}
         locale={this.locale}
         dir={this.dir}
+        readerMode={this.readerMode}
+        readingFocus={this.readingFocus}
         onCommand={(command) => {
           if (command === 'settings') {
             try {
@@ -626,6 +677,7 @@ export class ToolbarFeature implements IFeature {
 
   dispose(): void {
     this.unsubs.forEach((u) => u());
+    this.unsubs = [];
     this.root?.unmount();
     this.host?.remove();
     this.root = undefined;

@@ -11,6 +11,14 @@ import {
 const CURSOR_HOST_ID = 'Dastresa-focus-cursor';
 const HTML_CURSOR_CLASS = 'dastresa-focus-cursor-on';
 
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  const el = target.closest(
+    'input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="textbox"]',
+  );
+  return Boolean(el);
+}
+
 export class ReadingFocusFeature implements IFeature {
   readonly id = FEATURE_IDS.READING_FOCUS;
   readonly name = 'Reading Focus';
@@ -91,6 +99,7 @@ export class ReadingFocusFeature implements IFeature {
 
   private onKeyDown = (event: KeyboardEvent): void => {
     if (!this.enabled) return;
+    if (isEditableTarget(event.target)) return;
     if (event.key === 'ArrowDown' || event.key === 'j') {
       event.preventDefault();
       this.index = Math.min(this.index + 1, Math.max(this.paragraphs.length - 1, 0));
@@ -332,6 +341,10 @@ export class ReadingFocusFeature implements IFeature {
         border-bottom: 2px solid ${palette.fill};
         pointer-events: none; z-index: 2147483646;
       }
+      @media (prefers-reduced-motion: reduce) {
+        [data-Dastresa-focus="dim"],
+        [data-Dastresa-focus="current"] { transition: none !important; }
+      }
     `;
 
     if (this.ruler) {
@@ -347,7 +360,11 @@ export class ReadingFocusFeature implements IFeature {
     }
 
     if (opts.scroll) {
-      current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const smooth =
+        this.ctx.window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
+          ? 'auto'
+          : 'smooth';
+      current?.scrollIntoView({ behavior: smooth, block: 'center' });
     }
     this.ctx.bus.emit(EVENTS.FOCUS_PARAGRAPH, { index: this.index });
   }
@@ -382,10 +399,12 @@ export class ReadingFocusFeature implements IFeature {
 
   dispose(): void {
     this.unsubs.forEach((u) => u());
+    this.unsubs = [];
     this.ctx?.document.removeEventListener('keydown', this.onKeyDown, true);
     this.ctx?.document.removeEventListener('mousemove', this.onMouseMove, true);
     void this.disable({ persist: false });
     this.styleEl?.remove();
+    this.styleEl = undefined;
   }
 
   isEnabled(): boolean {

@@ -103,9 +103,9 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
             step={0.05}
             className="w-full accent-dastresa-accent"
             value={textScale ?? 1}
-            aria-valuemin={80}
-            aria-valuemax={250}
-            aria-valuenow={textSizePercent}
+            aria-valuemin={0.8}
+            aria-valuemax={2.5}
+            aria-valuenow={textScale ?? 1}
             aria-valuetext={`${textSizePercent}%`}
             aria-label={t(locale, 'textSize')}
             onChange={(e) => {

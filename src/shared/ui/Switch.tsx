@@ -7,6 +7,7 @@ export interface SwitchProps {
   disabled?: boolean;
   'aria-label'?: string;
   'aria-labelledby'?: string;
+  'aria-describedby'?: string;
   className?: string;
 }
 
@@ -19,6 +20,7 @@ export function Switch({
   className,
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledBy,
+  'aria-describedby': ariaDescribedBy,
 }: SwitchProps) {
   return (
     <button
@@ -28,6 +30,7 @@ export function Switch({
       aria-checked={checked}
       aria-label={ariaLabel}
       aria-labelledby={ariaLabelledBy}
+      aria-describedby={ariaDescribedBy}
       disabled={disabled}
       className={cn(
         'relative inline-flex h-11 w-[4.25rem] shrink-0 cursor-pointer items-center rounded-full p-1',

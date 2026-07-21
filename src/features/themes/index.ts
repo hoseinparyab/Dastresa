@@ -135,7 +135,9 @@ export class ThemesFeature implements IFeature {
 
   dispose(): void {
     this.unsubs.forEach((u) => u());
+    this.unsubs = [];
     this.styleEl?.remove();
+    this.styleEl = undefined;
   }
 
   enable(): void {
