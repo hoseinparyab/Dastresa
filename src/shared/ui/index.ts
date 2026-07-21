@@ -6,3 +6,4 @@ export { Section } from '@/shared/ui/Section';
 export { SelectField } from '@/shared/ui/SelectField';
 export { StatusPill } from '@/shared/ui/StatusPill';
 export { Button } from '@/shared/ui/Button';
+export { PublisherCredit } from '@/shared/ui/PublisherCredit';

@@ -7,7 +7,7 @@ import {
 } from '@/features/settings/schema/settings-schema';
 import { useSettingsStore } from '@/shared/hooks/useSettingsStore';
 import { t } from '@/shared/i18n/messages';
-import { ActionToolbar, Button, StatusPill } from '@/shared/ui';
+import { ActionToolbar, Button, PublisherCredit, StatusPill } from '@/shared/ui';
 import '@/shared/styles/globals.css';
 
 function syncDocumentLang(locale: 'en' | 'fa', dir: 'ltr' | 'rtl') {
@@ -196,6 +196,7 @@ function PopupApp() {
         <Button variant="ghost" className="w-full" onClick={() => chrome.runtime.openOptionsPage()}>
           {t(locale, 'openFullSettings')}
         </Button>
+        <PublisherCredit locale={locale} compact className="mt-1" />
       </div>
     </main>
   );

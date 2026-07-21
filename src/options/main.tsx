@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { SettingsForm } from '@/features/settings/components/SettingsForm';
 import { useSettingsStore } from '@/shared/hooks/useSettingsStore';
 import { t } from '@/shared/i18n/messages';
+import { PublisherCredit } from '@/shared/ui';
 import '@/shared/styles/globals.css';
 
 function OptionsApp() {
@@ -39,6 +40,7 @@ function OptionsApp() {
       </header>
       <SettingsForm />
       <p className="mt-6 text-center text-sm text-slate-300">{t(locale, 'tagline')}</p>
+      <PublisherCredit locale={locale} className="mx-auto mt-4 max-w-md" />
     </main>
   );
 }
