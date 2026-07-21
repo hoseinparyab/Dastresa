@@ -6,8 +6,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Source Sans 3"', 'Tahoma', 'Segoe UI', 'sans-serif'],
-        display: ['"Fraunces"', 'Georgia', 'serif'],
+        sans: ['Tahoma', 'Segoe UI', 'Source Sans 3', 'system-ui', 'sans-serif'],
+        display: ['Tahoma', 'Segoe UI', 'Georgia', 'serif'],
       },
       minWidth: {
         touch: '48px',
@@ -24,7 +24,7 @@ const config: Config = {
           surface: '#1e293b',
           accent: '#38bdf8',
           text: '#f8fafc',
-          muted: '#94a3b8',
+          muted: '#cbd5e1',
           danger: '#f87171',
           success: '#4ade80',
         },

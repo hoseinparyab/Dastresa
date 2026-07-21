@@ -10,6 +10,11 @@ import { t } from '@/shared/i18n/messages';
 import { ActionToolbar, Button, StatusPill } from '@/shared/ui';
 import '@/shared/styles/globals.css';
 
+function syncDocumentLang(locale: 'en' | 'fa', dir: 'ltr' | 'rtl') {
+  document.documentElement.lang = locale;
+  document.documentElement.dir = dir;
+}
+
 function PopupApp() {
   const { settings, hydrated, hydrate, update, replace } = useSettingsStore();
   const [busy, setBusy] = useState(false);
@@ -18,6 +23,11 @@ function PopupApp() {
   useEffect(() => {
     void hydrate();
   }, [hydrate]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    syncDocumentLang(settings.locale === 'en' ? 'en' : 'fa', settings.dir);
+  }, [hydrated, settings.locale, settings.dir]);
 
   useEffect(() => {
     void (async () => {
@@ -97,7 +107,12 @@ function PopupApp() {
   };
 
   return (
-    <main className="w-[380px] overflow-hidden text-dastresa-text" dir={settings.dir}>
+    <main
+      className="w-[400px] overflow-hidden text-dastresa-text"
+      dir={settings.dir}
+      lang={locale}
+      aria-busy={busy}
+    >
       <header className="relative overflow-hidden border-b border-white/10 px-5 pb-5 pt-5">
         <div
           aria-hidden
@@ -105,13 +120,11 @@ function PopupApp() {
         />
         <div className="relative flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-sky-300/90">
-              {t(locale, 'accessibility')}
-            </p>
+            <p className="text-sm font-bold text-sky-300/90">{t(locale, 'accessibility')}</p>
             <h1 className="mt-1 font-display text-[1.75rem] font-bold leading-none tracking-tight">
-              دسترسا
+              {t(locale, 'brand')}
             </h1>
-            <p className="mt-2 text-sm text-slate-400">{t(locale, 'tagline')}</p>
+            <p className="mt-2 text-base text-slate-300">{t(locale, 'tagline')}</p>
           </div>
           {hydrated ? (
             <StatusPill
@@ -124,10 +137,16 @@ function PopupApp() {
 
         {hydrated && (
           <div className="relative mt-4 space-y-2">
+            {busy ? (
+              <p className="sr-only" role="status" aria-live="polite">
+                {t(locale, 'working')}
+              </p>
+            ) : null}
             {settings.extensionActive ? (
               <>
                 <ActionToolbar
                   className="w-full"
+                  aria-label={t(locale, 'actions')}
                   buttons={[
                     {
                       id: 'reset',
@@ -155,7 +174,7 @@ function PopupApp() {
                   </Button>
                 ) : null}
                 {siteOff ? (
-                  <p className="text-xs text-amber-200/90">{t(locale, 'siteDisabledHint')}</p>
+                  <p className="text-sm text-amber-200">{t(locale, 'siteDisabledHint')}</p>
                 ) : null}
               </>
             ) : (
@@ -172,7 +191,7 @@ function PopupApp() {
         )}
       </header>
 
-      <div className="max-h-[460px] space-y-3 overflow-y-auto p-4">
+      <div className="max-h-[520px] space-y-3 overflow-y-auto p-4">
         <SettingsForm compact />
         <Button variant="ghost" className="w-full" onClick={() => chrome.runtime.openOptionsPage()}>
           {t(locale, 'openFullSettings')}

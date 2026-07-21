@@ -53,10 +53,10 @@ function systemButtons(locale: AppLocale): ToolbarBtn[] {
     },
   ];
 }
-const CHIP_W = 148;
-const CHIP_H = 48;
-const PANEL_W = 260;
-const PANEL_H = 280;
+const CHIP_W = 168;
+const CHIP_H = 56;
+const PANEL_W = 280;
+const PANEL_H = 320;
 const MARGIN = 12;
 
 /** Legacy default sat under site headers and looked broken on refresh. */
@@ -136,13 +136,14 @@ const TOOLBAR_CSS = `
   .chip {
     display: flex;
     align-items: center;
-    gap: 6px;
-    min-height: 40px;
-    padding: 0 4px 0 8px;
+    gap: 8px;
+    min-height: 48px;
+    padding-block: 0;
+    padding-inline: 10px 6px;
   }
   .dot {
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
     border-radius: 999px;
     background: #38bdf8;
     box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
@@ -150,20 +151,21 @@ const TOOLBAR_CSS = `
   }
   .title {
     margin: 0;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: 0.01em;
     white-space: nowrap;
+    color: #f8fafc;
   }
   .icon-btn {
-    min-width: 40px;
-    min-height: 40px;
+    min-width: 48px;
+    min-height: 48px;
     padding: 0;
     border: 0;
     border-radius: 999px;
     background: rgba(56, 189, 248, 0.16);
     color: #e0f2fe;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
     font-family: inherit;
     cursor: pointer;
@@ -189,8 +191,8 @@ const TOOLBAR_CSS = `
   }
   .hint {
     margin: 0;
-    font-size: 10px;
-    color: #64748b;
+    font-size: 12px;
+    color: #cbd5e1;
   }
   .header-actions {
     display: flex;
@@ -198,13 +200,13 @@ const TOOLBAR_CSS = `
     gap: 4px;
   }
   .mini {
-    min-width: 32px;
-    min-height: 32px;
+    min-width: 44px;
+    min-height: 44px;
     border: 0;
     border-radius: 10px;
     background: transparent;
-    color: #94a3b8;
-    font-size: 14px;
+    color: #e2e8f0;
+    font-size: 16px;
     font-weight: 700;
     font-family: inherit;
     cursor: pointer;
@@ -226,14 +228,14 @@ const TOOLBAR_CSS = `
   }
   .btn {
     min-width: 0;
-    min-height: 40px;
+    min-height: 48px;
     padding: 0 6px;
     border-radius: 10px;
     border: 1px solid transparent;
     background: transparent;
-    color: #e2e8f0;
-    font-size: 12px;
-    font-weight: 650;
+    color: #f1f5f9;
+    font-size: 13px;
+    font-weight: 700;
     font-family: inherit;
     cursor: pointer;
     transition: background 120ms ease, color 120ms ease;
@@ -257,20 +259,19 @@ const TOOLBAR_CSS = `
   }
   .btn.ghost {
     width: 100%;
-    min-height: 36px;
-    border-color: rgba(148, 163, 184, 0.22);
-    color: #cbd5e1;
+    min-height: 48px;
+    border-color: rgba(148, 163, 184, 0.28);
+    color: #e2e8f0;
   }
   .panel-title {
-    margin: 2px 0 0 2px;
-    font-size: 9px;
+    margin: 4px 0 0 2px;
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #64748b;
+    letter-spacing: 0.04em;
+    color: #cbd5e1;
   }
   @media (prefers-reduced-motion: reduce) {
-    .btn { transition: none; }
+    .btn, .dock { transition: none !important; }
   }
 `;
 
@@ -286,12 +287,14 @@ interface ToolbarProps {
 function BtnGrid({
   items,
   onCommand,
+  label,
 }: {
   items: ToolbarBtn[];
   onCommand: (command: Command) => void;
+  label: string;
 }) {
   return (
-    <div className="strip" role="group">
+    <div className="strip" role="group" aria-label={label}>
       {items.map((btn) => (
         <button
           key={btn.command}
@@ -388,12 +391,39 @@ function ToolbarApp({ x, y, locale, dir, onCommand, onMoved }: ToolbarProps) {
     }
   };
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        collapseToolbar();
+      }
+      const step = e.shiftKey ? 24 : 12;
+      let nx = pos.x;
+      let ny = pos.y;
+      if (e.key === 'ArrowLeft') nx -= step;
+      else if (e.key === 'ArrowRight') nx += step;
+      else if (e.key === 'ArrowUp') ny -= step;
+      else if (e.key === 'ArrowDown') ny += step;
+      else return;
+      e.preventDefault();
+      const next = clampPos(window, { x: nx, y: ny }, PANEL_W, PANEL_H);
+      setDragPos(next);
+      onMoved(next.x, next.y);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onMoved, pos.x, pos.y]);
+
+  const moreId = 'dastresa-toolbar-more';
+
   return (
     <div
       role="toolbar"
-      aria-label="Dastresa accessibility toolbar"
+      aria-label={t(locale, 'toolbarAria')}
       className={`dock${open ? '' : ' collapsed'}`}
       dir={dir}
+      tabIndex={0}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -406,7 +436,22 @@ function ToolbarApp({ x, y, locale, dir, onCommand, onMoved }: ToolbarProps) {
       {!open ? (
         <div className="chip">
           <span className="dot" aria-hidden />
-          <p className="title">دسترسا</p>
+          <button
+            type="button"
+            className="title"
+            style={{
+              background: 'transparent',
+              border: 0,
+              color: 'inherit',
+              cursor: 'pointer',
+              font: 'inherit',
+              padding: 0,
+            }}
+            aria-label={t(locale, 'toolbarOpen')}
+            onClick={openToolbar}
+          >
+            {t(locale, 'brand')}
+          </button>
           <button
             type="button"
             className="icon-btn"
@@ -415,7 +460,7 @@ function ToolbarApp({ x, y, locale, dir, onCommand, onMoved }: ToolbarProps) {
             title={t(locale, 'toolbarOpen')}
             onClick={openToolbar}
           >
-            {dir === 'rtl' ? '◂' : '▸'}
+            {'▴'}
           </button>
         </div>
       ) : (
@@ -423,7 +468,7 @@ function ToolbarApp({ x, y, locale, dir, onCommand, onMoved }: ToolbarProps) {
           <div className="header">
             <div className="brand">
               <span className="dot" aria-hidden />
-              <p className="title">دسترسا</p>
+              <p className="title">{t(locale, 'brand')}</p>
               <p className="hint">{t(locale, 'toolbarDrag')}</p>
             </div>
             <div className="header-actions">
@@ -440,24 +485,37 @@ function ToolbarApp({ x, y, locale, dir, onCommand, onMoved }: ToolbarProps) {
             </div>
           </div>
 
-          <BtnGrid items={primary} onCommand={onCommand} />
+          <BtnGrid
+            items={primary}
+            onCommand={onCommand}
+            label={t(locale, 'toolbarPrimaryGroup')}
+          />
 
           <button
             type="button"
             className="btn ghost"
             aria-expanded={moreOpen}
+            aria-controls={moreId}
             onClick={() => setMoreOpen((v) => !v)}
           >
             {moreOpen ? t(locale, 'toolbarLess') : t(locale, 'toolbarMore')}
           </button>
 
           {moreOpen && (
-            <>
+            <div id={moreId}>
               <p className="panel-title">{t(locale, 'toolbarSpeech')}</p>
-              <BtnGrid items={speech} onCommand={onCommand} />
+              <BtnGrid
+                items={speech}
+                onCommand={onCommand}
+                label={t(locale, 'toolbarSpeechGroup')}
+              />
               <p className="panel-title">{t(locale, 'toolbarSystem')}</p>
-              <BtnGrid items={system} onCommand={onCommand} />
-            </>
+              <BtnGrid
+                items={system}
+                onCommand={onCommand}
+                label={t(locale, 'toolbarSystemGroup')}
+              />
+            </div>
           )}
         </>
       )}
