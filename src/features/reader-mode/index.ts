@@ -7,6 +7,7 @@ import type {
 } from '@/core/contracts';
 import { EVENTS, FEATURE_IDS } from '@/core/constants';
 import { splitParagraphs } from '@/core/utils';
+import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 
 const NOISE_SELECTORS = [
   'header',
@@ -192,8 +193,14 @@ export class ReaderModeFeature implements IFeature, IReadableContentProvider {
 
   dispose(): void {
     this.unsubs.forEach((u) => u());
+    this.unsubs = [];
     this.service.unmount();
     this.enabled = false;
+  }
+
+  private async persistReader(active: boolean): Promise<void> {
+    if (!this.ctx) return;
+    await patchStoredSettings(this.ctx.storage, { readerMode: active });
   }
 
   async enable(): Promise<void> {
@@ -209,12 +216,14 @@ export class ReaderModeFeature implements IFeature, IReadableContentProvider {
       paragraphs: content.paragraphs,
       html: content.html,
     });
+    await this.persistReader(true);
   }
 
   async disable(): Promise<void> {
     this.service.unmount();
     this.enabled = false;
     this.ctx?.bus.emit(EVENTS.READER_DEACTIVATED, undefined);
+    await this.persistReader(false);
   }
 
   isEnabled(): boolean {

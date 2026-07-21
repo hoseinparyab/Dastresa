@@ -4,7 +4,9 @@ import type { FeatureContext, IFeature } from '@/core/contracts';
 import { EVENTS, FEATURE_IDS, STORAGE_KEYS } from '@/core/constants';
 import type { EventMap } from '@/core/types/events';
 import { clamp, prefersReducedMotion } from '@/core/utils';
-import { parseSettings } from '@/features/settings/schema/settings-schema';
+import { parseSettings, type DastresaSettings } from '@/features/settings/schema/settings-schema';
+import { patchStoredSettings } from '@/features/settings/services/patch-settings';
+import { t, type AppLocale } from '@/shared/i18n/messages';
 
 type Command = EventMap['toolbar:command']['command'];
 
@@ -14,43 +16,62 @@ interface ToolbarBtn {
   aria: string;
   danger?: boolean;
   soft?: boolean;
+  pressed?: boolean;
 }
 
-const PRIMARY: ToolbarBtn[] = [
-  { command: 'reader', label: 'Read', aria: 'Toggle reader mode' },
-  { command: 'read', label: 'Speak', aria: 'Start reading aloud' },
-  { command: 'zoom-in', label: 'A+', aria: 'Increase text size' },
-  { command: 'zoom-out', label: 'A−', aria: 'Decrease text size' },
-  { command: 'contrast', label: 'Theme', aria: 'Cycle contrast theme' },
-  { command: 'focus', label: 'Focus', aria: 'Toggle reading focus and highlighted cursor' },
-];
+function primaryButtons(
+  locale: AppLocale,
+  state: { readerMode: boolean; readingFocus: boolean },
+): ToolbarBtn[] {
+  return [
+    {
+      command: 'reader',
+      label: t(locale, 'cmdReader'),
+      aria: t(locale, 'ariaReader'),
+      pressed: state.readerMode,
+    },
+    { command: 'read', label: t(locale, 'cmdSpeak'), aria: t(locale, 'ariaSpeak') },
+    { command: 'zoom-in', label: t(locale, 'cmdZoomIn'), aria: t(locale, 'ariaZoomIn') },
+    { command: 'zoom-out', label: t(locale, 'cmdZoomOut'), aria: t(locale, 'ariaZoomOut') },
+    { command: 'contrast', label: t(locale, 'cmdTheme'), aria: t(locale, 'ariaTheme') },
+    {
+      command: 'focus',
+      label: t(locale, 'cmdFocus'),
+      aria: t(locale, 'ariaFocus'),
+      pressed: state.readingFocus,
+    },
+  ];
+}
 
-const SPEECH: ToolbarBtn[] = [
-  { command: 'pause', label: 'Pause', aria: 'Pause speech' },
-  { command: 'resume', label: 'Resume', aria: 'Resume speech' },
-  { command: 'stop', label: 'Stop', aria: 'Stop speech' },
-];
+function speechButtons(locale: AppLocale): ToolbarBtn[] {
+  return [
+    { command: 'pause', label: t(locale, 'cmdPause'), aria: t(locale, 'ariaPause') },
+    { command: 'resume', label: t(locale, 'cmdResume'), aria: t(locale, 'ariaResume') },
+    { command: 'stop', label: t(locale, 'cmdStop'), aria: t(locale, 'ariaStop') },
+  ];
+}
 
-const SYSTEM: ToolbarBtn[] = [
-  { command: 'settings', label: 'Settings', aria: 'Open settings' },
-  {
-    command: 'reset',
-    label: 'Reset',
-    aria: 'Reset page to browser default appearance',
-    soft: true,
-  },
-  {
-    command: 'exit',
-    label: 'Exit',
-    aria: 'Exit Dastresa and restore the normal browser page',
-    danger: true,
-  },
-];
-
-const CHIP_W = 148;
-const CHIP_H = 48;
-const PANEL_W = 260;
-const PANEL_H = 280;
+function systemButtons(locale: AppLocale): ToolbarBtn[] {
+  return [
+    { command: 'settings', label: t(locale, 'cmdSettings'), aria: t(locale, 'ariaSettings') },
+    {
+      command: 'reset',
+      label: t(locale, 'cmdReset'),
+      aria: t(locale, 'ariaReset'),
+      soft: true,
+    },
+    {
+      command: 'exit',
+      label: t(locale, 'cmdExit'),
+      aria: t(locale, 'ariaExit'),
+      danger: true,
+    },
+  ];
+}
+const CHIP_W = 168;
+const CHIP_H = 56;
+const PANEL_W = 280;
+const PANEL_H = 320;
 const MARGIN = 12;
 
 /** Legacy default sat under site headers and looked broken on refresh. */
@@ -114,7 +135,7 @@ const TOOLBAR_CSS = `
     border: 1px solid rgba(255, 255, 255, 0.16);
     background: #0f172a;
     color: #f8fafc;
-    font-family: "Source Sans 3", Tahoma, "Segoe UI", sans-serif;
+    font-family: Tahoma, "Segoe UI", "Source Sans 3", sans-serif;
     box-shadow: 0 10px 28px rgba(2, 6, 23, 0.55);
     pointer-events: auto;
     cursor: grab;
@@ -122,21 +143,35 @@ const TOOLBAR_CSS = `
     user-select: none;
   }
   .dock.collapsed {
-    padding: 4px;
+    padding: 0;
     border-radius: 999px;
+    overflow: hidden;
   }
   .dock:active { cursor: grabbing; }
 
   .chip {
     display: flex;
     align-items: center;
-    gap: 6px;
-    min-height: 40px;
-    padding: 0 4px 0 8px;
+    gap: 8px;
+    min-height: 48px;
+    padding-block: 0;
+    padding-inline: 10px 6px;
+    text-align: start;
+  }
+  .dock.collapsed .chip {
+    /* Icon sits on inline-end (left in RTL) — no gap on that side */
+    padding-block: 0;
+    padding-inline-start: 12px;
+    padding-inline-end: 0;
+    gap: 10px;
+  }
+  .chip:focus-visible {
+    outline: 2px solid #38bdf8;
+    outline-offset: 2px;
   }
   .dot {
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
     border-radius: 999px;
     background: #38bdf8;
     box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
@@ -144,23 +179,47 @@ const TOOLBAR_CSS = `
   }
   .title {
     margin: 0;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: 0.01em;
     white-space: nowrap;
+    color: #f8fafc;
   }
   .icon-btn {
-    min-width: 40px;
-    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    min-height: 48px;
     padding: 0;
     border: 0;
     border-radius: 999px;
     background: rgba(56, 189, 248, 0.16);
     color: #e0f2fe;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
     font-family: inherit;
     cursor: pointer;
+  }
+  .dock.collapsed .icon-btn {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    border-radius: 0;
+    /* Match the pill’s outer curve on the free edge */
+    border-start-end-radius: 999px;
+    border-end-end-radius: 999px;
+    background: rgba(56, 189, 248, 0.2);
+  }
+  .icon-btn svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+  }
+  .dock.collapsed .icon-btn svg {
+    width: 24px;
+    height: 24px;
   }
   .icon-btn:hover { background: rgba(56, 189, 248, 0.28); }
   .icon-btn:focus-visible {
@@ -183,8 +242,8 @@ const TOOLBAR_CSS = `
   }
   .hint {
     margin: 0;
-    font-size: 10px;
-    color: #64748b;
+    font-size: 12px;
+    color: #cbd5e1;
   }
   .header-actions {
     display: flex;
@@ -192,13 +251,13 @@ const TOOLBAR_CSS = `
     gap: 4px;
   }
   .mini {
-    min-width: 32px;
-    min-height: 32px;
+    min-width: 44px;
+    min-height: 44px;
     border: 0;
     border-radius: 10px;
     background: transparent;
-    color: #94a3b8;
-    font-size: 14px;
+    color: #e2e8f0;
+    font-size: 16px;
     font-weight: 700;
     font-family: inherit;
     cursor: pointer;
@@ -220,20 +279,25 @@ const TOOLBAR_CSS = `
   }
   .btn {
     min-width: 0;
-    min-height: 40px;
+    min-height: 48px;
     padding: 0 6px;
     border-radius: 10px;
     border: 1px solid transparent;
     background: transparent;
-    color: #e2e8f0;
-    font-size: 12px;
-    font-weight: 650;
+    color: #f1f5f9;
+    font-size: 13px;
+    font-weight: 700;
     font-family: inherit;
     cursor: pointer;
     transition: background 120ms ease, color 120ms ease;
   }
   .btn:hover {
     background: rgba(56, 189, 248, 0.14);
+    color: #fff;
+  }
+  .btn.pressed {
+    background: rgba(56, 189, 248, 0.22);
+    border-color: rgba(56, 189, 248, 0.55);
     color: #fff;
   }
   .btn:focus-visible {
@@ -251,26 +315,29 @@ const TOOLBAR_CSS = `
   }
   .btn.ghost {
     width: 100%;
-    min-height: 36px;
-    border-color: rgba(148, 163, 184, 0.22);
-    color: #cbd5e1;
+    min-height: 48px;
+    border-color: rgba(148, 163, 184, 0.28);
+    color: #e2e8f0;
   }
   .panel-title {
-    margin: 2px 0 0 2px;
-    font-size: 9px;
+    margin: 4px 0 0 2px;
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #64748b;
+    letter-spacing: 0.04em;
+    color: #cbd5e1;
   }
   @media (prefers-reduced-motion: reduce) {
-    .btn { transition: none; }
+    .btn, .dock { transition: none !important; }
   }
 `;
 
 interface ToolbarProps {
   x: number;
   y: number;
+  locale: AppLocale;
+  dir: 'ltr' | 'rtl';
+  readerMode: boolean;
+  readingFocus: boolean;
   onCommand: (command: Command) => void;
   onMoved: (x: number, y: number) => void;
 }
@@ -278,18 +345,21 @@ interface ToolbarProps {
 function BtnGrid({
   items,
   onCommand,
+  label,
 }: {
   items: ToolbarBtn[];
   onCommand: (command: Command) => void;
+  label: string;
 }) {
   return (
-    <div className="strip" role="group">
+    <div className="strip" role="group" aria-label={label}>
       {items.map((btn) => (
         <button
           key={btn.command}
           type="button"
-          className={`btn${btn.danger ? ' danger' : ''}${btn.soft ? ' soft' : ''}`}
+          className={`btn${btn.danger ? ' danger' : ''}${btn.soft ? ' soft' : ''}${btn.pressed ? ' pressed' : ''}`}
           aria-label={btn.aria}
+          aria-pressed={btn.pressed === undefined ? undefined : btn.pressed}
           title={btn.aria}
           onClick={() => onCommand(btn.command)}
         >
@@ -300,13 +370,29 @@ function BtnGrid({
   );
 }
 
-function ToolbarApp({ x, y, onCommand, onMoved }: ToolbarProps) {
+function ToolbarApp({
+  x,
+  y,
+  locale,
+  dir,
+  readerMode,
+  readingFocus,
+  onCommand,
+  onMoved,
+}: ToolbarProps) {
+  const dockRef = useRef<HTMLDivElement | null>(null);
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [open, setOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const dragging = useRef<{ ox: number; oy: number } | null>(null);
   const reduceMotion = useMemo(() => prefersReducedMotion(), []);
   const pos = useMemo(() => dragPos ?? { x, y }, [dragPos, x, y]);
+  const primary = useMemo(
+    () => primaryButtons(locale, { readerMode, readingFocus }),
+    [locale, readerMode, readingFocus],
+  );
+  const speech = useMemo(() => speechButtons(locale), [locale]);
+  const system = useMemo(() => systemButtons(locale), [locale]);
 
   useEffect(() => {
     const onResize = () => {
@@ -377,11 +463,49 @@ function ToolbarApp({ x, y, onCommand, onMoved }: ToolbarProps) {
     }
   };
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      const dock = dockRef.current;
+      const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+      const insideDock = Boolean(dock && (path.includes(dock) || dock.contains(e.target as Node)));
+      if (!insideDock) return;
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        collapseToolbar();
+        return;
+      }
+
+      // Arrow move only when focus is on the dock shell (not a command button).
+      if (e.target !== dock) return;
+      const step = e.shiftKey ? 24 : 12;
+      let nx = pos.x;
+      let ny = pos.y;
+      if (e.key === 'ArrowLeft') nx -= step;
+      else if (e.key === 'ArrowRight') nx += step;
+      else if (e.key === 'ArrowUp') ny -= step;
+      else if (e.key === 'ArrowDown') ny += step;
+      else return;
+      e.preventDefault();
+      const next = clampPos(window, { x: nx, y: ny }, PANEL_W, PANEL_H);
+      setDragPos(next);
+      onMoved(next.x, next.y);
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [open, onMoved, pos.x, pos.y]);
+
+  const moreId = 'dastresa-toolbar-more';
+
   return (
     <div
+      ref={dockRef}
       role="toolbar"
-      aria-label="Dastresa accessibility toolbar"
+      aria-label={t(locale, 'toolbarAria')}
       className={`dock${open ? '' : ' collapsed'}`}
+      dir={dir}
+      tabIndex={open ? 0 : -1}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -392,35 +516,54 @@ function ToolbarApp({ x, y, onCommand, onMoved }: ToolbarProps) {
       }}
     >
       {!open ? (
-        <div className="chip">
+        <button
+          type="button"
+          className="chip"
+          aria-label={t(locale, 'toolbarOpen')}
+          aria-expanded={false}
+          title={t(locale, 'toolbarOpen')}
+          onClick={openToolbar}
+          style={{
+            border: 0,
+            background: 'transparent',
+            color: 'inherit',
+            font: 'inherit',
+            width: '100%',
+            cursor: 'pointer',
+          }}
+        >
           <span className="dot" aria-hidden />
-          <p className="title">Dastresa</p>
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label="Open Dastresa toolbar"
-            aria-expanded={false}
-            title="Open toolbar"
-            onClick={openToolbar}
-          >
-            {'▸'}
-          </button>
-        </div>
+          <span className="title">{t(locale, 'brand')}</span>
+          <span className="icon-btn" aria-hidden>
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+              <path
+                d="M8 12.2 10.6 14.8 16 9.2"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+        </button>
       ) : (
         <>
           <div className="header">
             <div className="brand">
               <span className="dot" aria-hidden />
-              <p className="title">Dastresa</p>
-              <p className="hint">drag</p>
+              <p className="title" aria-hidden>
+                {t(locale, 'brand')}
+              </p>
+              <p className="hint">{t(locale, 'toolbarDrag')}</p>
             </div>
             <div className="header-actions">
               <button
                 type="button"
                 className="mini"
-                aria-label="Collapse toolbar"
+                aria-label={t(locale, 'toolbarCollapse')}
                 aria-expanded={true}
-                title="Collapse"
+                title={t(locale, 'toolbarCollapse')}
                 onClick={collapseToolbar}
               >
                 {'▾'}
@@ -428,24 +571,37 @@ function ToolbarApp({ x, y, onCommand, onMoved }: ToolbarProps) {
             </div>
           </div>
 
-          <BtnGrid items={PRIMARY} onCommand={onCommand} />
+          <BtnGrid
+            items={primary}
+            onCommand={onCommand}
+            label={t(locale, 'toolbarPrimaryGroup')}
+          />
 
           <button
             type="button"
             className="btn ghost"
             aria-expanded={moreOpen}
+            aria-controls={moreId}
             onClick={() => setMoreOpen((v) => !v)}
           >
-            {moreOpen ? 'Less' : 'More'}
+            {moreOpen ? t(locale, 'toolbarLess') : t(locale, 'toolbarMore')}
           </button>
 
           {moreOpen && (
-            <>
-              <p className="panel-title">Speech</p>
-              <BtnGrid items={SPEECH} onCommand={onCommand} />
-              <p className="panel-title">System</p>
-              <BtnGrid items={SYSTEM} onCommand={onCommand} />
-            </>
+            <div id={moreId}>
+              <p className="panel-title">{t(locale, 'toolbarSpeech')}</p>
+              <BtnGrid
+                items={speech}
+                onCommand={onCommand}
+                label={t(locale, 'toolbarSpeechGroup')}
+              />
+              <p className="panel-title">{t(locale, 'toolbarSystem')}</p>
+              <BtnGrid
+                items={system}
+                onCommand={onCommand}
+                label={t(locale, 'toolbarSystemGroup')}
+              />
+            </div>
           )}
         </>
       )}
@@ -462,28 +618,41 @@ export class ToolbarFeature implements IFeature {
   private root?: Root;
   private ctx?: FeatureContext;
   private pos = { x: 24, y: 24 };
+  private locale: AppLocale = 'fa';
+  private dir: 'ltr' | 'rtl' = 'rtl';
+  private readerMode = false;
+  private readingFocus = false;
   private unsubs: Array<() => void> = [];
   private migrated = false;
 
   initialize(ctx: FeatureContext): void {
     this.ctx = ctx;
-    void this.hydratePosition().then(() => {
+    void this.hydrateFromStorage().then(() => {
       this.mount();
       this.render();
     });
 
     this.unsubs.push(
       ctx.bus.on(EVENTS.SETTINGS_CHANGED, ({ settings }) => {
+        this.applySettings(settings);
         this.pos = resolveToolbarPosition(ctx.window, settings.toolbarPosition, false);
         this.render();
       }),
     );
   }
 
-  private async hydratePosition(): Promise<void> {
+  private applySettings(settings: DastresaSettings): void {
+    this.locale = settings.locale === 'en' ? 'en' : 'fa';
+    this.dir = settings.dir === 'ltr' ? 'ltr' : 'rtl';
+    this.readerMode = settings.readerMode;
+    this.readingFocus = settings.readingFocus;
+  }
+
+  private async hydrateFromStorage(): Promise<void> {
     if (!this.ctx) return;
     const raw = await this.ctx.storage.get<unknown>(STORAGE_KEYS.SETTINGS);
     const settings = parseSettings(raw);
+    this.applySettings(settings);
     const resolved = resolveToolbarPosition(this.ctx.window, settings.toolbarPosition, false);
     this.pos = resolved;
 
@@ -494,10 +663,7 @@ export class ToolbarFeature implements IFeature {
         settings.toolbarPosition.y !== resolved.y)
     ) {
       this.migrated = true;
-      await this.ctx.storage.set(STORAGE_KEYS.SETTINGS, {
-        ...settings,
-        toolbarPosition: resolved,
-      });
+      await patchStoredSettings(this.ctx.storage, { toolbarPosition: resolved });
     }
   }
 
@@ -524,6 +690,10 @@ export class ToolbarFeature implements IFeature {
       <ToolbarApp
         x={this.pos.x}
         y={this.pos.y}
+        locale={this.locale}
+        dir={this.dir}
+        readerMode={this.readerMode}
+        readingFocus={this.readingFocus}
         onCommand={(command) => {
           if (command === 'settings') {
             try {
@@ -545,6 +715,7 @@ export class ToolbarFeature implements IFeature {
 
   dispose(): void {
     this.unsubs.forEach((u) => u());
+    this.unsubs = [];
     this.root?.unmount();
     this.host?.remove();
     this.root = undefined;
@@ -554,7 +725,7 @@ export class ToolbarFeature implements IFeature {
   enable(): void {
     this.enabled = true;
     if (!this.host) {
-      void this.hydratePosition().then(() => {
+      void this.hydrateFromStorage().then(() => {
         this.mount();
         this.render();
       });

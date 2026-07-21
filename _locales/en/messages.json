@@ -1,11 +1,11 @@
 {
   "extName": {
     "message": "Dastresa",
-    "description": "Extension name"
+    "description": "Extension name shown in Chrome and the Web Store"
   },
   "extDescription": {
-    "message": "Make every website easier to read and use.",
-    "description": "Extension description"
+    "message": "Offline accessibility: larger text, clearer themes, read aloud, simple toolbar. Private. No AI cloud.",
+    "description": "Short store/extension description (keep under 132 chars)"
   },
   "actionTitle": {
     "message": "Dastresa — Accessibility controls",

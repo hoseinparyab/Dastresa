@@ -20,8 +20,8 @@ export function Section({
       )}
     >
       <div className="mb-3">
-        <h2 className="text-sm font-bold text-dastresa-text">{title}</h2>
-        {description ? <p className="mt-1 text-xs text-dastresa-muted">{description}</p> : null}
+        <h2 className="text-base font-bold text-dastresa-text">{title}</h2>
+        {description ? <p className="mt-1 text-sm leading-relaxed text-slate-300">{description}</p> : null}
       </div>
       <div className="flex flex-col gap-1">{children}</div>
     </section>
