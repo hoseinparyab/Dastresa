@@ -444,16 +444,16 @@ function ToolbarApp({
     setDragPos(null);
   }, [onMoved, pos.x, pos.y]);
 
-  const openToolbar = () => {
+  const openToolbar = useCallback(() => {
     const next = clampPos(window, pos, PANEL_W, PANEL_H);
     if (next.x !== pos.x || next.y !== pos.y) {
       setDragPos(next);
       onMoved(next.x, next.y);
     }
     setOpen(true);
-  };
+  }, [onMoved, pos]);
 
-  const collapseToolbar = () => {
+  const collapseToolbar = useCallback(() => {
     setMoreOpen(false);
     setOpen(false);
     const next = clampPos(window, pos, CHIP_W, CHIP_H);
@@ -461,7 +461,7 @@ function ToolbarApp({
       setDragPos(next);
       onMoved(next.x, next.y);
     }
-  };
+  }, [onMoved, pos]);
 
   useEffect(() => {
     if (!open) return;
@@ -494,7 +494,7 @@ function ToolbarApp({
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
-  }, [open, onMoved, pos.x, pos.y]);
+  }, [open, onMoved, pos, collapseToolbar]);
 
   const moreId = 'dastresa-toolbar-more';
 
