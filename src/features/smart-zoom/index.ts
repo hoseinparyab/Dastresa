@@ -176,10 +176,13 @@ export class SmartZoomFeature implements IFeature {
   private unsubs: Array<() => void> = [];
   private ctx?: FeatureContext;
 
-  initialize(ctx: FeatureContext): void {
+  async initialize(ctx: FeatureContext): Promise<void> {
     this.ctx = ctx;
     this.bus = ctx.bus;
     this.controller = new StyleController(ctx.document);
+
+    // Load persisted zoom before first apply — refresh must not use defaults.
+    await this.syncFromStorage();
     this.apply();
 
     this.unsubs.push(
@@ -195,6 +198,13 @@ export class SmartZoomFeature implements IFeature {
         if (command === 'zoom-out') void this.nudge(-0.1);
       }),
     );
+  }
+
+  private async syncFromStorage(): Promise<void> {
+    if (!this.ctx) return;
+    const raw = await this.ctx.storage.get<unknown>(STORAGE_KEYS.SETTINGS);
+    const settings = parseSettings(raw);
+    this.zoom = { ...settings.zoom, imageScale: 1 };
   }
 
   private async nudge(delta: number): Promise<void> {
