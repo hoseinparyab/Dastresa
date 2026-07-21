@@ -123,6 +123,8 @@ async function handleActivate(): Promise<void> {
   transitioning = true;
   try {
     await startProductFeatures(container);
+    const settings = (settingsFeature as SettingsFeature).getService().get();
+    container.bus.emit(EVENTS.SETTINGS_CHANGED, { settings });
     await persistActive(true);
   } finally {
     transitioning = false;
@@ -256,6 +258,9 @@ async function boot(): Promise<void> {
 
   if (settings.extensionActive) {
     await startProductFeatures(container);
+    // Re-broadcast so every feature that subscribed during init gets the
+    // hydrated Look/zoom values (not the in-memory defaults).
+    container.bus.emit(EVENTS.SETTINGS_CHANGED, { settings });
   }
 }
 

@@ -49,11 +49,15 @@ export class ThemesFeature implements IFeature {
     'normal',
   ];
 
-  initialize(ctx: FeatureContext): void {
+  async initialize(ctx: FeatureContext): Promise<void> {
     this.ctx = ctx;
     this.styleEl = ctx.document.createElement('style');
     this.styleEl.setAttribute(HOST_STYLE_ATTR, 'theme');
     ctx.document.documentElement.appendChild(this.styleEl);
+
+    // Load persisted Look settings before first paint — otherwise refresh
+    // re-applies hardcoded defaults (dark + large buttons) and breaks pages.
+    await this.syncFromStorage();
     this.apply();
 
     this.unsubs.push(
@@ -74,6 +78,15 @@ export class ThemesFeature implements IFeature {
         void this.persistTheme();
       }),
     );
+  }
+
+  private async syncFromStorage(): Promise<void> {
+    if (!this.ctx) return;
+    const raw = await this.ctx.storage.get<unknown>(STORAGE_KEYS.SETTINGS);
+    const settings = parseSettings(raw);
+    this.theme = settings.theme;
+    this.largeCursor = settings.largeCursor;
+    this.largeButtons = settings.largeButtons;
   }
 
   private async persistTheme(): Promise<void> {

@@ -28,6 +28,8 @@ export class ReadingFocusFeature implements IFeature {
   private ctx?: FeatureContext;
   private lastX = 80;
   private lastY = 80;
+  private modalObserver?: MutationObserver;
+  private elevateScheduled = false;
 
   initialize(ctx: FeatureContext): void {
     this.ctx = ctx;
@@ -125,21 +127,102 @@ export class ReadingFocusFeature implements IFeature {
     ).filter((el) => (el.textContent?.trim().length ?? 0) > 40);
   }
 
+  /**
+   * Dialogs / showModal() use the browser top layer, which sits above any
+   * z-index. Put the cursor in that same layer via Popover so it stays visible
+   * over GitHub (and similar) modals while remaining pointer-events: none.
+   */
+  private elevateCursor(): void {
+    const host = this.cursorHost;
+    if (!host || typeof host.showPopover !== 'function') return;
+    try {
+      if (host.matches(':popover-open')) {
+        host.hidePopover();
+      }
+      host.showPopover();
+    } catch {
+      // Element may be disconnected mid-navigation
+    }
+  }
+
+  private scheduleElevateCursor(): void {
+    if (this.elevateScheduled || !this.enabled) return;
+    this.elevateScheduled = true;
+    requestAnimationFrame(() => {
+      this.elevateScheduled = false;
+      this.elevateCursor();
+    });
+  }
+
+  private watchModals(): void {
+    if (!this.ctx || this.modalObserver) return;
+    this.modalObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'attributes') {
+          const target = mutation.target;
+          if (!(target instanceof Element)) continue;
+          if (
+            target instanceof HTMLDialogElement ||
+            target.getAttribute('aria-modal') === 'true' ||
+            target.getAttribute('role') === 'dialog' ||
+            target.hasAttribute('popover')
+          ) {
+            this.scheduleElevateCursor();
+            return;
+          }
+        }
+        if (mutation.type === 'childList') {
+          for (const node of mutation.addedNodes) {
+            if (!(node instanceof Element)) continue;
+            if (
+              node instanceof HTMLDialogElement ||
+              node.getAttribute('role') === 'dialog' ||
+              node.getAttribute('aria-modal') === 'true' ||
+              node.querySelector?.('dialog, [role="dialog"], [aria-modal="true"]')
+            ) {
+              this.scheduleElevateCursor();
+              return;
+            }
+          }
+        }
+      }
+    });
+    this.modalObserver.observe(this.ctx.document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['open', 'aria-modal'],
+    });
+  }
+
+  private stopWatchingModals(): void {
+    this.modalObserver?.disconnect();
+    this.modalObserver = undefined;
+  }
+
   private ensureCursor(): void {
     if (!this.ctx || this.cursorHost) return;
 
     const host = this.ctx.document.createElement('div');
     host.id = CURSOR_HOST_ID;
     host.setAttribute('aria-hidden', 'true');
+    // popover=manual → browser top layer (above <dialog showModal()> overlays)
+    host.setAttribute('popover', 'manual');
     host.style.cssText = `
-      all: initial !important;
       position: fixed !important;
       inset: 0 !important;
       width: 100vw !important;
       height: 100vh !important;
+      max-width: none !important;
+      max-height: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      background: transparent !important;
+      overflow: visible !important;
       pointer-events: none !important;
       z-index: 2147483647 !important;
-      overflow: visible !important;
+      color-scheme: normal !important;
     `;
 
     const shadow = host.attachShadow({ mode: 'closed' });
@@ -183,9 +266,19 @@ export class ReadingFocusFeature implements IFeature {
     (this.ctx.document.body ?? this.ctx.document.documentElement).appendChild(host);
     this.cursorHost = host;
     this.cursorShadow = shadow;
+    this.elevateCursor();
+    this.watchModals();
   }
 
   private removeCursor(): void {
+    this.stopWatchingModals();
+    try {
+      if (this.cursorHost?.matches(':popover-open')) {
+        this.cursorHost.hidePopover();
+      }
+    } catch {
+      // ignore
+    }
     this.cursorHost?.remove();
     this.cursorHost = undefined;
     this.cursorShadow = undefined;
@@ -216,6 +309,7 @@ export class ReadingFocusFeature implements IFeature {
       pointer.innerHTML = buildFocusPointerSvg(this.cursorColor);
     }
     this.positionCursor(this.lastX, this.lastY);
+    this.elevateCursor();
 
     this.styleEl.textContent = `
       html.${HTML_CURSOR_CLASS},
