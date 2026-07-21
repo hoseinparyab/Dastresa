@@ -1,0 +1,14 @@
+{
+  "extName": {
+    "message": "دسترسا",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "هر وب‌سایتی را خوانا و ساده‌تر کنید.",
+    "description": "Extension description"
+  },
+  "actionTitle": {
+    "message": "دسترسا — کنترل‌های دسترسی‌پذیری",
+    "description": "Browser action tooltip"
+  }
+}
