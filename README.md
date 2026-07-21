@@ -1,14 +1,15 @@
-# Dastresa / دسترسا
+# Dastresa
 
-**Make every website easier to read and use.**  
-**هر وب‌سایتی را خوانا و ساده‌تر کنید.**
+**[English](README.md)** · **[فارسی](README.fa.md)**
 
-Dastresa is an offline Chrome extension (Manifest V3) that adds an accessibility layer to any website. It helps elderly users, low-vision users, and people with low digital literacy browse independently.
+**Make every website easier to read and use.**
 
-This is **not** a screen reader and **not** an AI assistant. Everything runs locally. No cloud. No tracking. No external APIs.
+Dastresa is an offline Chrome extension (Manifest V3) that adds a calm accessibility layer to any website. It helps older adults, low-vision users, and people with low digital literacy browse more independently.
 
-> Brand, store copy, and privacy: see [`docs/BRAND.md`](docs/BRAND.md), [`docs/STORE_LISTING.md`](docs/STORE_LISTING.md), [`docs/PRIVACY.md`](docs/PRIVACY.md).  
-> Release steps: [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md).
+This is **not** a screen reader and **not** an AI assistant. Everything runs locally on your device. No cloud. No tracking. No external APIs.
+
+> Brand, store copy, and privacy: [`docs/BRAND.md`](docs/BRAND.md) · [`docs/STORE_LISTING.md`](docs/STORE_LISTING.md) · [`docs/PRIVACY.md`](docs/PRIVACY.md)  
+> Release steps: [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md)
 
 ## MVP features
 
@@ -22,7 +23,7 @@ This is **not** a screen reader and **not** an AI assistant. Everything runs loc
 | Reading Focus | Dim distractions, ruler, high-visibility cursor |
 | Settings | Persian / English · per-site disable · on-device storage |
 
-**Defaults:** off until you Enable · Normal (browser) look · does not rewrite pages on install.
+**Safe defaults:** off until you Enable · Normal (browser) look · does not rewrite pages on install.
 
 ## Quick start
 
@@ -54,18 +55,28 @@ npm run dev
 | `npm run pack:mvp` | Zip `dist/` into `release/` for store upload |
 | `npm run typecheck` | TypeScript only |
 | `npm run lint` | ESLint |
-| `npm test` | Vitest unit/component/integration |
+| `npm test` | Vitest unit / component / integration |
 | `npm run test:e2e` | Playwright fixture smoke |
 | `npm run test:a11y` | Accessibility invariant tests |
 
 ## Privacy
 
-- No analytics / telemetry
+- No analytics or telemetry
 - No user data collection by Dastresa servers (there are none)
 - No network requests from extension feature code
 - Settings stay on device (`chrome.storage.local`)
 
 Full policy: [`docs/PRIVACY.md`](docs/PRIVACY.md)
+
+## Docs
+
+| Doc | Topic |
+|-----|--------|
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How the extension is structured |
+| [`docs/BRAND.md`](docs/BRAND.md) | Brand foundation |
+| [`docs/PRIVACY.md`](docs/PRIVACY.md) | Privacy policy |
+| [`docs/STORE_LISTING.md`](docs/STORE_LISTING.md) | Chrome Web Store copy |
+| [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md) | Ship checklist |
 
 ## License
 
