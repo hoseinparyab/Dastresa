@@ -2,6 +2,16 @@
 
 **[English](README.md)** · **[فارسی](README.fa.md)**
 
+<p align="center">
+  <img src="docs/brand/store-icon-128.png" alt="لوگوی دسترسا" width="96" height="96" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="docs/brand/najino-logo.svg" alt="Najino Group — Digital Agency" height="96" />
+</p>
+
+<p align="center">
+  <strong>دسترسا</strong> ساخته‌شده توسط <a href="https://najino.com/">ناجینو</a>
+</p>
+
 **هر وب‌سایتی را خوانا و ساده‌تر کنید.**
 
 دسترسا یک افزونهٔ آفلاین کروم (Manifest V3) است که یک لایهٔ آرام دسترسی‌پذیری روی هر وب‌سایت اضافه می‌کند. برای سالمندان، افراد کم‌بینا و کسانی که سواد دیجیتال پایین‌تری دارند طراحی شده تا مستقل‌تر وب‌گردی کنند.
@@ -77,6 +87,10 @@ npm run dev
 | [`docs/PRIVACY.md`](docs/PRIVACY.md) | سیاست حریم خصوصی |
 | [`docs/STORE_LISTING.md`](docs/STORE_LISTING.md) | متن Chrome Web Store |
 | [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md) | چک‌لیست انتشار |
+
+## ناشر
+
+ساخته شده توسط **[ناجینو](https://najino.com/)** — Digital Agency · [https://najino.com/](https://najino.com/)
 
 ## مجوز
 

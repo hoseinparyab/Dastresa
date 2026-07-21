@@ -12,4 +12,4 @@ test-results
 .turbo
 .cursor
 release
-
+build-najino-svg.py

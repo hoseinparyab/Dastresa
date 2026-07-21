@@ -2,6 +2,16 @@
 
 **[English](README.md)** · **[فارسی](README.fa.md)**
 
+<p align="center">
+  <img src="docs/brand/store-icon-128.png" alt="Dastresa logo" width="96" height="96" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="docs/brand/najino-logo.svg" alt="Najino Group — Digital Agency" height="96" />
+</p>
+
+<p align="center">
+  <strong>Dastresa</strong> by <a href="https://najino.com/">Najino Group</a>
+</p>
+
 **Make every website easier to read and use.**
 
 Dastresa is an offline Chrome extension (Manifest V3) that adds a calm accessibility layer to any website. It helps older adults, low-vision users, and people with low digital literacy browse more independently.
@@ -77,6 +87,10 @@ Full policy: [`docs/PRIVACY.md`](docs/PRIVACY.md)
 | [`docs/PRIVACY.md`](docs/PRIVACY.md) | Privacy policy |
 | [`docs/STORE_LISTING.md`](docs/STORE_LISTING.md) | Chrome Web Store copy |
 | [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md) | Ship checklist |
+
+## Publisher
+
+Made by **[Najino Group](https://najino.com/)** — Digital Agency · [najino.com](https://najino.com/)
 
 ## License
 
