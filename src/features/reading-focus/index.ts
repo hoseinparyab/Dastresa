@@ -2,6 +2,7 @@ import type { FeatureContext, IFeature } from '@/core/contracts';
 import { EVENTS, FEATURE_IDS, HOST_STYLE_ATTR, STORAGE_KEYS } from '@/core/constants';
 import { safeQueryAll } from '@/core/utils';
 import { parseSettings } from '@/features/settings/schema/settings-schema';
+import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 import {
   buildFocusPointerSvg,
   FOCUS_CURSOR_PALETTE,
@@ -371,12 +372,7 @@ export class ReadingFocusFeature implements IFeature {
 
   private async persistFocus(active: boolean): Promise<void> {
     if (!this.ctx) return;
-    const raw = await this.ctx.storage.get<unknown>(STORAGE_KEYS.SETTINGS);
-    const next = parseSettings(raw);
-    await this.ctx.storage.set(STORAGE_KEYS.SETTINGS, {
-      ...next,
-      readingFocus: active,
-    });
+    await patchStoredSettings(this.ctx.storage, { readingFocus: active });
   }
 
   async enable(opts: { persist?: boolean; scroll?: boolean } = {}): Promise<void> {

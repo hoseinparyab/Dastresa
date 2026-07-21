@@ -55,4 +55,25 @@ describe('settings schema', () => {
     expect(settings.theme).toBe('normal');
     expect(DastresaSettingsSchema.safeParse(settings).success).toBe(true);
   });
+
+  it('soft-recovers valid fields when some keys are corrupt', () => {
+    const settings = parseSettings({
+      extensionActive: true,
+      theme: 'high-contrast',
+      locale: 'fa',
+      dir: 'rtl',
+      disabledSites: ['example.com'],
+      zoom: { textScale: 1.5, nope: true },
+      speech: 'broken',
+      largeButtons: 'yes',
+    });
+    expect(settings.extensionActive).toBe(true);
+    expect(settings.theme).toBe('high-contrast');
+    expect(settings.locale).toBe('fa');
+    expect(settings.disabledSites).toEqual(['example.com']);
+    expect(settings.zoom.textScale).toBe(1.5);
+    expect(settings.speech.preferPersian).toBe(true);
+    expect(settings.largeButtons).toBe(false);
+    expect(DastresaSettingsSchema.safeParse(settings).success).toBe(true);
+  });
 });

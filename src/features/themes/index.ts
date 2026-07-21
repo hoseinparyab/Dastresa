@@ -1,6 +1,7 @@
 import type { FeatureContext, IFeature } from '@/core/contracts';
 import { EVENTS, FEATURE_IDS, HOST_STYLE_ATTR, STORAGE_KEYS } from '@/core/constants';
 import { parseSettings, type ThemeId } from '@/features/settings/schema/settings-schema';
+import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 
 /**
  * Site-safe themes: avoid rewriting every link/control size and avoid
@@ -108,12 +109,7 @@ export class ThemesFeature implements IFeature {
 
   private async persistTheme(): Promise<void> {
     if (!this.ctx) return;
-    const raw = await this.ctx.storage.get<unknown>(STORAGE_KEYS.SETTINGS);
-    const next = parseSettings(raw);
-    await this.ctx.storage.set(STORAGE_KEYS.SETTINGS, {
-      ...next,
-      theme: this.theme,
-    });
+    await patchStoredSettings(this.ctx.storage, { theme: this.theme });
   }
 
   private apply(): void {

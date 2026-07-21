@@ -5,6 +5,7 @@ import { EVENTS, FEATURE_IDS, STORAGE_KEYS } from '@/core/constants';
 import type { EventMap } from '@/core/types/events';
 import { clamp, prefersReducedMotion } from '@/core/utils';
 import { parseSettings, type DastresaSettings } from '@/features/settings/schema/settings-schema';
+import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 import { t, type AppLocale } from '@/shared/i18n/messages';
 
 type Command = EventMap['toolbar:command']['command'];
@@ -154,6 +155,11 @@ const TOOLBAR_CSS = `
     min-height: 48px;
     padding-block: 0;
     padding-inline: 10px 6px;
+    text-align: start;
+  }
+  .chip:focus-visible {
+    outline: 2px solid #38bdf8;
+    outline-offset: 2px;
   }
   .dot {
     width: 8px;
@@ -468,7 +474,7 @@ function ToolbarApp({
       aria-label={t(locale, 'toolbarAria')}
       className={`dock${open ? '' : ' collapsed'}`}
       dir={dir}
-      tabIndex={0}
+      tabIndex={open ? 0 : -1}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -479,41 +485,36 @@ function ToolbarApp({
       }}
     >
       {!open ? (
-        <div className="chip">
+        <button
+          type="button"
+          className="chip"
+          aria-label={t(locale, 'toolbarOpen')}
+          aria-expanded={false}
+          title={t(locale, 'toolbarOpen')}
+          onClick={openToolbar}
+          style={{
+            border: 0,
+            background: 'transparent',
+            color: 'inherit',
+            font: 'inherit',
+            width: '100%',
+            cursor: 'pointer',
+          }}
+        >
           <span className="dot" aria-hidden />
-          <button
-            type="button"
-            className="title"
-            style={{
-              background: 'transparent',
-              border: 0,
-              color: 'inherit',
-              cursor: 'pointer',
-              font: 'inherit',
-              padding: 0,
-            }}
-            aria-label={t(locale, 'toolbarOpen')}
-            onClick={openToolbar}
-          >
-            {t(locale, 'brand')}
-          </button>
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label={t(locale, 'toolbarOpen')}
-            aria-expanded={false}
-            title={t(locale, 'toolbarOpen')}
-            onClick={openToolbar}
-          >
+          <span className="title">{t(locale, 'brand')}</span>
+          <span className="icon-btn" aria-hidden>
             {'▴'}
-          </button>
-        </div>
+          </span>
+        </button>
       ) : (
         <>
           <div className="header">
             <div className="brand">
               <span className="dot" aria-hidden />
-              <p className="title">{t(locale, 'brand')}</p>
+              <p className="title" aria-hidden>
+                {t(locale, 'brand')}
+              </p>
               <p className="hint">{t(locale, 'toolbarDrag')}</p>
             </div>
             <div className="header-actions">
@@ -622,10 +623,7 @@ export class ToolbarFeature implements IFeature {
         settings.toolbarPosition.y !== resolved.y)
     ) {
       this.migrated = true;
-      await this.ctx.storage.set(STORAGE_KEYS.SETTINGS, {
-        ...settings,
-        toolbarPosition: resolved,
-      });
+      await patchStoredSettings(this.ctx.storage, { toolbarPosition: resolved });
     }
   }
 

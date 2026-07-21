@@ -14,5 +14,8 @@ export default defineConfig({
   build: {
     sourcemap: true,
     minify: 'esbuild',
+    // Avoid Vite injecting modulepreload helpers that resolve "/assets/..."
+    // against the host page instead of chrome-extension://…
+    modulePreload: false,
   },
 });

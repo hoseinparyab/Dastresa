@@ -5,9 +5,9 @@ import type {
   IReadableContentProvider,
   ReadableDocument,
 } from '@/core/contracts';
-import { EVENTS, FEATURE_IDS, STORAGE_KEYS } from '@/core/constants';
+import { EVENTS, FEATURE_IDS } from '@/core/constants';
 import { splitParagraphs } from '@/core/utils';
-import { parseSettings } from '@/features/settings/schema/settings-schema';
+import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 
 const NOISE_SELECTORS = [
   'header',
@@ -200,13 +200,7 @@ export class ReaderModeFeature implements IFeature, IReadableContentProvider {
 
   private async persistReader(active: boolean): Promise<void> {
     if (!this.ctx) return;
-    const raw = await this.ctx.storage.get<unknown>(STORAGE_KEYS.SETTINGS);
-    const next = parseSettings(raw);
-    if (next.readerMode === active) return;
-    await this.ctx.storage.set(STORAGE_KEYS.SETTINGS, {
-      ...next,
-      readerMode: active,
-    });
+    await patchStoredSettings(this.ctx.storage, { readerMode: active });
   }
 
   async enable(): Promise<void> {

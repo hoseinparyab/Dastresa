@@ -8,6 +8,9 @@ import { feature as domAnalyzerFeature } from '@/features/dom-analyzer';
 import { feature as smartZoomFeature } from '@/features/smart-zoom';
 import { feature as themesFeature } from '@/features/themes';
 import { feature as toolbarFeature } from '@/features/toolbar';
+import { feature as readerModeFeature } from '@/features/reader-mode';
+import { feature as textToSpeechFeature } from '@/features/text-to-speech';
+import { feature as readingFocusFeature } from '@/features/reading-focus';
 import {
   createPageResetSettings,
   isSiteDisabled,
@@ -45,11 +48,16 @@ function clearPageArtifacts(doc: Document): void {
   doc.querySelectorAll('[data-Dastresa-focus]').forEach((el) => {
     el.removeAttribute('data-Dastresa-focus');
   });
-  doc.getElementById('dastresa-ruler')?.remove();
+  // Canonical id is Dastresa-ruler; keep legacy lowercase cleanup for old sessions.
   doc.getElementById('Dastresa-ruler')?.remove();
+  doc.getElementById('dastresa-ruler')?.remove();
   doc.getElementById('Dastresa-cursor-halo')?.remove();
   doc.getElementById('Dastresa-focus-cursor')?.remove();
   doc.documentElement.classList.remove('dastresa-focus-cursor-on');
+}
+
+function settingsService() {
+  return (settingsFeature as SettingsFeature).getService();
 }
 
 async function shutdown(): Promise<void> {
@@ -75,6 +83,8 @@ async function ensureRegistered(app: AppContainer, feature: IFeature): Promise<v
 
 async function startProductFeatures(app: AppContainer): Promise<void> {
   const ctx = app.createFeatureContext();
+  // Static imports only — Vite dynamic import()/modulepreload resolves as
+  // "/assets/..." on the *page* origin and breaks content scripts.
   const critical = [domAnalyzerFeature, themesFeature, smartZoomFeature, toolbarFeature];
 
   productFeatures = [];
@@ -86,41 +96,29 @@ async function startProductFeatures(app: AppContainer): Promise<void> {
     productFeatures.push(feature);
   }
 
-  const reader = await app.registry.loadLazy(
-    FEATURE_IDS.READER_MODE,
-    () => import('@/features/reader-mode'),
-  );
-  await reader.initialize(ctx);
-  productFeatures.push(reader);
+  await ensureRegistered(app, readerModeFeature);
+  await readerModeFeature.initialize(ctx);
+  productFeatures.push(readerModeFeature);
 
-  const tts = await app.registry.loadLazy(
-    FEATURE_IDS.TEXT_TO_SPEECH,
-    () => import('@/features/text-to-speech'),
-  );
-  await tts.initialize(ctx);
-  await tts.enable();
-  productFeatures.push(tts);
+  await ensureRegistered(app, textToSpeechFeature);
+  await textToSpeechFeature.initialize(ctx);
+  await textToSpeechFeature.enable();
+  productFeatures.push(textToSpeechFeature);
 
-  const focus = await app.registry.loadLazy(
-    FEATURE_IDS.READING_FOCUS,
-    () => import('@/features/reading-focus'),
-  );
-  await focus.initialize(ctx);
-  productFeatures.push(focus);
+  await ensureRegistered(app, readingFocusFeature);
+  await readingFocusFeature.initialize(ctx);
+  productFeatures.push(readingFocusFeature);
 
   window.__DASTRESA_ACTIVE__ = true;
   app.bus.emit(EVENTS.EXTENSION_ACTIVATED, undefined);
 }
 
 async function persistActive(active: boolean): Promise<void> {
-  const storage = container?.storage ?? createChromeStorage();
-  const raw = await storage.get<unknown>(STORAGE_KEYS.SETTINGS);
-  const settings = parseSettings(raw);
-  await storage.set(STORAGE_KEYS.SETTINGS, {
-    ...settings,
+  const current = settingsService().get();
+  await settingsService().update({
     extensionActive: active,
-    readerMode: active ? settings.readerMode : false,
-    readingFocus: active ? settings.readingFocus : false,
+    readerMode: active ? current.readerMode : false,
+    readingFocus: active ? current.readingFocus : false,
   });
 }
 
@@ -148,7 +146,7 @@ async function handleSiteDeactivate(): Promise<void> {
 
 async function handleActivate(): Promise<void> {
   if (transitioning || window.__DASTRESA_ACTIVE__ || !container) return;
-  const settings = (settingsFeature as SettingsFeature).getService().get();
+  const settings = settingsService().get();
   if (!shouldRunOnPage(settings)) return;
   transitioning = true;
   try {
@@ -173,11 +171,11 @@ async function handleReset(): Promise<void> {
 
   clearPageArtifacts(document);
 
-  const current = (settingsFeature as SettingsFeature).getService().get();
+  const current = settingsService().get();
   const reset = createPageResetSettings(current);
 
   try {
-    await (settingsFeature as SettingsFeature).getService().replace(reset);
+    await settingsService().replace(reset);
   } catch {
     await container.storage.set(STORAGE_KEYS.SETTINGS, reset);
     container.bus.emit(EVENTS.SETTINGS_CHANGED, { settings: reset });
@@ -218,7 +216,7 @@ async function boot(): Promise<void> {
   await storageFeature.initialize(ctx);
   await settingsFeature.initialize(ctx);
 
-  const settings = (settingsFeature as SettingsFeature).getService().get();
+  const settings = settingsService().get();
 
   container.bus.on(EVENTS.TOOLBAR_COMMAND, ({ command }) => {
     if (command === 'exit') {
@@ -230,14 +228,7 @@ async function boot(): Promise<void> {
   });
 
   container.bus.on(EVENTS.TOOLBAR_MOVED, ({ x, y }) => {
-    void (async () => {
-      const raw = await storage.get<unknown>(STORAGE_KEYS.SETTINGS);
-      const next = parseSettings(raw);
-      await storage.set(STORAGE_KEYS.SETTINGS, {
-        ...next,
-        toolbarPosition: { x, y },
-      });
-    })();
+    void settingsService().update({ toolbarPosition: { x, y } });
   });
 
   container.bus.on(EVENTS.SETTINGS_CHANGED, ({ settings: next }) => {
@@ -265,7 +256,7 @@ async function boot(): Promise<void> {
         }
         const next = parseSettings(message.settings);
         try {
-          await (settingsFeature as SettingsFeature).getService().replace(next);
+          await settingsService().replace(next);
         } catch {
           await container.storage.set(STORAGE_KEYS.SETTINGS, next);
           container.bus.emit(EVENTS.SETTINGS_CHANGED, { settings: next });
@@ -293,4 +284,6 @@ async function boot(): Promise<void> {
   }
 }
 
-void boot();
+void boot().catch((error) => {
+  console.error('[Dastresa] Content script failed to boot', error);
+});

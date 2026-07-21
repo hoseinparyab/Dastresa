@@ -6,7 +6,7 @@ Offline accessibility enhancement layer for Chrome (Manifest V3). Not a screen r
 
 ## Goal (MVP)
 
-When the user opens any website, it immediately becomes easier to read and navigate.
+After the user **opts in** (popup Enable), any website can become easier to read and navigate. Fresh installs do **not** rewrite pages until activated.
 
 ## Runtimes
 
@@ -19,9 +19,11 @@ When the user opens any website, it immediately becomes easier to read and navig
 ## Boot sequence (content script)
 
 1. Create `IStorage` + DI container + Event Bus
-2. Initialize critical features: Storage, Settings, DOM Analyzer, Themes, Smart Zoom, Toolbar
-3. Lazy-load Reader Mode, Text To Speech, Reading Focus
-4. Persist toolbar position on `toolbar:moved`
+2. Initialize Storage + Settings (hydrate Zod-validated prefs)
+3. If `extensionActive` and host not in `disabledSites`:
+   - Critical: Dom Analyzer, Themes, Smart Zoom, Toolbar
+   - Lazy: Reader Mode, Text To Speech, Reading Focus
+4. Persist toolbar position / theme / zoom / focus via `SettingsService` or `patchStoredSettings`
 
 ## Principles
 
@@ -30,7 +32,8 @@ When the user opens any website, it immediately becomes easier to read and navig
 - Cross-feature communication via Event Bus or interfaces only
 - Lazy-load heavy modules; keep first paint of extension chrome fast
 - Shadow DOM for toolbar + reader chrome
-- `chrome.storage.local` only; Zod at the persistence boundary
+- `chrome.storage.local` only; Zod at the persistence boundary with **soft field recovery**
+- Single settings write helpers: `SettingsService.update/replace` and `patchStoredSettings`
 - Future modules: extension points in `src/future/` — no implementation
 
 ## MVP modules
@@ -45,4 +48,4 @@ AI Simplifier · AI Copilot · AI Form Assistant · Voice Navigation · OCR Read
 
 `IFeature`, `IEventBus`, `IStorage`, `IDomAnalyzer`, `IReadableContentProvider`, `ISpeechEngine`, `IStyleController`, `IModuleRegistry`, `IExtensionPoint`
 
-See also: [FOLDER_STRUCTURE.md](FOLDER_STRUCTURE.md), [MANIFEST.md](MANIFEST.md), [COMPONENTS.md](COMPONENTS.md).
+See also: [FOLDER_STRUCTURE.md](FOLDER_STRUCTURE.md), [MANIFEST.md](MANIFEST.md), [COMPONENTS.md](COMPONENTS.md), [BRAND.md](BRAND.md).

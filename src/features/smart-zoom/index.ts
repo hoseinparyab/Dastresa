@@ -2,6 +2,7 @@ import type { FeatureContext, IFeature, IStyleController, StyleTokenMap } from '
 import { EVENTS, FEATURE_IDS, HOST_STYLE_ATTR, STORAGE_KEYS } from '@/core/constants';
 import { clamp } from '@/core/utils';
 import { parseSettings, type ZoomSettings } from '@/features/settings/schema/settings-schema';
+import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 
 const ZOOMED_ATTR = 'data-Dastresa-zoomed';
 const BASE_FS_ATTR = 'data-Dastresa-fs';
@@ -215,12 +216,7 @@ export class SmartZoomFeature implements IFeature {
     };
     this.apply();
     if (!this.ctx) return;
-    const raw = await this.ctx.storage.get<unknown>(STORAGE_KEYS.SETTINGS);
-    const next = parseSettings(raw);
-    await this.ctx.storage.set(STORAGE_KEYS.SETTINGS, {
-      ...next,
-      zoom: this.zoom,
-    });
+    await patchStoredSettings(this.ctx.storage, { zoom: this.zoom });
   }
 
   private apply(): void {

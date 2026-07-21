@@ -81,6 +81,24 @@ export function createDefaultSettings(): DastresaSettings {
   return DastresaSettingsSchema.parse({});
 }
 
+/** Deep-merge a partial patch onto current settings, then validate. */
+export function mergeSettings(
+  current: DastresaSettings,
+  partial: Partial<DastresaSettings>,
+): DastresaSettings {
+  return parseSettings({
+    ...current,
+    ...partial,
+    zoom: { ...current.zoom, ...(partial.zoom ?? {}) },
+    speech: { ...current.speech, ...(partial.speech ?? {}) },
+    toolbarPosition: {
+      ...current.toolbarPosition,
+      ...(partial.toolbarPosition ?? {}),
+    },
+    disabledSites: partial.disabledSites ?? current.disabledSites,
+  });
+}
+
 /** Reset visual settings to a clean browser look; keep locale, speech prefs, site list. */
 export function createPageResetSettings(current?: Partial<DastresaSettings>): DastresaSettings {
   const locale = current?.locale ?? 'fa';
@@ -137,8 +155,58 @@ export function withSiteDisabled(
   return parseSettings({ ...settings, disabledSites: [...set].sort() });
 }
 
+/**
+ * Validate settings without wiping good fields on partial corruption.
+ * Invalid top-level / nested keys fall back to defaults for that key only.
+ */
 export function parseSettings(input: unknown): DastresaSettings {
-  const result = DastresaSettingsSchema.safeParse(input ?? {});
-  if (result.success) return result.data;
-  return createDefaultSettings();
+  const direct = DastresaSettingsSchema.safeParse(input ?? {});
+  if (direct.success) return direct.data;
+
+  const base = createDefaultSettings();
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return base;
+  }
+
+  const raw = input as Record<string, unknown>;
+  const salvage: Record<string, unknown> = { ...base };
+
+  const assignIfValid = <T>(key: keyof DastresaSettings, schema: z.ZodType<T>, value: unknown) => {
+    const parsed = schema.safeParse(value);
+    if (parsed.success) salvage[key] = parsed.data;
+  };
+
+  assignIfValid('extensionActive', z.boolean(), raw.extensionActive);
+  assignIfValid('disabledSites', z.array(z.string()), raw.disabledSites);
+  assignIfValid('theme', ThemeIdSchema, raw.theme);
+  assignIfValid('largeCursor', z.boolean(), raw.largeCursor);
+  assignIfValid('largeButtons', z.boolean(), raw.largeButtons);
+  assignIfValid('readerMode', z.boolean(), raw.readerMode);
+  assignIfValid('readingFocus', z.boolean(), raw.readingFocus);
+  assignIfValid('readingRuler', z.boolean(), raw.readingRuler);
+  assignIfValid('focusCursorColor', FocusCursorColorSchema, raw.focusCursorColor);
+  assignIfValid('locale', z.enum(['en', 'fa']), raw.locale);
+  assignIfValid('dir', z.enum(['ltr', 'rtl']), raw.dir);
+
+  if (raw.zoom && typeof raw.zoom === 'object') {
+    const zoom = ZoomSettingsSchema.safeParse({ ...base.zoom, ...(raw.zoom as object) });
+    if (zoom.success) salvage.zoom = zoom.data;
+  }
+  if (raw.speech && typeof raw.speech === 'object') {
+    const speech = SpeechSettingsSchema.safeParse({ ...base.speech, ...(raw.speech as object) });
+    if (speech.success) salvage.speech = speech.data;
+  }
+  if (raw.toolbarPosition && typeof raw.toolbarPosition === 'object') {
+    const pos = ToolbarPositionSchema.safeParse({
+      ...base.toolbarPosition,
+      ...(raw.toolbarPosition as object),
+    });
+    if (pos.success) salvage.toolbarPosition = pos.data;
+  }
+
+  // Keep locale/dir paired when only one survives.
+  if (salvage.locale === 'fa') salvage.dir = salvage.dir ?? 'rtl';
+  if (salvage.locale === 'en' && salvage.dir === undefined) salvage.dir = 'ltr';
+
+  return DastresaSettingsSchema.parse(salvage);
 }
