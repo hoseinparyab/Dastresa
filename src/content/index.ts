@@ -8,7 +8,12 @@ import { feature as domAnalyzerFeature } from '@/features/dom-analyzer';
 import { feature as smartZoomFeature } from '@/features/smart-zoom';
 import { feature as themesFeature } from '@/features/themes';
 import { feature as toolbarFeature } from '@/features/toolbar';
-import { createPageResetSettings, parseSettings } from '@/features/settings/schema/settings-schema';
+import {
+  createPageResetSettings,
+  isSiteDisabled,
+  parseSettings,
+  type DastresaSettings,
+} from '@/features/settings/schema/settings-schema';
 
 declare global {
   interface Window {
@@ -20,6 +25,18 @@ declare global {
 let container: AppContainer | undefined;
 let productFeatures: IFeature[] = [];
 let transitioning = false;
+
+function pageHostname(): string {
+  try {
+    return window.location.hostname.toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
+function shouldRunOnPage(settings: DastresaSettings): boolean {
+  return settings.extensionActive && !isSiteDisabled(settings, pageHostname());
+}
 
 function clearPageArtifacts(doc: Document): void {
   doc.querySelectorAll('[data-Dastresa-speech]').forEach((el) => {
@@ -118,12 +135,24 @@ async function handleExit(): Promise<void> {
   }
 }
 
+/** Stop on this page only (global switch stays on; site is in disabledSites). */
+async function handleSiteDeactivate(): Promise<void> {
+  if (transitioning || !window.__DASTRESA_ACTIVE__) return;
+  transitioning = true;
+  try {
+    await shutdown();
+  } finally {
+    transitioning = false;
+  }
+}
+
 async function handleActivate(): Promise<void> {
   if (transitioning || window.__DASTRESA_ACTIVE__ || !container) return;
+  const settings = (settingsFeature as SettingsFeature).getService().get();
+  if (!shouldRunOnPage(settings)) return;
   transitioning = true;
   try {
     await startProductFeatures(container);
-    const settings = (settingsFeature as SettingsFeature).getService().get();
     container.bus.emit(EVENTS.SETTINGS_CHANGED, { settings });
     await persistActive(true);
   } finally {
@@ -134,7 +163,6 @@ async function handleActivate(): Promise<void> {
 async function handleReset(): Promise<void> {
   if (!container || !window.__DASTRESA_ACTIVE__) return;
 
-  // Stop speech without re-entering reset handler logic
   container.bus.emit(EVENTS.TOOLBAR_COMMAND, { command: 'stop' });
 
   const reader = container.registry.get(FEATURE_IDS.READER_MODE);
@@ -145,9 +173,9 @@ async function handleReset(): Promise<void> {
 
   clearPageArtifacts(document);
 
-  const reset = createPageResetSettings();
+  const current = (settingsFeature as SettingsFeature).getService().get();
+  const reset = createPageResetSettings(current);
 
-  // Prefer SettingsService.replace so SETTINGS_CHANGED always fires immediately
   try {
     await (settingsFeature as SettingsFeature).getService().replace(reset);
   } catch {
@@ -155,7 +183,6 @@ async function handleReset(): Promise<void> {
     container.bus.emit(EVENTS.SETTINGS_CHANGED, { settings: reset });
   }
 
-  // Force style features to drop old in-memory state and re-apply reset
   const themes = container.registry.get(FEATURE_IDS.THEMES);
   const zoom = container.registry.get(FEATURE_IDS.SMART_ZOOM);
   await themes?.disable();
@@ -163,6 +190,19 @@ async function handleReset(): Promise<void> {
   container.bus.emit(EVENTS.SETTINGS_CHANGED, { settings: reset });
   await themes?.enable();
   await zoom?.enable();
+}
+
+async function syncActiveState(next: DastresaSettings): Promise<void> {
+  if (transitioning) return;
+  const shouldRun = shouldRunOnPage(next);
+  if (shouldRun && !window.__DASTRESA_ACTIVE__) {
+    await handleActivate();
+    return;
+  }
+  if (!shouldRun && window.__DASTRESA_ACTIVE__) {
+    if (!next.extensionActive) await handleExit();
+    else await handleSiteDeactivate();
+  }
 }
 
 async function boot(): Promise<void> {
@@ -201,13 +241,7 @@ async function boot(): Promise<void> {
   });
 
   container.bus.on(EVENTS.SETTINGS_CHANGED, ({ settings: next }) => {
-    if (transitioning) return;
-    if (next.extensionActive && !window.__DASTRESA_ACTIVE__) {
-      void handleActivate();
-    }
-    if (!next.extensionActive && window.__DASTRESA_ACTIVE__) {
-      void handleExit();
-    }
+    void syncActiveState(next);
   });
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -237,13 +271,10 @@ async function boot(): Promise<void> {
           container.bus.emit(EVENTS.SETTINGS_CHANGED, { settings: next });
         }
 
-        // Ensure product features are running when focus/reader settings need them
-        if (next.extensionActive && !window.__DASTRESA_ACTIVE__) {
-          await handleActivate();
-        }
+        await syncActiveState(next);
 
         const focus = container.registry.get(FEATURE_IDS.READING_FOCUS);
-        if (next.readingFocus) {
+        if (next.readingFocus && window.__DASTRESA_ACTIVE__) {
           if (focus && !focus.isEnabled()) await focus.enable();
         } else if (focus?.isEnabled()) {
           await focus.disable();
@@ -256,10 +287,8 @@ async function boot(): Promise<void> {
     return false;
   });
 
-  if (settings.extensionActive) {
+  if (shouldRunOnPage(settings)) {
     await startProductFeatures(container);
-    // Re-broadcast so every feature that subscribed during init gets the
-    // hydrated Look/zoom values (not the in-memory defaults).
     container.bus.emit(EVENTS.SETTINGS_CHANGED, { settings });
   }
 }

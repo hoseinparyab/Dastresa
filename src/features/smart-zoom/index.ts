@@ -165,13 +165,13 @@ export class SmartZoomFeature implements IFeature {
   private controller?: StyleController;
   private bus?: FeatureContext['bus'];
   private zoom: ZoomSettings = {
-    textScale: 1.15,
+    textScale: 1,
     imageScale: 1,
-    lineHeight: 1.7,
-    letterSpacing: 0.02,
-    wordSpacing: 0.05,
-    contentWidth: 72,
-    maxLineLength: 70,
+    lineHeight: 1.2,
+    letterSpacing: 0,
+    wordSpacing: 0,
+    contentWidth: 100,
+    maxLineLength: 100,
   };
   private unsubs: Array<() => void> = [];
   private ctx?: FeatureContext;
