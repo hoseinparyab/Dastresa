@@ -41,17 +41,11 @@ Page product UI (floating toolbar, reader chrome) lives in the **content script 
 ### i18n
 `default_locale: "en"` with `_locales/en` and `_locales/fa` stubs. Persian is a first-class locale for RTL + TTS priority; UI strings will migrate to `chrome.i18n` in Core/Settings steps.
 
-### Icons
-Source files live in `public/icons/icon-{16,32,48,128}.png`. Manifest references `icons/...` because Vite copies `public/` to the extension root.
-
-### Localized strings
-`name`, `description`, and action title use `__MSG_*__` keys from `_locales/{en,fa}/messages.json`.
-
-### web_accessible_resources
-Fonts/styles may be referenced from the page context / Shadow root via `chrome-extension://` URLs. Scoped to http(s) only.
-
 ### Version
-`0.1.0` — MVP pre-release. Bump with semver when shipping features.
+`0.1.0` — MVP release candidate. See `CHANGELOG.md` and `docs/RELEASE_CHECKLIST.md`.
+
+### Icons
+Source files live in `public/icons/icon-{16,32,48,128}.png` (Dastresa navy/cyan mark). Manifest references `icons/...` because Vite copies `public/` to the extension root. Brand master: `docs/brand/icon-master.png`.
 
 ## Security posture
 
@@ -60,10 +54,9 @@ Fonts/styles may be referenced from the page context / Shadow root via `chrome-e
 - CSP on extension pages
 - Storage is local device only (`chrome.storage.local` in implementation — not sync)
 
-## Load unpacked (after build toolchain exists)
+## Load unpacked (after build)
 
-1. Build → output in `dist/`
+1. `npm run build` → output in `dist/`
 2. `chrome://extensions` → Developer mode → Load unpacked → select `dist/`
 3. Built manifest inside `dist/` is what Chrome reads
-
-Until Step 4+ tooling lands, this root `manifest.json` is the **source contract**, not a loadable package by itself.
+4. For store upload: `npm run pack:mvp` → zip in `release/`

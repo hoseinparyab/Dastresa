@@ -1,11 +1,11 @@
 {
   "extName": {
     "message": "دسترسا",
-    "description": "Extension name"
+    "description": "Extension name shown in Chrome and the Web Store"
   },
   "extDescription": {
-    "message": "هر وب‌سایتی را خوانا و ساده‌تر کنید.",
-    "description": "Extension description"
+    "message": "دسترسی‌پذیری آفلاین: متن بزرگ‌تر، تم واضح، خواندن با صدا، تولبار ساده. خصوصی. بدون ابر و هوش مصنوعی.",
+    "description": "Short store/extension description (keep under 132 chars)"
   },
   "actionTitle": {
     "message": "دسترسا — کنترل‌های دسترسی‌پذیری",
