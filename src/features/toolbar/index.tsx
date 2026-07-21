@@ -143,8 +143,9 @@ const TOOLBAR_CSS = `
     user-select: none;
   }
   .dock.collapsed {
-    padding: 4px;
+    padding: 0;
     border-radius: 999px;
+    overflow: hidden;
   }
   .dock:active { cursor: grabbing; }
 
@@ -156,6 +157,13 @@ const TOOLBAR_CSS = `
     padding-block: 0;
     padding-inline: 10px 6px;
     text-align: start;
+  }
+  .dock.collapsed .chip {
+    /* Icon sits on inline-end (left in RTL) — no gap on that side */
+    padding-block: 0;
+    padding-inline-start: 12px;
+    padding-inline-end: 0;
+    gap: 10px;
   }
   .chip:focus-visible {
     outline: 2px solid #38bdf8;
@@ -178,6 +186,9 @@ const TOOLBAR_CSS = `
     color: #f8fafc;
   }
   .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-width: 48px;
     min-height: 48px;
     padding: 0;
@@ -189,6 +200,26 @@ const TOOLBAR_CSS = `
     font-weight: 700;
     font-family: inherit;
     cursor: pointer;
+  }
+  .dock.collapsed .icon-btn {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    border-radius: 0;
+    /* Match the pill’s outer curve on the free edge */
+    border-start-end-radius: 999px;
+    border-end-end-radius: 999px;
+    background: rgba(56, 189, 248, 0.2);
+  }
+  .icon-btn svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+  }
+  .dock.collapsed .icon-btn svg {
+    width: 24px;
+    height: 24px;
   }
   .icon-btn:hover { background: rgba(56, 189, 248, 0.28); }
   .icon-btn:focus-visible {
@@ -504,7 +535,16 @@ function ToolbarApp({
           <span className="dot" aria-hidden />
           <span className="title">{t(locale, 'brand')}</span>
           <span className="icon-btn" aria-hidden>
-            {'▴'}
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+              <path
+                d="M8 12.2 10.6 14.8 16 9.2"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </span>
         </button>
       ) : (
