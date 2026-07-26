@@ -1,4 +1,4 @@
-import { StrictMode, useCallback, useEffect, useState } from 'react';
+import { StrictMode, useCallback, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { OnboardingTour } from '@/features/onboarding/OnboardingTour';
 import { useSettingsStore } from '@/shared/hooks/useSettingsStore';
@@ -18,7 +18,7 @@ function detectInitialLocale(settingsLocale: string | undefined): AppLocale {
 
 function OnboardingApp() {
   const { settings, hydrated, hydrate, update } = useSettingsStore();
-  const [locale, setLocale] = useState<AppLocale>('fa');
+  const locale = detectInitialLocale(settings.locale);
 
   useEffect(() => {
     void hydrate();
@@ -26,19 +26,14 @@ function OnboardingApp() {
 
   useEffect(() => {
     if (!hydrated) return;
-    setLocale(detectInitialLocale(settings.locale));
-  }, [hydrated, settings.locale]);
-
-  useEffect(() => {
     const dir = locale === 'fa' ? 'rtl' : 'ltr';
     document.documentElement.lang = locale;
     document.documentElement.dir = dir;
     document.title = locale === 'fa' ? 'آشنایی با دسترسا' : 'Welcome — Dastresa';
-  }, [locale]);
+  }, [hydrated, locale]);
 
   const onLocaleChange = useCallback(
     (next: AppLocale) => {
-      setLocale(next);
       void update({ locale: next, dir: next === 'fa' ? 'rtl' : 'ltr' });
     },
     [update],
