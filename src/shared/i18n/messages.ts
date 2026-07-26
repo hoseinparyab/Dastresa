@@ -93,7 +93,42 @@ const EN = {
   ariaSettings: 'Open settings',
   ariaReset: 'Reset page to browser default appearance',
   ariaExit: 'Exit Dastresa and restore the normal browser page',
-} as const;
+
+  // Onboarding tour
+  tourTitle: 'Welcome to Dastresa',
+  tourSkip: 'Skip tour',
+  tourBack: 'Back',
+  tourNext: 'Next',
+  tourFinish: 'Got it — open popup',
+  tourReplay: 'Replay welcome tour',
+  tourProgress: 'Step {{current}} of {{total}}',
+  tourPopupCta: 'Take a quick tour',
+  tourPopupDismiss: 'Maybe later',
+
+  tourStep1Title: 'Private reading, on your device',
+  tourStep1Body:
+    'Dastresa makes websites easier to read. Everything runs offline in your browser — no cloud, no tracking.',
+
+  tourStep2Title: 'Enable when you need it',
+  tourStep2Body:
+    'After install, Dastresa stays off until you choose Enable. Open the toolbar icon, then tap Enable Dastresa on any normal webpage.',
+
+  tourStep3Title: 'Floating toolbar',
+  tourStep3Body:
+    'A small toolbar appears on the page. Drag it, expand it, and use reading tools without leaving the site.',
+
+  tourStep4Title: 'Reader, speak, zoom & themes',
+  tourStep4Body:
+    'Clean article view, read aloud with paragraph highlight, larger text (A+/A−), and contrast themes — all from the toolbar.',
+
+  tourStep5Title: 'Focus and site control',
+  tourStep5Body:
+    'Reading Focus dims distractions. You can disable Dastresa on one site, switch language, or open full settings anytime.',
+
+  tourStep6Title: 'You are ready',
+  tourStep6Body:
+    'Click the Dastresa icon in your toolbar, Enable on a webpage, and explore the floating tools. You can replay this tour from Settings.',
+}
 
 type MessageKey = keyof typeof EN;
 
@@ -190,6 +225,40 @@ const FA: Record<MessageKey, string> = {
   ariaSettings: 'باز کردن تنظیمات',
   ariaReset: 'بازگرداندن ظاهر عادی مرورگر',
   ariaExit: 'خروج از دسترسا و بازگرداندن صفحه عادی',
+
+  tourTitle: 'به دسترسا خوش آمدید',
+  tourSkip: 'رد کردن تور',
+  tourBack: 'قبلی',
+  tourNext: 'بعدی',
+  tourFinish: 'متوجه شدم — باز کردن پاپ‌آپ',
+  tourReplay: 'پخش دوباره تور آشنایی',
+  tourProgress: 'مرحله {{current}} از {{total}}',
+  tourPopupCta: 'تور سریع آشنایی',
+  tourPopupDismiss: 'بعداً',
+
+  tourStep1Title: 'خواندن خصوصی، روی دستگاه شما',
+  tourStep1Body:
+    'دسترسا وب‌سایت‌ها را برای خواندن آسان‌تر می‌کند. همه‌چیز آفلاین در مرورگر شما اجرا می‌شود — بدون ابر، بدون ردیابی.',
+
+  tourStep2Title: 'هر وقت لازم بود فعال کنید',
+  tourStep2Body:
+    'بعد از نصب، دسترسا خاموش می‌ماند تا خودتان فعال‌سازی را بزنید. آیکون نوار ابزار را باز کنید و روی یک صفحه عادی «فعال‌سازی دسترسا» را بزنید.',
+
+  tourStep3Title: 'تولبار شناور',
+  tourStep3Body:
+    'یک تولبار کوچک روی صفحه ظاهر می‌شود. آن را بکشید، باز کنید و بدون ترک سایت از ابزارهای خواندن استفاده کنید.',
+
+  tourStep4Title: 'مطالعه، گفتار، بزرگ‌نمایی و تم',
+  tourStep4Body:
+    'نمای تمیز مقاله، خواندن با صدا و هایلایت پاراگراف، متن بزرگ‌تر (A+/A−) و تم‌های کنتراست — همه از تولبار.',
+
+  tourStep5Title: 'فوکوس و کنترل سایت',
+  tourStep5Body:
+    'فوکوس خواندن حواس‌پرتی را کم می‌کند. می‌توانید دسترسا را در یک سایت خاموش کنید، زبان را عوض کنید یا تنظیمات کامل را باز کنید.',
+
+  tourStep6Title: 'آماده هستید',
+  tourStep6Body:
+    'آیکون دسترسا را در نوار ابزار بزنید، روی یک صفحه فعال کنید و ابزارهای شناور را امتحان کنید. پخش دوباره این تور از تنظیمات ممکن است.',
 };
 
 const TABLES: Record<AppLocale, Record<MessageKey, string>> = {
@@ -200,6 +269,16 @@ const TABLES: Record<AppLocale, Record<MessageKey, string>> = {
 export function t(locale: AppLocale | undefined, key: MessageKey): string {
   const table = TABLES[locale === 'fa' ? 'fa' : 'en'];
   return table[key] ?? EN[key];
+}
+
+export function tFormat(
+  locale: AppLocale | undefined,
+  key: MessageKey,
+  vars: Record<string, string | number>,
+): string {
+  return t(locale, key).replace(/\{\{(\w+)\}\}/g, (_, name: string) =>
+    vars[name] !== undefined ? String(vars[name]) : `{{${name}}}`,
+  );
 }
 
 export type { MessageKey };

@@ -1,5 +1,10 @@
 import { StrictMode, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import {
+  openOnboardingPage,
+  shouldShowOnboarding,
+  markOnboardingComplete,
+} from '@/features/onboarding/onboarding-storage';
 import { SettingsForm } from '@/features/settings/components/SettingsForm';
 import {
   isSiteDisabled,
@@ -19,6 +24,7 @@ function PopupApp() {
   const { settings, hydrated, hydrate, update, replace } = useSettingsStore();
   const [busy, setBusy] = useState(false);
   const [hostname, setHostname] = useState('');
+  const [showTourCta, setShowTourCta] = useState(false);
 
   useEffect(() => {
     void hydrate();
@@ -38,6 +44,10 @@ function PopupApp() {
         setHostname('');
       }
     })();
+  }, []);
+
+  useEffect(() => {
+    void shouldShowOnboarding().then(setShowTourCta);
   }, []);
 
   const locale = settings.locale === 'en' ? 'en' : 'fa';
@@ -106,6 +116,16 @@ function PopupApp() {
     }
   };
 
+  const openTour = async () => {
+    await openOnboardingPage();
+    window.close();
+  };
+
+  const dismissTourCta = async () => {
+    await markOnboardingComplete(true);
+    setShowTourCta(false);
+  };
+
   return (
     <main
       className="w-[400px] overflow-hidden text-dastresa-text"
@@ -134,6 +154,20 @@ function PopupApp() {
             />
           ) : null}
         </div>
+
+        {hydrated && showTourCta ? (
+          <div className="relative mt-4 rounded-2xl border border-sky-400/30 bg-sky-500/10 p-3">
+            <p className="text-sm font-semibold text-sky-100">{t(locale, 'tourTitle')}</p>
+            <div className="mt-2 flex gap-2">
+              <Button variant="primary" className="flex-1" onClick={() => void openTour()}>
+                {t(locale, 'tourPopupCta')}
+              </Button>
+              <Button variant="ghost" onClick={() => void dismissTourCta()}>
+                {t(locale, 'tourPopupDismiss')}
+              </Button>
+            </div>
+          </div>
+        ) : null}
 
         {hydrated && (
           <div className="relative mt-4 space-y-2">

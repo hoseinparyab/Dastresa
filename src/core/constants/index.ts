@@ -14,7 +14,11 @@ export type FeatureId = (typeof FEATURE_IDS)[keyof typeof FEATURE_IDS];
 
 export const STORAGE_KEYS = {
   SETTINGS: 'Dastresa.settings',
+  ONBOARDING: 'Dastresa.onboarding',
 } as const;
+
+/** Bump when tour content changes so returning users can see an updated intro. */
+export const ONBOARDING_VERSION = 1;
 
 export const EVENTS = {
   SETTINGS_CHANGED: 'settings:changed',
