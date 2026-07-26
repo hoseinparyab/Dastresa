@@ -2,13 +2,36 @@
  * Dastresa MV3 service worker — lean coordinator only.
  */
 
-chrome.runtime.onInstalled.addListener(() => {
-  // Reserved for future migrations; no network, no analytics.
+import { ONBOARDING_VERSION, STORAGE_KEYS } from '@/core/constants';
+import type { OnboardingState } from '@/features/onboarding/onboarding-storage';
+
+async function seedOnboardingOnInstall(): Promise<void> {
+  const initial: OnboardingState = {
+    completed: false,
+    version: ONBOARDING_VERSION,
+  };
+  await chrome.storage.local.set({ [STORAGE_KEYS.ONBOARDING]: initial });
+  await chrome.tabs.create({
+    url: chrome.runtime.getURL('src/onboarding/index.html'),
+  });
+}
+
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === 'install') {
+    void seedOnboardingOnInstall();
+  }
 });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === 'open-options') {
     void chrome.runtime.openOptionsPage();
+    sendResponse({ ok: true });
+    return true;
+  }
+  if (message?.type === 'open-onboarding') {
+    void chrome.tabs.create({
+      url: chrome.runtime.getURL('src/onboarding/index.html'),
+    });
     sendResponse({ ok: true });
     return true;
   }

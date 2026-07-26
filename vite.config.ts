@@ -4,6 +4,10 @@ import { crx } from '@crxjs/vite-plugin';
 import { fileURLToPath, URL } from 'node:url';
 import manifest from './manifest.json';
 
+const onboardingHtml = fileURLToPath(
+  new URL('./src/onboarding/index.html', import.meta.url),
+);
+
 export default defineConfig({
   plugins: [react(), crx({ manifest })],
   resolve: {
@@ -17,5 +21,11 @@ export default defineConfig({
     // Avoid Vite injecting modulepreload helpers that resolve "/assets/..."
     // against the host page instead of chrome-extension://…
     modulePreload: false,
+    rollupOptions: {
+      input: {
+        // Extra extension page opened on first install (not declared in manifest).
+        onboarding: onboardingHtml,
+      },
+    },
   },
 });

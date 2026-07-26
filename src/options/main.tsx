@@ -1,9 +1,13 @@
 import { StrictMode, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import {
+  openOnboardingPage,
+  resetOnboarding,
+} from '@/features/onboarding/onboarding-storage';
 import { SettingsForm } from '@/features/settings/components/SettingsForm';
 import { useSettingsStore } from '@/shared/hooks/useSettingsStore';
 import { t } from '@/shared/i18n/messages';
-import { PublisherCredit } from '@/shared/ui';
+import { Button, PublisherCredit } from '@/shared/ui';
 import '@/shared/styles/globals.css';
 
 function OptionsApp() {
@@ -18,6 +22,11 @@ function OptionsApp() {
     document.documentElement.lang = locale;
     document.documentElement.dir = settings.dir;
   }, [locale, settings.dir]);
+
+  const replayTour = async () => {
+    await resetOnboarding();
+    await openOnboardingPage();
+  };
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-10" dir={settings.dir} lang={locale}>
@@ -37,6 +46,13 @@ function OptionsApp() {
         <p className="relative mt-3 max-w-xl text-base leading-relaxed text-slate-300">
           {t(locale, 'optionsSubtitle')}
         </p>
+        <Button
+          variant="secondary"
+          className="relative mt-5"
+          onClick={() => void replayTour()}
+        >
+          {t(locale, 'tourReplay')}
+        </Button>
       </header>
       <SettingsForm />
       <p className="mt-6 text-center text-sm text-slate-300">{t(locale, 'tagline')}</p>
