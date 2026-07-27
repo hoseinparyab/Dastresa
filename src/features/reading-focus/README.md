@@ -4,8 +4,8 @@
 
 ## Boundary
 
-Highlights current paragraph, dims surroundings, optional ruler, keyboard navigation,
-mouse tracking, and a high-visibility colored cursor with tracking halo.
+Highlights current paragraph, dims surroundings, optional ruler, keyboard / click
+navigation, mouse tracking, and a high-visibility colored cursor with tracking halo.
 
 ## Public surface
 

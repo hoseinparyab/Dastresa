@@ -13,3 +13,5 @@ test-results
 .cursor
 release
 build-najino-svg.py
+release
+scripts

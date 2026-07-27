@@ -86,6 +86,7 @@ export class ReadingFocusFeature implements IFeature {
     );
 
     ctx.document.addEventListener('keydown', this.onKeyDown, true);
+    ctx.document.addEventListener('click', this.onClick, true);
     ctx.document.addEventListener('mousemove', this.onMouseMove, { passive: true, capture: true });
   }
 
@@ -111,6 +112,39 @@ export class ReadingFocusFeature implements IFeature {
       this.index = Math.max(this.index - 1, 0);
       this.render({ scroll: true });
     }
+  };
+
+  private onClick = (event: MouseEvent): void => {
+    if (!this.enabled) return;
+    if (event.button !== 0) return;
+    if (isEditableTarget(event.target)) return;
+    if (!(event.target instanceof Element)) return;
+
+    // Keep extension chrome and real interactive controls working as usual.
+    if (
+      event.target.closest(
+        '#Dastresa-toolbar-host, #Dastresa-focus-cursor, #Dastresa-ruler, [data-Dastresa="toolbar"]',
+      )
+    ) {
+      return;
+    }
+    if (
+      event.target.closest(
+        'a, button, input, textarea, select, summary, label, [role="button"], [role="link"]',
+      )
+    ) {
+      return;
+    }
+
+    this.collect();
+    const paragraph = event.target.closest('p');
+    if (!(paragraph instanceof HTMLElement)) return;
+
+    const nextIndex = this.paragraphs.indexOf(paragraph);
+    if (nextIndex < 0 || nextIndex === this.index) return;
+
+    this.index = nextIndex;
+    this.render({ scroll: false });
   };
 
   private onMouseMove = (event: MouseEvent): void => {
@@ -397,6 +431,7 @@ export class ReadingFocusFeature implements IFeature {
     this.unsubs.forEach((u) => u());
     this.unsubs = [];
     this.ctx?.document.removeEventListener('keydown', this.onKeyDown, true);
+    this.ctx?.document.removeEventListener('click', this.onClick, true);
     this.ctx?.document.removeEventListener('mousemove', this.onMouseMove, true);
     void this.disable({ persist: false });
     this.styleEl?.remove();
