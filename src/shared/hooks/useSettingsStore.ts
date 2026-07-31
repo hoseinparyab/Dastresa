@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 import {
   createDefaultSettings,
+  mergeSettings,
   parseSettings,
   type DastresaSettings,
-} from '@/features/settings/schema/settings-schema';
+} from '@/core/settings';
 import { STORAGE_KEYS } from '@/core/constants';
 
 interface SettingsStore {
@@ -23,22 +24,11 @@ async function readSettings(): Promise<DastresaSettings> {
   }
 }
 
-function mergeSettings(
-  current: DastresaSettings,
-  partial: Partial<DastresaSettings>,
-): DastresaSettings {
-  return parseSettings({
-    ...current,
-    ...partial,
-    zoom: { ...current.zoom, ...(partial.zoom ?? {}) },
-    speech: { ...current.speech, ...(partial.speech ?? {}) },
-    toolbarPosition: {
-      ...current.toolbarPosition,
-      ...(partial.toolbarPosition ?? {}),
-    },
-  });
-}
-
+/**
+ * Popup/options settings store.
+ * Writes full validated settings to chrome.storage.local using the same
+ * merge/parse helpers as content-side SettingsService / patchStoredSettings.
+ */
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
   settings: createDefaultSettings(),
   hydrated: false,

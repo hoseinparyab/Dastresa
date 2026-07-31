@@ -6,3 +6,4 @@ export * from '@/core/di';
 export * from '@/core/extension-points';
 export * from '@/core/utils';
 export * from '@/core/types/events';
+export * from '@/core/settings';

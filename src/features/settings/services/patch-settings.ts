@@ -4,7 +4,7 @@ import {
   mergeSettings,
   parseSettings,
   type DastresaSettings,
-} from '@/features/settings/schema/settings-schema';
+} from '@/core/settings';
 
 /** Single write path for feature modules that only have IStorage. */
 export async function patchStoredSettings(

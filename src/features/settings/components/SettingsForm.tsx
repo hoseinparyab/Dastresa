@@ -1,9 +1,7 @@
 import { Controller, useWatch } from 'react-hook-form';
-import {
-  createPageResetSettings,
-  type DastresaSettings,
-} from '@/features/settings/schema/settings-schema';
+import { createPageResetSettings, type DastresaSettings } from '@/core/settings';
 import { useInstantSettings } from '@/shared/hooks/useInstantSettings';
+import { notifyActiveTab } from '@/shared/messaging/tab';
 import { t } from '@/shared/i18n/messages';
 import { Button, Section, SelectField, SwitchRow } from '@/shared/ui';
 
@@ -275,14 +273,7 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
               const reset = createPageResetSettings(form.getValues());
               form.reset(reset);
               await replace(reset);
-              try {
-                const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-                if (tab?.id) {
-                  await chrome.tabs.sendMessage(tab.id, { type: 'dastresa-reset' });
-                }
-              } catch {
-                // ignore when not on a web page
-              }
+              await notifyActiveTab('dastresa-reset');
             })();
           }}
         >

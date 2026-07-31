@@ -27,13 +27,15 @@ After the user **opts in** (popup Enable), any website can become easier to read
 
 ## Principles
 
-- Feature-first packages under `src/features/`
+- Feature-first packages under `src/features/` (see [ADR-001](adr/001-feature-plugin-ports.md))
 - SOLID + dependency inversion via `src/core/contracts`
+- Shared settings domain in `src/core/settings` (core must not import features)
 - Cross-feature communication via Event Bus or interfaces only
 - Lazy-load heavy modules; keep first paint of extension chrome fast
 - Shadow DOM for toolbar + reader chrome
 - `chrome.storage.local` only; Zod at the persistence boundary with **soft field recovery**
-- Single settings write helpers: `SettingsService.update/replace` and `patchStoredSettings`
+- Single settings merge/parse helpers; writes via `SettingsService` / `patchStoredSettings` / store using those helpers
+- Content bootstrap: `src/content/index.ts` wires; lifecycle + messaging stay separate modules
 - Future modules: extension points in `src/future/` — no implementation
 
 ## MVP modules

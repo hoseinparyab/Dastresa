@@ -31,16 +31,16 @@ Dastresa-Extension/
 │   │   ├── module-registry/       # register + lazy load features
 │   │   ├── extension-points/      # slots for future modules
 │   │   ├── runtime/               # boot context, env adapters
-│   │   ├── types/                 # shared domain types
+│   │   ├── settings/              # Zod settings domain (shared)
+│   │   ├── types/                 # shared domain types / events
 │   │   ├── utils/                 # pure helpers
 │   │   └── constants/             # IDs, event names, storage keys
 │   ├── shared/                    # reusable UI/lib (not features)
-│   │   ├── components/
+│   │   ├── ui/
 │   │   ├── hooks/
+│   │   ├── messaging/             # popup/options → content helpers
 │   │   ├── styles/
-│   │   ├── i18n/                  # en + fa (RTL)
-│   │   ├── a11y/                  # focus, announcements, AAA helpers
-│   │   └── testing/               # test doubles / render helpers
+│   │   └── i18n/                  # en + fa (RTL)
 │   ├── features/                  # MVP modules (isolated)
 │   │   ├── dom-analyzer/
 │   │   ├── reader-mode/

@@ -1,6 +1,6 @@
 import type { FeatureContext, IFeature, ISpeechEngine, SpeechState } from '@/core/contracts';
 import { EVENTS, FEATURE_IDS } from '@/core/constants';
-import type { SpeechSettings } from '@/features/settings/schema/settings-schema';
+import type { SpeechSettings } from '@/core/settings';
 
 export class SpeechEngine implements ISpeechEngine {
   private state: SpeechState = 'idle';

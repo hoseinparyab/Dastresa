@@ -1,6 +1,6 @@
 import type { FeatureContext, IFeature } from '@/core/contracts';
 import { EVENTS, FEATURE_IDS, HOST_STYLE_ATTR, STORAGE_KEYS } from '@/core/constants';
-import { parseSettings, type ThemeId } from '@/features/settings/schema/settings-schema';
+import { parseSettings, type ThemeId } from '@/core/settings';
 import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 
 /**
