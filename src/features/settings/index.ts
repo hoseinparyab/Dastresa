@@ -5,7 +5,7 @@ import {
   mergeSettings,
   parseSettings,
   type DastresaSettings,
-} from './schema/settings-schema';
+} from '@/core/settings';
 
 export class SettingsService {
   private settings: DastresaSettings = createDefaultSettings();
@@ -102,5 +102,5 @@ export class SettingsFeature implements IFeature {
 export const feature = new SettingsFeature();
 export default feature;
 
-export * from './schema/settings-schema';
+export * from '@/core/settings';
 export { patchStoredSettings } from './services/patch-settings';

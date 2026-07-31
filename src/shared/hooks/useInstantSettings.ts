@@ -3,9 +3,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   DastresaSettingsSchema,
+  mergeSettings,
   type DastresaSettings,
-} from '@/features/settings/schema/settings-schema';
+} from '@/core/settings';
 import { useSettingsStore } from '@/shared/hooks/useSettingsStore';
+import { notifyActiveTab } from '@/shared/messaging/tab';
 
 /** Instant-apply settings form wired to chrome.storage. */
 export function useInstantSettings() {
@@ -31,17 +33,7 @@ export function useInstantSettings() {
       applying.current = true;
       try {
         await replace(values);
-        try {
-          const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-          if (tab?.id) {
-            await chrome.tabs.sendMessage(tab.id, {
-              type: 'dastresa-apply-settings',
-              settings: values,
-            });
-          }
-        } catch {
-          // Content script may be missing on chrome:// pages
-        }
+        await notifyActiveTab('dastresa-apply-settings', { settings: values });
       } finally {
         window.setTimeout(() => {
           applying.current = false;
@@ -54,16 +46,7 @@ export function useInstantSettings() {
   const applyNow = useCallback(
     (patch: Partial<DastresaSettings>) => {
       const current = form.getValues();
-      const next: DastresaSettings = {
-        ...current,
-        ...patch,
-        zoom: { ...current.zoom, ...(patch.zoom ?? {}) },
-        speech: { ...current.speech, ...(patch.speech ?? {}) },
-        toolbarPosition: {
-          ...current.toolbarPosition,
-          ...(patch.toolbarPosition ?? {}),
-        },
-      };
+      const next = mergeSettings(current, patch);
       form.reset(next);
       void persist(next);
     },

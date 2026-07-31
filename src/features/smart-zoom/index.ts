@@ -1,7 +1,7 @@
 import type { FeatureContext, IFeature, IStyleController, StyleTokenMap } from '@/core/contracts';
 import { EVENTS, FEATURE_IDS, HOST_STYLE_ATTR, STORAGE_KEYS } from '@/core/constants';
 import { clamp } from '@/core/utils';
-import { parseSettings, type ZoomSettings } from '@/features/settings/schema/settings-schema';
+import { parseSettings, type ZoomSettings } from '@/core/settings';
 import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 
 const ZOOMED_ATTR = 'data-Dastresa-zoomed';

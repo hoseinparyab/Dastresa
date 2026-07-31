@@ -1,4 +1,4 @@
-import type { DastresaSettings } from '@/features/settings/schema/settings-schema';
+import type { DastresaSettings } from '@/core/settings';
 
 export type Unsubscribe = () => void;
 

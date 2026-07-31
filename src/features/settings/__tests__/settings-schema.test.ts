@@ -6,7 +6,7 @@ import {
   parseSettings,
   withSiteDisabled,
   DastresaSettingsSchema,
-} from '@/features/settings/schema/settings-schema';
+} from '@/core/settings';
 
 describe('settings schema', () => {
   it('creates safe opt-in defaults', () => {

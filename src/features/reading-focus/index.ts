@@ -1,7 +1,7 @@
 import type { FeatureContext, IFeature } from '@/core/contracts';
 import { EVENTS, FEATURE_IDS, HOST_STYLE_ATTR, STORAGE_KEYS } from '@/core/constants';
 import { safeQueryAll } from '@/core/utils';
-import { parseSettings } from '@/features/settings/schema/settings-schema';
+import { parseSettings } from '@/core/settings';
 import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 import {
   buildFocusPointerSvg,

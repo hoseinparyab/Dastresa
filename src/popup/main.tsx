@@ -6,11 +6,9 @@ import {
   markOnboardingComplete,
 } from '@/features/onboarding/onboarding-storage';
 import { SettingsForm } from '@/features/settings/components/SettingsForm';
-import {
-  isSiteDisabled,
-  withSiteDisabled,
-} from '@/features/settings/schema/settings-schema';
+import { isSiteDisabled, withSiteDisabled } from '@/core/settings';
 import { useSettingsStore } from '@/shared/hooks/useSettingsStore';
+import { notifyActiveTab } from '@/shared/messaging/tab';
 import { t } from '@/shared/i18n/messages';
 import { ActionToolbar, Button, PublisherCredit, StatusPill } from '@/shared/ui';
 import '@/shared/styles/globals.css';
@@ -57,25 +55,11 @@ function PopupApp() {
   );
   const activeHere = settings.extensionActive && !siteOff;
 
-  const notifyTab = async (
-    type: 'dastresa-exit' | 'dastresa-activate' | 'dastresa-reset' | 'dastresa-apply-settings',
-    payload?: Record<string, unknown>,
-  ) => {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id) {
-      try {
-        await chrome.tabs.sendMessage(tab.id, { type, ...payload });
-      } catch {
-        // Content script may be missing on chrome:// pages
-      }
-    }
-  };
-
   const exitNow = async () => {
     setBusy(true);
     try {
       await update({ extensionActive: false, readerMode: false, readingFocus: false });
-      await notifyTab('dastresa-exit');
+      await notifyActiveTab('dastresa-exit');
     } finally {
       setBusy(false);
     }
@@ -88,7 +72,7 @@ function PopupApp() {
         ? withSiteDisabled({ ...settings, extensionActive: true }, hostname, false)
         : { ...settings, extensionActive: true };
       await replace(next);
-      await notifyTab('dastresa-apply-settings', { settings: next });
+      await notifyActiveTab('dastresa-apply-settings', { settings: next });
     } finally {
       setBusy(false);
     }
@@ -97,7 +81,7 @@ function PopupApp() {
   const resetNow = async () => {
     setBusy(true);
     try {
-      await notifyTab('dastresa-reset');
+      await notifyActiveTab('dastresa-reset');
       await hydrate();
     } finally {
       setBusy(false);
@@ -110,7 +94,7 @@ function PopupApp() {
     try {
       const next = withSiteDisabled(settings, hostname, !siteOff);
       await replace(next);
-      await notifyTab('dastresa-apply-settings', { settings: next });
+      await notifyActiveTab('dastresa-apply-settings', { settings: next });
     } finally {
       setBusy(false);
     }
