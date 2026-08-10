@@ -124,7 +124,17 @@ export function ToolbarApp({
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [open, setOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
-  const dragging = useRef<{ ox: number; oy: number } | null>(null);
+  const dragRef = useRef<{
+    ox: number;
+    oy: number;
+    startX: number;
+    startY: number;
+    x: number;
+    y: number;
+    moved: boolean;
+    fromChip: boolean;
+  } | null>(null);
+  const skipChipClick = useRef(false);
   const reduceMotion = useMemo(() => prefersReducedMotion(), []);
   const pos = useMemo(() => dragPos ?? { x, y }, [dragPos, x, y]);
   const primary = useMemo(
@@ -149,49 +159,104 @@ export function ToolbarApp({
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
+      if (e.button !== 0) return;
       const target = e.target as HTMLElement;
-      if (target.closest('button')) return;
-      dragging.current = { ox: e.clientX - pos.x, oy: e.clientY - pos.y };
+      const fromChip = !open && Boolean(target.closest('.chip'));
+      // Open panel: drag only from non-button chrome. Collapsed chip: always draggable.
+      if (!fromChip && target.closest('button')) return;
+
+      dragRef.current = {
+        ox: e.clientX - pos.x,
+        oy: e.clientY - pos.y,
+        startX: e.clientX,
+        startY: e.clientY,
+        x: pos.x,
+        y: pos.y,
+        moved: false,
+        fromChip,
+      };
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     },
-    [pos.x, pos.y],
+    [open, pos.x, pos.y],
   );
 
   const onPointerMove = useCallback(
     (e: React.PointerEvent) => {
-      if (!dragging.current) return;
+      const drag = dragRef.current;
+      if (!drag) return;
+
+      const dist = Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY);
+      if (!drag.moved && dist < 6) return;
+      drag.moved = true;
+
       const width = open ? PANEL_W : CHIP_W;
       const height = open ? PANEL_H : CHIP_H;
-      setDragPos(
-        clampPos(
-          window,
-          {
-            x: e.clientX - dragging.current.ox,
-            y: e.clientY - dragging.current.oy,
-          },
-          width,
-          height,
-        ),
+      const next = clampPos(
+        window,
+        {
+          x: e.clientX - drag.ox,
+          y: e.clientY - drag.oy,
+        },
+        width,
+        height,
       );
+      drag.x = next.x;
+      drag.y = next.y;
+      setDragPos(next);
     },
     [open],
   );
 
-  const onPointerUp = useCallback(() => {
-    if (!dragging.current) return;
-    dragging.current = null;
-    onMoved(pos.x, pos.y);
-    setDragPos(null);
-  }, [onMoved, pos.x, pos.y]);
+  const endPointer = useCallback(
+    (e: React.PointerEvent) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+      dragRef.current = null;
+      try {
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      } catch {
+        // already released
+      }
 
-  const openToolbar = useCallback(() => {
-    const next = clampPos(window, pos, PANEL_W, PANEL_H);
-    if (next.x !== pos.x || next.y !== pos.y) {
-      setDragPos(next);
-      onMoved(next.x, next.y);
-    }
-    setOpen(true);
-  }, [onMoved, pos]);
+      if (drag.moved) {
+        skipChipClick.current = true;
+        onMoved(drag.x, drag.y);
+        setDragPos(null);
+        return;
+      }
+
+      if (drag.fromChip) {
+        // Swallow the following click so we don't open twice.
+        skipChipClick.current = true;
+        const next = clampPos(window, { x: drag.x, y: drag.y }, PANEL_W, PANEL_H);
+        if (next.x !== drag.x || next.y !== drag.y) {
+          setDragPos(next);
+          onMoved(next.x, next.y);
+        }
+        setOpen(true);
+      }
+    },
+    [onMoved],
+  );
+
+  const onChipClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Pointer path already opened / dragged; ignore the synthetic click.
+      if (skipChipClick.current) {
+        e.preventDefault();
+        skipChipClick.current = false;
+        return;
+      }
+      // Keyboard activation.
+      const next = clampPos(window, pos, PANEL_W, PANEL_H);
+      if (next.x !== pos.x || next.y !== pos.y) {
+        setDragPos(next);
+        onMoved(next.x, next.y);
+      }
+      setOpen(true);
+    },
+    [onMoved, pos],
+  );
 
   const collapseToolbar = useCallback(() => {
     setMoreOpen(false);
@@ -248,7 +313,8 @@ export function ToolbarApp({
       tabIndex={open ? 0 : -1}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
+      onPointerUp={endPointer}
+      onPointerCancel={endPointer}
       style={{
         left: pos.x,
         top: pos.y,
@@ -262,14 +328,14 @@ export function ToolbarApp({
           aria-label={t(locale, 'toolbarOpen')}
           aria-expanded={false}
           title={t(locale, 'toolbarOpen')}
-          onClick={openToolbar}
+          onClick={onChipClick}
           style={{
             border: 0,
             background: 'transparent',
             color: 'inherit',
             font: 'inherit',
             width: '100%',
-            cursor: 'pointer',
+            cursor: 'grab',
           }}
         >
           <span className="dot" aria-hidden />

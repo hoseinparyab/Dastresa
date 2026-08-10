@@ -96,7 +96,9 @@ export class ReaderModeService implements IReadableContentProvider {
       position: 'fixed',
       inset: '0',
       zIndex: '2147483645',
-      background: 'rgba(2, 6, 23, 0.92)',
+      // Fully opaque so underlying page text never shows through.
+      background: '#020617',
+      overflow: 'auto',
     });
 
     const shadow = this.host.attachShadow({ mode: 'open' });
@@ -107,16 +109,24 @@ export class ReaderModeService implements IReadableContentProvider {
     this.overlay.innerHTML = `
       <style>
         :host, * { box-sizing: border-box; }
+        .scrim {
+          position: fixed;
+          inset: 0;
+          background: #020617;
+          z-index: 0;
+        }
         .wrap {
+          position: relative;
+          z-index: 1;
           max-width: min(72ch, 92vw);
           margin: 0 auto;
           padding: 2rem 1.25rem 4rem;
+          min-height: 100vh;
           color: #f8fafc;
+          background: #020617;
           font-family: "Source Sans 3", Tahoma, sans-serif;
           line-height: 1.7;
           font-size: 1.125rem;
-          overflow: auto;
-          height: 100vh;
         }
         h1 { font-family: Fraunces, Georgia, serif; font-size: 2rem; margin: 0 0 0.75rem; }
         .byline { color: #94a3b8; margin-bottom: 1.5rem; }
@@ -133,6 +143,7 @@ export class ReaderModeService implements IReadableContentProvider {
         }
         .close:focus-visible { outline: 3px solid #38bdf8; outline-offset: 2px; }
       </style>
+      <div class="scrim" aria-hidden="true"></div>
       <div class="wrap">
         <button type="button" class="close" aria-label="Close reader mode">Close</button>
         <h1>${escapeHtml(content.title)}</h1>
@@ -142,12 +153,19 @@ export class ReaderModeService implements IReadableContentProvider {
     `;
     shadow.appendChild(this.overlay);
     doc.documentElement.appendChild(this.host);
+    doc.documentElement.style.setProperty('overflow', 'hidden', 'important');
+    doc.body?.style.setProperty('overflow', 'hidden', 'important');
   }
 
   unmount(): void {
+    const doc = this.host?.ownerDocument;
     this.host?.remove();
     this.host = null;
     this.overlay = null;
+    if (doc) {
+      doc.documentElement.style.removeProperty('overflow');
+      doc.body?.style.removeProperty('overflow');
+    }
   }
 
   onClose(handler: () => void): void {

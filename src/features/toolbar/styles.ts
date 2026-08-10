@@ -53,6 +53,11 @@ export const TOOLBAR_CSS = `
     padding-inline-start: 12px;
     padding-inline-end: 0;
     gap: 10px;
+    cursor: grab;
+    touch-action: none;
+  }
+  .dock.collapsed:active .chip {
+    cursor: grabbing;
   }
   .chip:focus-visible {
     outline: 2px solid #38bdf8;
