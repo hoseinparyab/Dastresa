@@ -3,36 +3,97 @@ import { EVENTS, FEATURE_IDS, HOST_STYLE_ATTR, STORAGE_KEYS } from '@/core/const
 import { parseSettings, type ThemeId } from '@/core/settings';
 import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 
+type PaintTokens = {
+  scheme: 'dark' | 'light';
+  bg: string;
+  fg: string;
+  link: string;
+  border: string;
+};
+
 /**
- * Site-safe themes: avoid rewriting every link/control size and avoid
- * universal border overrides that shatter dense app layouts (GitHub, etc.).
- * Users opt into stronger looks; default theme is `normal` (no CSS).
+ * Force readable surfaces. Sites like Wikipedia paint white panels with their own
+ * colors, so html/body-only rules leave light text on white (text "disappears").
  */
-const THEME_CSS: Record<ThemeId, string> = {
+function paintTheme({ scheme, bg, fg, link, border }: PaintTokens): string {
+  return `
+    html {
+      color-scheme: ${scheme} !important;
+      background-color: ${bg} !important;
+    }
+    html body {
+      background-color: ${bg} !important;
+      color: ${fg} !important;
+    }
+    html body :where(
+      div, section, article, main, aside, nav, header, footer,
+      p, span, li, ul, ol, dl, dt, dd, td, th, tr, table, thead, tbody, tfoot,
+      h1, h2, h3, h4, h5, h6, label, figcaption, blockquote,
+      pre, code, form, fieldset, legend, summary, details
+    ) {
+      background-color: ${bg} !important;
+      color: ${fg} !important;
+      border-color: ${border} !important;
+      caret-color: ${fg} !important;
+    }
+    html body :where(a, a:link, a:visited, a:hover, a:active) {
+      color: ${link} !important;
+      background-color: transparent !important;
+    }
+    html body :where(a) * {
+      color: inherit !important;
+      background-color: transparent !important;
+    }
+    html body :where(input, textarea, select, button) {
+      background-color: ${bg} !important;
+      color: ${fg} !important;
+      border-color: ${border} !important;
+      caret-color: ${fg} !important;
+    }
+    html body :where(hr) {
+      border-color: ${border} !important;
+      background-color: ${border} !important;
+    }
+  `;
+}
+
+/**
+ * Default theme is `normal` (no CSS). Color themes must paint containers, not
+ * only body — otherwise light text lands on white site panels.
+ */
+export const THEME_CSS: Record<ThemeId, string> = {
   normal: '',
-  dark: `
-    html { color-scheme: dark; }
-    html { background-color: #0f172a !important; }
-    body { background-color: transparent !important; color: #e2e8f0 !important; }
-  `,
-  light: `
-    html { color-scheme: light; }
-    html { background-color: #ffffff !important; }
-    body { background-color: transparent !important; color: #0f172a !important; }
-  `,
-  'high-contrast': `
-    html { color-scheme: dark; background-color: #000 !important; }
-    body { background-color: transparent !important; color: #fff !important; }
-    a, a:visited { color: #ffe566 !important; text-decoration: underline !important; }
-  `,
+  dark: paintTheme({
+    scheme: 'dark',
+    bg: '#0f172a',
+    fg: '#e2e8f0',
+    link: '#7dd3fc',
+    border: '#334155',
+  }),
+  light: paintTheme({
+    scheme: 'light',
+    bg: '#ffffff',
+    fg: '#0f172a',
+    link: '#0369a1',
+    border: '#cbd5e1',
+  }),
+  'high-contrast': paintTheme({
+    scheme: 'dark',
+    bg: '#000000',
+    fg: '#ffffff',
+    link: '#ffe566',
+    border: '#ffffff',
+  }),
   'black-white': `
-    html { filter: grayscale(1) contrast(1.15); }
+    html { filter: grayscale(1) contrast(1.2) !important; }
   `,
-  'yellow-black': `
-    html { color-scheme: dark; background-color: #000 !important; }
-    body { background-color: transparent !important; color: #ffe566 !important; }
-    a, a:visited { color: #fff176 !important; }
-  `,
+  'yellow-black': paintTheme({
+    scheme: 'dark',
+    bg: '#000000',
+    fg: '#ffe566',
+    link: '#fff176',
+    border: '#665c00',
+  }),
 };
 
 /** Touch targets for controls only — never force min-size on every link. */
