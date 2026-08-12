@@ -1,4 +1,4 @@
-# MVP Release Checklist — Dastresa 0.1.0
+# MVP Release Checklist — Dastresa 0.1.1
 
 **Goal:** First public Chrome Web Store (or closed testers) submission that matches the brand promise: offline, private, opt-in accessibility.
 
