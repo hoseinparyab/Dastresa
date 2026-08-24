@@ -68,8 +68,10 @@ export class PageSummaryFeature implements IFeature {
         const message =
           code === 'missing_api_key'
             ? t(locale, 'summaryNeedKey')
-            : (response && 'error' in response ? response.error : null) ||
-              t(locale, 'summaryFailed');
+            : code === 'rate_limited'
+              ? t(locale, 'summaryRateLimited')
+              : (response && 'error' in response ? response.error : null) ||
+                t(locale, 'summaryFailed');
         this.overlay.showError(this.ctx.document, locale, dir, content.title, message);
         this.ctx.bus.emit(EVENTS.SUMMARY_FAILED, { message });
         return;

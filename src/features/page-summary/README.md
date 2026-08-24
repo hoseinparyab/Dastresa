@@ -1,16 +1,14 @@
 # Page Summary
 
-**Status:** MVP (opt-in cloud)
+**Status:** MVP (opt-in cloud via backend)
 
-## Boundary
+## Flow
 
-Summarizes readable page text via Luma Responses API when the user taps **Summary**.
+1. Toolbar **Summary** → content script extracts readable text
+2. Background SW calls **Dastresa Summary API** (`SUMMARY_API.BASE_URL/api/summarize`)
+3. Cloudflare Worker holds `LUMA_API_KEY` and proxies to Luma Responses API
+4. Optional: user custom key in Settings → direct Luma call (skips backend)
 
-- API: `POST https://dash.lumai.ir/api/v1/responses`
-- Auth: Bearer API key from `chrome.storage.local` secrets (not in settings broadcast)
-- Default model: `openai/gpt-4o-mini`
-- Text extraction reuses Readability path from Reader Mode
+## Backend
 
-## Privacy
-
-Page content leaves the device **only** when the user explicitly requests a summary. Core Dastresa tools remain local.
+See `server/README.md`.

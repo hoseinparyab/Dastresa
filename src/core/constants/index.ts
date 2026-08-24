@@ -20,15 +20,19 @@ export const STORAGE_KEYS = {
   SECRETS: 'Dastresa.secrets',
 } as const;
 
-/** Luma (OpenAI-compatible Responses API). */
+/** Luma Responses API (used only when user supplies their own key). */
 export const LUMA_API = {
   BASE_URL: 'https://dash.lumai.ir/api/v1',
   DEFAULT_MODEL: 'openai/gpt-4o-mini',
-  /**
-   * Built-in key so Summary works without user setup.
-   * Anyone can extract this from the packaged extension — rotate if abused.
-   */
-  DEFAULT_API_KEY: 'LU_6MCAOTPX5SK24PPWJ74XVFSQVRANGJY2OYDZJUA',
+} as const;
+
+/**
+ * Dastresa Summary backend (Cloudflare Worker).
+ * Local: `cd server && npm run dev` → http://127.0.0.1:8787
+ * After deploy: replace with your workers.dev / custom domain URL.
+ */
+export const SUMMARY_API = {
+  BASE_URL: 'http://127.0.0.1:8787',
 } as const;
 
 /** Bump when tour content changes so returning users can see an updated intro. */

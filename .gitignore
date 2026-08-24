@@ -13,5 +13,7 @@ test-results
 .cursor
 release
 build-najino-svg.py
-release
 scripts
+server/.dev.vars
+server/.wrangler
+server/node_modules

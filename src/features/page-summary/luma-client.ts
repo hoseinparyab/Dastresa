@@ -63,7 +63,7 @@ function buildPrompt(params: LumaSummarizeParams): string {
   ].join('\n');
 }
 
-/** Call Luma Responses API (dash.lumai.ir). */
+/** Call Luma Responses API (dash.lumai.ir) with a user-provided key. */
 export async function summarizeWithLuma(params: LumaSummarizeParams): Promise<string> {
   const apiKey = params.apiKey.trim();
   if (!apiKey) throw new Error('missing_api_key');
@@ -100,4 +100,49 @@ export async function summarizeWithLuma(params: LumaSummarizeParams): Promise<st
   const text = extractLumaText(json);
   if (!text) throw new Error('empty_summary');
   return text;
+}
+
+/** Call Dastresa summary backend (API key stays on the server). */
+export async function summarizeViaBackend(params: {
+  baseUrl: string;
+  title: string;
+  text: string;
+  locale: 'en' | 'fa';
+}): Promise<string> {
+  const response = await fetch(`${params.baseUrl.replace(/\/$/, '')}/api/summarize`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({
+      title: params.title,
+      text: truncateForSummary(params.text),
+      locale: params.locale,
+    }),
+  });
+
+  const raw = await response.text();
+  let json: unknown = null;
+  try {
+    json = raw ? JSON.parse(raw) : null;
+  } catch {
+    json = null;
+  }
+
+  if (!response.ok) {
+    const error =
+      json && typeof json === 'object' && json !== null && 'error' in json
+        ? String((json as { error?: string }).error ?? raw)
+        : raw || `HTTP ${response.status}`;
+    if (error === 'rate_limited') throw new Error('rate_limited');
+    throw new Error(error || `HTTP ${response.status}`);
+  }
+
+  const summary =
+    json && typeof json === 'object' && json !== null && 'summary' in json
+      ? String((json as { summary?: string }).summary ?? '')
+      : '';
+  if (!summary.trim()) throw new Error('empty_summary');
+  return summary.trim();
 }

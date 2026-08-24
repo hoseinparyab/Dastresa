@@ -1,0 +1,18 @@
+{
+  "name": "dastresa-summary-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "LUMA_BASE_URL": "https://dash.lumai.ir/api/v1",
+    "LUMA_MODEL": "openai/gpt-4o-mini",
+    "RATE_LIMIT_PER_HOUR": "30"
+  },
+  "secrets": {
+    "required": ["LUMA_API_KEY"]
+  }
+}
