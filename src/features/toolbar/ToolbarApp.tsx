@@ -23,7 +23,7 @@ interface ToolbarBtn {
 
 function primaryButtons(
   locale: AppLocale,
-  state: { readerMode: boolean; readingFocus: boolean },
+  state: { readerMode: boolean; readingFocus: boolean; summarizing: boolean },
 ): ToolbarBtn[] {
   return [
     {
@@ -42,7 +42,13 @@ function primaryButtons(
       aria: t(locale, 'ariaFocus'),
       pressed: state.readingFocus,
     },
-    { command: 'summary', label: t(locale, 'cmdSummary'), aria: t(locale, 'ariaSummary') },
+    {
+      command: 'summary',
+      label: state.summarizing ? t(locale, 'cmdSummaryBusy') : t(locale, 'cmdSummary'),
+      aria: state.summarizing ? t(locale, 'summaryLoading') : t(locale, 'ariaSummary'),
+      pressed: state.summarizing,
+      soft: state.summarizing,
+    },
   ];
 }
 
@@ -79,6 +85,7 @@ export interface ToolbarAppProps {
   dir: 'ltr' | 'rtl';
   readerMode: boolean;
   readingFocus: boolean;
+  summarizing?: boolean;
   onCommand: (command: Command) => void;
   onMoved: (x: number, y: number) => void;
 }
@@ -118,6 +125,7 @@ export function ToolbarApp({
   dir,
   readerMode,
   readingFocus,
+  summarizing = false,
   onCommand,
   onMoved,
 }: ToolbarAppProps) {
@@ -139,8 +147,8 @@ export function ToolbarApp({
   const reduceMotion = useMemo(() => prefersReducedMotion(), []);
   const pos = useMemo(() => dragPos ?? { x, y }, [dragPos, x, y]);
   const primary = useMemo(
-    () => primaryButtons(locale, { readerMode, readingFocus }),
-    [locale, readerMode, readingFocus],
+    () => primaryButtons(locale, { readerMode, readingFocus, summarizing }),
+    [locale, readerMode, readingFocus, summarizing],
   );
   const speech = useMemo(() => speechButtons(locale), [locale]);
   const system = useMemo(() => systemButtons(locale), [locale]);

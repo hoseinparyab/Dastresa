@@ -46,7 +46,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     void (async () => {
       try {
         const secrets = await readSecrets();
-        const apiKey = secrets.lumaApiKey?.trim();
+        const apiKey =
+          secrets.lumaApiKey?.trim() || LUMA_API.DEFAULT_API_KEY.trim();
         if (!apiKey) {
           sendResponse({ ok: false, code: 'missing_api_key', error: 'missing_api_key' });
           return;

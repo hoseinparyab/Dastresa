@@ -41,9 +41,11 @@ export class SummaryOverlay {
     Object.assign(this.host.style, {
       position: 'fixed',
       inset: '0',
-      zIndex: '2147483645',
+      // Above toolbar so loading/result is never hidden behind it.
+      zIndex: '2147483647',
       background: '#020617',
       overflow: 'auto',
+      pointerEvents: 'auto',
     });
 
     const shadow = this.host.attachShadow({ mode: 'open' });
@@ -64,7 +66,27 @@ export class SummaryOverlay {
         }
         h1 { font-family: Fraunces, Georgia, serif; font-size: 1.75rem; margin: 0 0 0.5rem; }
         .hint { color: #94a3b8; margin: 0 0 1.5rem; font-size: 0.95rem; }
-        .status { color: #7dd3fc; margin: 1rem 0; }
+        .status {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          color: #7dd3fc;
+          margin: 1.5rem 0;
+          font-weight: 700;
+        }
+        .spinner {
+          width: 28px;
+          height: 28px;
+          border-radius: 999px;
+          border: 3px solid rgba(125, 211, 252, 0.25);
+          border-top-color: #38bdf8;
+          animation: dastresa-spin 0.8s linear infinite;
+          flex-shrink: 0;
+        }
+        @keyframes dastresa-spin { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) {
+          .spinner { animation: none; border-top-color: #38bdf8; }
+        }
         .error { color: #fecaca; }
         .close {
           position: sticky; top: 0; float: inline-end;
@@ -82,13 +104,15 @@ export class SummaryOverlay {
         <p class="hint">${escapeHtml(t(opts.locale, 'summaryPrivacyHint'))}</p>
         ${
           opts.status === 'loading'
-            ? `<p class="status" role="status">${escapeHtml(t(opts.locale, 'summaryLoading'))}</p>`
+            ? `<p class="status" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span>${escapeHtml(t(opts.locale, 'summaryLoading'))}</span></p>`
             : ''
         }
         ${
           opts.status === 'error'
             ? `<div class="error" role="alert">${opts.bodyHtml}</div>`
-            : `<div class="article">${opts.bodyHtml}</div>`
+            : opts.status === 'ready'
+              ? `<div class="article">${opts.bodyHtml}</div>`
+              : ''
         }
       </div>
     `;

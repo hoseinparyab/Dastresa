@@ -41,20 +41,27 @@ export class PageSummaryFeature implements IFeature {
   }
 
   private async runSummary(): Promise<void> {
-    if (!this.ctx || this.busy) return;
+    if (!this.ctx || this.busy || !this.enabled) return;
     this.busy = true;
-    const { locale, dir } = await this.localeDir();
-    const content = this.reader.extract(this.ctx.document);
-    this.overlay.showLoading(this.ctx.document, locale, dir, content.title);
+    // Immediate feedback before any async work (storage / extract / network).
     this.ctx.bus.emit(EVENTS.SUMMARY_STARTED, undefined);
+    this.overlay.showLoading(this.ctx.document, 'fa', 'rtl', this.ctx.document.title || '');
 
     try {
+      const { locale, dir } = await this.localeDir();
+      const content = this.reader.extract(this.ctx.document);
+      this.overlay.showLoading(this.ctx.document, locale, dir, content.title);
+
       const response = (await chrome.runtime.sendMessage({
         type: 'dastresa-summarize',
         title: content.title,
         text: content.text,
         locale,
       })) as SummarizeResponse | undefined;
+
+      if (chrome.runtime.lastError) {
+        throw new Error(chrome.runtime.lastError.message || t(locale, 'summaryFailed'));
+      }
 
       if (!response?.ok) {
         const code = response && 'code' in response ? response.code : undefined;
@@ -74,8 +81,18 @@ export class PageSummaryFeature implements IFeature {
         title: content.title,
       });
     } catch (error) {
+      const { locale, dir } = await this.localeDir().catch(() => ({
+        locale: 'fa' as const,
+        dir: 'rtl' as const,
+      }));
       const message = error instanceof Error ? error.message : t(locale, 'summaryFailed');
-      this.overlay.showError(this.ctx.document, locale, dir, content.title, message);
+      this.overlay.showError(
+        this.ctx.document,
+        locale,
+        dir,
+        this.ctx.document.title || '',
+        message,
+      );
       this.ctx.bus.emit(EVENTS.SUMMARY_FAILED, { message });
     } finally {
       this.busy = false;

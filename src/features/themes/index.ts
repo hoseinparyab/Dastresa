@@ -30,7 +30,7 @@ function paintTheme({ scheme, bg, fg, link, border }: PaintTokens): string {
       p, span, li, ul, ol, dl, dt, dd, td, th, tr, table, thead, tbody, tfoot,
       h1, h2, h3, h4, h5, h6, label, figcaption, blockquote,
       pre, code, form, fieldset, legend, summary, details
-    ) {
+    ):not([data-Dastresa]) {
       background-color: ${bg} !important;
       color: ${fg} !important;
       border-color: ${border} !important;
