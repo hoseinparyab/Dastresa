@@ -12,8 +12,9 @@ MVP keeps future capabilities as **IDs + contracts only**.
 | `accessibility-scanner` | `src/future/accessibility-scanner` |
 | `banking-assistant` | `src/future/banking-assistant` |
 | `government-website-assistant` | `src/future/government-website-assistant` |
-| `page-summary` | `src/future/page-summary` |
 | `cloud-sync` | `src/future/cloud-sync` |
 | `user-profiles` | `src/future/user-profiles` |
+
+`page-summary` graduated to MVP under `src/features/page-summary` (opt-in Luma cloud).
 
 Runtime registration code is added in Core steps; these packages must stay implementation-free until scheduled.

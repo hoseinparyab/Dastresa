@@ -11,7 +11,6 @@ export const FUTURE_EXTENSION_POINTS = [
     capability: 'vertical-government',
     status: 'future' as const,
   },
-  { id: 'page-summary', capability: 'summary', status: 'future' as const },
   { id: 'cloud-sync', capability: 'sync', status: 'future' as const },
   { id: 'user-profiles', capability: 'profiles', status: 'future' as const },
 ] as const;

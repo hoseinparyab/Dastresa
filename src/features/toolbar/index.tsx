@@ -21,6 +21,7 @@ export class ToolbarFeature implements IFeature {
   private dir: 'ltr' | 'rtl' = 'rtl';
   private readerMode = false;
   private readingFocus = false;
+  private summarizing = false;
   private unsubs: Array<() => void> = [];
   private migrated = false;
 
@@ -35,6 +36,24 @@ export class ToolbarFeature implements IFeature {
       ctx.bus.on(EVENTS.SETTINGS_CHANGED, ({ settings }) => {
         this.applySettings(settings);
         this.pos = resolveToolbarPosition(ctx.window, settings.toolbarPosition, false);
+        this.render();
+      }),
+    );
+    this.unsubs.push(
+      ctx.bus.on(EVENTS.SUMMARY_STARTED, () => {
+        this.summarizing = true;
+        this.render();
+      }),
+    );
+    this.unsubs.push(
+      ctx.bus.on(EVENTS.SUMMARY_READY, () => {
+        this.summarizing = false;
+        this.render();
+      }),
+    );
+    this.unsubs.push(
+      ctx.bus.on(EVENTS.SUMMARY_FAILED, () => {
+        this.summarizing = false;
         this.render();
       }),
     );
@@ -93,6 +112,7 @@ export class ToolbarFeature implements IFeature {
         dir={this.dir}
         readerMode={this.readerMode}
         readingFocus={this.readingFocus}
+        summarizing={this.summarizing}
         onCommand={(command) => {
           if (command === 'settings') {
             try {

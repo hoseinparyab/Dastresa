@@ -1,6 +1,6 @@
 {
   "name": "Dastresa",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Make every website easier to read and use — offline accessibility Chrome extension",
   "type": "module",
@@ -8,6 +8,9 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "pack:mvp": "node scripts/pack-mvp.mjs",
+    "server:dev": "npm run dev --prefix server",
+    "server:deploy": "npm run deploy --prefix server",
+    "server:install": "npm install --prefix server",
     "preview": "vite preview",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",

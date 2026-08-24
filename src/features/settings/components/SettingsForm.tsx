@@ -1,5 +1,8 @@
+import { useEffect, useState } from 'react';
 import { Controller, useWatch } from 'react-hook-form';
+import { LUMA_API } from '@/core/constants';
 import { createPageResetSettings, type DastresaSettings } from '@/core/settings';
+import { readSecrets, writeSecrets } from '@/features/storage/secrets';
 import { useInstantSettings } from '@/shared/hooks/useInstantSettings';
 import { notifyActiveTab } from '@/shared/messaging/tab';
 import { t } from '@/shared/i18n/messages';
@@ -13,6 +16,14 @@ const CURSOR_KEYS = {
   white: 'cursorWhite',
 } as const;
 
+const SUMMARY_MODELS = [
+  'openai/gpt-4o-mini',
+  'openai/gpt-4.1-mini',
+  'google/gemini-2.5-flash',
+  'google/gemini-2.5-flash-lite',
+  'anthropic/claude-haiku-4.5',
+] as const;
+
 export function SettingsForm({ compact = false }: { compact?: boolean }) {
   const { form, settings, hydrated, replace, applyNow, applyDebounced } = useInstantSettings();
   const textScale = useWatch({ control: form.control, name: 'zoom.textScale' });
@@ -20,7 +31,11 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
   const theme = useWatch({ control: form.control, name: 'theme' });
   const localeWatch = useWatch({ control: form.control, name: 'locale' });
   const focusCursorColor = useWatch({ control: form.control, name: 'focusCursorColor' });
+  const summaryModel = useWatch({ control: form.control, name: 'summaryModel' });
   const locale = (localeWatch ?? settings.locale) === 'en' ? 'en' : 'fa';
+  const [apiKeyDraft, setApiKeyDraft] = useState('');
+  const [hasApiKey, setHasApiKey] = useState(false);
+  const [keyStatus, setKeyStatus] = useState('');
 
   const themeOptions: Array<{ value: DastresaSettings['theme']; label: string }> = [
     { value: 'normal', label: t(locale, 'themeNormal') },
@@ -30,6 +45,14 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
     { value: 'black-white', label: t(locale, 'themeBlackWhite') },
     { value: 'yellow-black', label: t(locale, 'themeYellowBlack') },
   ];
+
+  useEffect(() => {
+    if (compact) return;
+    void readSecrets().then((secrets) => {
+      setHasApiKey(Boolean(secrets.lumaApiKey));
+      setApiKeyDraft('');
+    });
+  }, [compact]);
 
   if (!hydrated) {
     return (
@@ -261,6 +284,76 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
               />
             )}
           />
+        </Section>
+      )}
+
+      {!compact && (
+        <Section title={t(locale, 'summarySection')} description={t(locale, 'summarySectionDesc')}>
+          <label className="block px-1 py-2">
+            <span className="mb-2 block text-sm font-semibold text-slate-200">
+              {t(locale, 'summaryApiKey')}
+            </span>
+            <p className="mb-2 text-sm text-slate-400">{t(locale, 'summaryApiKeyDesc')}</p>
+            <input
+              type="password"
+              autoComplete="off"
+              className="wp-touch w-full rounded-xl border border-white/10 bg-dastresa-surface/90 px-3 text-base text-dastresa-text"
+              placeholder={hasApiKey ? '••••••••••••' : 'LU_…'}
+              value={apiKeyDraft}
+              onChange={(e) => setApiKeyDraft(e.target.value)}
+              aria-label={t(locale, 'summaryApiKey')}
+            />
+          </label>
+          <div className="flex flex-wrap gap-2 px-1 py-2">
+            <Button
+              variant="primary"
+              onClick={() => {
+                void (async () => {
+                  await writeSecrets({ lumaApiKey: apiKeyDraft });
+                  setHasApiKey(Boolean(apiKeyDraft.trim()));
+                  setApiKeyDraft('');
+                  setKeyStatus(t(locale, 'summaryKeySaved'));
+                })();
+              }}
+            >
+              {t(locale, 'summarySaveKey')}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                void (async () => {
+                  await writeSecrets({ lumaApiKey: '' });
+                  setHasApiKey(false);
+                  setApiKeyDraft('');
+                  setKeyStatus(t(locale, 'summaryKeyCleared'));
+                })();
+              }}
+            >
+              {t(locale, 'summaryClearKey')}
+            </Button>
+          </div>
+          {keyStatus ? (
+            <p className="px-1 text-sm text-sky-200" role="status">
+              {keyStatus}
+            </p>
+          ) : null}
+          <SelectField
+            label={t(locale, 'summaryModel')}
+            value={summaryModel ?? LUMA_API.DEFAULT_MODEL}
+            onChange={(e) => {
+              applyNow({ summaryModel: e.target.value });
+            }}
+          >
+            {SUMMARY_MODELS.map((model) => (
+              <option key={model} value={model}>
+                {model}
+              </option>
+            ))}
+            {summaryModel &&
+            !SUMMARY_MODELS.includes(summaryModel as (typeof SUMMARY_MODELS)[number]) ? (
+              <option value={summaryModel}>{summaryModel}</option>
+            ) : null}
+          </SelectField>
         </Section>
       )}
 

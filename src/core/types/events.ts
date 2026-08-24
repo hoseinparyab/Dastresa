@@ -15,6 +15,7 @@ export type EventMap = {
       | 'zoom-out'
       | 'contrast'
       | 'focus'
+      | 'summary'
       | 'settings'
       | 'exit'
       | 'reset';
@@ -39,6 +40,9 @@ export type EventMap = {
   'zoom:applied': { scale: number };
   'dom:ready': { ready: boolean };
   'dom:changed': { reason: string };
+  'summary:started': undefined;
+  'summary:ready': { summary: string; title: string };
+  'summary:failed': { message: string };
 };
 
 export type EventName = keyof EventMap;
