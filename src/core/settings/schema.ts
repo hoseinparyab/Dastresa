@@ -69,6 +69,11 @@ export const DastresaSettingsSchema = z.object({
   toolbarPosition: ToolbarPositionSchema.default({ x: 24, y: 24 }),
   locale: z.enum(['en', 'fa']).default('fa'),
   dir: z.enum(['ltr', 'rtl']).default('rtl'),
+  /**
+   * Luma model id for optional page summary (opt-in cloud).
+   * API key is stored separately under STORAGE_KEYS.SECRETS.
+   */
+  summaryModel: z.string().default('openai/gpt-4o-mini'),
 });
 
 export type DastresaSettings = z.infer<typeof DastresaSettingsSchema>;
@@ -132,6 +137,7 @@ export function createPageResetSettings(current?: Partial<DastresaSettings>): Da
     toolbarPosition: current?.toolbarPosition ?? { x: 24, y: 24 },
     locale,
     dir,
+    summaryModel: current?.summaryModel ?? 'openai/gpt-4o-mini',
   });
 }
 
@@ -187,6 +193,7 @@ export function parseSettings(input: unknown): DastresaSettings {
   assignIfValid('focusCursorColor', FocusCursorColorSchema, raw.focusCursorColor);
   assignIfValid('locale', z.enum(['en', 'fa']), raw.locale);
   assignIfValid('dir', z.enum(['ltr', 'rtl']), raw.dir);
+  assignIfValid('summaryModel', z.string().min(1), raw.summaryModel);
 
   if (raw.zoom && typeof raw.zoom === 'object') {
     const zoom = ZoomSettingsSchema.safeParse({ ...base.zoom, ...(raw.zoom as object) });

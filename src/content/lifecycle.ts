@@ -16,6 +16,7 @@ import { feature as toolbarFeature } from '@/features/toolbar';
 import { feature as readerModeFeature } from '@/features/reader-mode';
 import { feature as textToSpeechFeature } from '@/features/text-to-speech';
 import { feature as readingFocusFeature } from '@/features/reading-focus';
+import { feature as pageSummaryFeature } from '@/features/page-summary';
 
 export type ContentRuntime = {
   container: AppContainer;
@@ -114,6 +115,11 @@ export async function startProductFeatures(runtime: ContentRuntime): Promise<voi
   await ensureRegistered(container, readingFocusFeature);
   await readingFocusFeature.initialize(ctx);
   runtime.productFeatures.push(readingFocusFeature);
+
+  await ensureRegistered(container, pageSummaryFeature);
+  await pageSummaryFeature.initialize(ctx);
+  await pageSummaryFeature.enable();
+  runtime.productFeatures.push(pageSummaryFeature);
 
   window.__DASTRESA_ACTIVE__ = true;
   container.bus.emit(EVENTS.EXTENSION_ACTIVATED, undefined);

@@ -19,6 +19,7 @@ describe('accessibility architecture invariants', () => {
         'themes',
         'reading-focus',
         'toolbar',
+        'page-summary',
       ]),
     );
   });

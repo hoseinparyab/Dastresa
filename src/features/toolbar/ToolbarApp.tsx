@@ -42,6 +42,7 @@ function primaryButtons(
       aria: t(locale, 'ariaFocus'),
       pressed: state.readingFocus,
     },
+    { command: 'summary', label: t(locale, 'cmdSummary'), aria: t(locale, 'ariaSummary') },
   ];
 }
 

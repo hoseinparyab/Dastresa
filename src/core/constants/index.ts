@@ -8,6 +8,7 @@ export const FEATURE_IDS = {
   THEMES: 'themes',
   READING_FOCUS: 'reading-focus',
   TOOLBAR: 'toolbar',
+  PAGE_SUMMARY: 'page-summary',
 } as const;
 
 export type FeatureId = (typeof FEATURE_IDS)[keyof typeof FEATURE_IDS];
@@ -15,6 +16,14 @@ export type FeatureId = (typeof FEATURE_IDS)[keyof typeof FEATURE_IDS];
 export const STORAGE_KEYS = {
   SETTINGS: 'Dastresa.settings',
   ONBOARDING: 'Dastresa.onboarding',
+  /** API keys and secrets — never broadcast to pages. */
+  SECRETS: 'Dastresa.secrets',
+} as const;
+
+/** Luma (OpenAI-compatible Responses API). */
+export const LUMA_API = {
+  BASE_URL: 'https://dash.lumai.ir/api/v1',
+  DEFAULT_MODEL: 'openai/gpt-4o-mini',
 } as const;
 
 /** Bump when tour content changes so returning users can see an updated intro. */
@@ -36,6 +45,9 @@ export const EVENTS = {
   ZOOM_APPLIED: 'zoom:applied',
   DOM_READY: 'dom:ready',
   DOM_CHANGED: 'dom:changed',
+  SUMMARY_STARTED: 'summary:started',
+  SUMMARY_READY: 'summary:ready',
+  SUMMARY_FAILED: 'summary:failed',
 } as const;
 
 export const HOST_ROOT_ID = 'Dastresa-root';
