@@ -21,6 +21,30 @@ function toHtmlParagraphs(summary: string): string {
     .join('');
 }
 
+async function copyText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // fall through to execCommand
+  }
+  try {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.cssText = 'position:fixed;left:-9999px;top:0';
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand('copy');
+    area.remove();
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 export class SummaryOverlay {
   private host: HTMLElement | null = null;
 
@@ -32,6 +56,8 @@ export class SummaryOverlay {
       title: string;
       bodyHtml: string;
       status?: 'loading' | 'ready' | 'error';
+      /** Plain text used by the Copy button (ready state only). */
+      copyText?: string;
     },
   ): void {
     this.close();
@@ -50,6 +76,7 @@ export class SummaryOverlay {
 
     const shadow = this.host.attachShadow({ mode: 'open' });
     const wrap = doc.createElement('div');
+    const showCopy = opts.status === 'ready' && Boolean(opts.copyText?.trim());
     wrap.innerHTML = `
       <style>
         :host, * { box-sizing: border-box; }
@@ -63,6 +90,17 @@ export class SummaryOverlay {
           font-family: "Source Sans 3", Tahoma, sans-serif;
           line-height: 1.7;
           font-size: 1.125rem;
+        }
+        .actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          justify-content: flex-end;
+          position: sticky;
+          top: 0;
+          margin-bottom: 0.75rem;
+          padding-block: 0.25rem;
+          background: #020617;
         }
         h1 { font-family: Fraunces, Georgia, serif; font-size: 1.75rem; margin: 0 0 0.5rem; }
         .hint { color: #94a3b8; margin: 0 0 1.5rem; font-size: 0.95rem; }
@@ -88,17 +126,35 @@ export class SummaryOverlay {
           .spinner { animation: none; border-top-color: #38bdf8; }
         }
         .error { color: #fecaca; }
-        .close {
-          position: sticky; top: 0; float: inline-end;
+        .action-btn {
           min-width: 48px; min-height: 48px;
+          padding: 0 14px;
           border: 0; border-radius: 10px;
           background: #1e293b; color: #f8fafc; cursor: pointer; font-size: 1rem;
+          font-family: inherit;
         }
-        .close:focus-visible { outline: 3px solid #38bdf8; outline-offset: 2px; }
+        .action-btn.copy {
+          background: rgba(56, 189, 248, 0.18);
+          color: #e0f2fe;
+          border: 1px solid rgba(56, 189, 248, 0.45);
+        }
+        .action-btn.copy.done {
+          background: rgba(34, 197, 94, 0.2);
+          border-color: rgba(74, 222, 128, 0.55);
+          color: #bbf7d0;
+        }
+        .action-btn:focus-visible { outline: 3px solid #38bdf8; outline-offset: 2px; }
         p { margin: 0 0 1rem; }
       </style>
       <div class="wrap" dir="${opts.dir}" lang="${opts.locale}">
-        <button type="button" class="close" aria-label="${escapeHtml(t(opts.locale, 'summaryClose'))}">${escapeHtml(t(opts.locale, 'summaryClose'))}</button>
+        <div class="actions">
+          ${
+            showCopy
+              ? `<button type="button" class="action-btn copy" aria-label="${escapeHtml(t(opts.locale, 'summaryCopy'))}">${escapeHtml(t(opts.locale, 'summaryCopy'))}</button>`
+              : ''
+          }
+          <button type="button" class="action-btn close" aria-label="${escapeHtml(t(opts.locale, 'summaryClose'))}">${escapeHtml(t(opts.locale, 'summaryClose'))}</button>
+        </div>
         <h1>${escapeHtml(t(opts.locale, 'summaryTitle'))}</h1>
         <p class="hint">${escapeHtml(opts.title)}</p>
         <p class="hint">${escapeHtml(t(opts.locale, 'summaryPrivacyHint'))}</p>
@@ -118,6 +174,27 @@ export class SummaryOverlay {
     `;
     shadow.appendChild(wrap);
     wrap.querySelector('.close')?.addEventListener('click', () => this.close());
+
+    const copyBtn = wrap.querySelector<HTMLButtonElement>('.copy');
+    const plain = opts.copyText?.trim() ?? '';
+    if (copyBtn && plain) {
+      copyBtn.addEventListener('click', () => {
+        void (async () => {
+          const ok = await copyText(plain);
+          if (!ok) return;
+          copyBtn.textContent = t(opts.locale, 'summaryCopied');
+          copyBtn.classList.add('done');
+          copyBtn.setAttribute('aria-label', t(opts.locale, 'summaryCopied'));
+          window.setTimeout(() => {
+            if (!copyBtn.isConnected) return;
+            copyBtn.textContent = t(opts.locale, 'summaryCopy');
+            copyBtn.classList.remove('done');
+            copyBtn.setAttribute('aria-label', t(opts.locale, 'summaryCopy'));
+          }, 1600);
+        })();
+      });
+    }
+
     doc.documentElement.appendChild(this.host);
   }
 
@@ -144,6 +221,7 @@ export class SummaryOverlay {
       title,
       bodyHtml: toHtmlParagraphs(summary),
       status: 'ready',
+      copyText: summary,
     });
   }
 

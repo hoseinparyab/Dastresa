@@ -99,6 +99,8 @@ const EN = {
 
   summaryTitle: 'Page summary',
   summaryClose: 'Close',
+  summaryCopy: 'Copy summary',
+  summaryCopied: 'Copied',
   summaryLoading: 'Summarizing with Luma…',
   summaryFailed: 'Could not summarize this page.',
   summaryNeedKey: 'Summary backend is offline. Start the server or add your own Luma API key.',
@@ -252,6 +254,8 @@ const FA: Record<MessageKey, string> = {
 
   summaryTitle: 'خلاصه صفحه',
   summaryClose: 'بستن',
+  summaryCopy: 'کپی خلاصه',
+  summaryCopied: 'کپی شد',
   summaryLoading: 'در حال خلاصه‌سازی با لوما…',
   summaryFailed: 'خلاصه‌سازی این صفحه ممکن نشد.',
   summaryNeedKey: 'سرویس خلاصه در دسترس نیست. سرور را روشن کنید یا کلید لومای خودتان را وارد کنید.',
