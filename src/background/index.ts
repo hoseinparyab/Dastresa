@@ -72,10 +72,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         sendResponse({ ok: true, summary });
       } catch (error) {
         const errMessage = error instanceof Error ? error.message : 'summary_failed';
+        const isOffline =
+          /failed to fetch|networkerror|load failed|could not connect/i.test(errMessage);
         sendResponse({
           ok: false,
-          code:
-            errMessage === 'missing_api_key'
+          code: isOffline
+            ? 'offline'
+            : errMessage === 'missing_api_key'
               ? 'missing_api_key'
               : errMessage === 'rate_limited'
                 ? 'rate_limited'

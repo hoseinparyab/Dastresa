@@ -104,6 +104,7 @@ const EN = {
   summaryLoading: 'Summarizing with Luma…',
   summaryFailed: 'Could not summarize this page.',
   summaryNeedKey: 'Summary backend is offline. Start the server or add your own Luma API key.',
+  summaryOffline: 'Cannot reach the summary server. Run npm run server:dev or deploy the backend.',
   summaryPrivacyHint: 'Page text is sent to the Dastresa summary service (or your Luma key) only when you tap Summary.',
   summarySection: 'Page summary',
   summarySectionDesc:
@@ -259,6 +260,7 @@ const FA: Record<MessageKey, string> = {
   summaryLoading: 'در حال خلاصه‌سازی با لوما…',
   summaryFailed: 'خلاصه‌سازی این صفحه ممکن نشد.',
   summaryNeedKey: 'سرویس خلاصه در دسترس نیست. سرور را روشن کنید یا کلید لومای خودتان را وارد کنید.',
+  summaryOffline: 'به سرور خلاصه وصل نشد. npm run server:dev را بزنید یا بک‌اند را دیپلوی کنید.',
   summaryPrivacyHint: 'متن صفحه فقط با زدن خلاصه به سرویس دسترسا (یا کلید لومای شما) فرستاده می‌شود.',
   summarySection: 'خلاصه صفحه',
   summarySectionDesc:
