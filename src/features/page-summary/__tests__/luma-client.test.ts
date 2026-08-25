@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { extractLumaText, truncateForSummary } from '@/features/page-summary/luma-client';
+import {
+  extractChatText,
+  extractLumaText,
+  truncateForSummary,
+} from '@/features/page-summary/luma-client';
 
 describe('luma-client helpers', () => {
   it('extracts output_text from Responses API payload', () => {
@@ -12,6 +16,14 @@ describe('luma-client helpers', () => {
       ],
     });
     expect(text).toBe('خلاصه تست');
+  });
+
+  it('extracts message content from Chat Completions payload', () => {
+    expect(
+      extractChatText({
+        choices: [{ message: { content: 'hello summary' } }],
+      }),
+    ).toBe('hello summary');
   });
 
   it('truncates long page text', () => {

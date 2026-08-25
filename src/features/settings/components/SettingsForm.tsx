@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Controller, useWatch } from 'react-hook-form';
-import { LUMA_API } from '@/core/constants';
 import { createPageResetSettings, type DastresaSettings } from '@/core/settings';
 import { readSecrets, writeSecrets } from '@/features/storage/secrets';
 import { useInstantSettings } from '@/shared/hooks/useInstantSettings';
@@ -16,14 +15,6 @@ const CURSOR_KEYS = {
   white: 'cursorWhite',
 } as const;
 
-const SUMMARY_MODELS = [
-  'openai/gpt-4o-mini',
-  'openai/gpt-4.1-mini',
-  'google/gemini-2.5-flash',
-  'google/gemini-2.5-flash-lite',
-  'anthropic/claude-haiku-4.5',
-] as const;
-
 export function SettingsForm({ compact = false }: { compact?: boolean }) {
   const { form, settings, hydrated, replace, applyNow, applyDebounced } = useInstantSettings();
   const textScale = useWatch({ control: form.control, name: 'zoom.textScale' });
@@ -31,11 +22,15 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
   const theme = useWatch({ control: form.control, name: 'theme' });
   const localeWatch = useWatch({ control: form.control, name: 'locale' });
   const focusCursorColor = useWatch({ control: form.control, name: 'focusCursorColor' });
+  const summaryProvider = useWatch({ control: form.control, name: 'summaryProvider' });
+  const summaryBaseUrl = useWatch({ control: form.control, name: 'summaryBaseUrl' });
   const summaryModel = useWatch({ control: form.control, name: 'summaryModel' });
+  const summaryApiStyle = useWatch({ control: form.control, name: 'summaryApiStyle' });
   const locale = (localeWatch ?? settings.locale) === 'en' ? 'en' : 'fa';
   const [apiKeyDraft, setApiKeyDraft] = useState('');
   const [hasApiKey, setHasApiKey] = useState(false);
   const [keyStatus, setKeyStatus] = useState('');
+  const isCustomProvider = (summaryProvider ?? settings.summaryProvider) === 'custom';
 
   const themeOptions: Array<{ value: DastresaSettings['theme']; label: string }> = [
     { value: 'normal', label: t(locale, 'themeNormal') },
@@ -49,7 +44,7 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
   useEffect(() => {
     if (compact) return;
     void readSecrets().then((secrets) => {
-      setHasApiKey(Boolean(secrets.lumaApiKey));
+      setHasApiKey(Boolean(secrets.summaryApiKey));
       setApiKeyDraft('');
     });
   }, [compact]);
@@ -289,71 +284,121 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
 
       {!compact && (
         <Section title={t(locale, 'summarySection')} description={t(locale, 'summarySectionDesc')}>
-          <label className="block px-1 py-2">
-            <span className="mb-2 block text-sm font-semibold text-slate-200">
-              {t(locale, 'summaryApiKey')}
-            </span>
-            <p className="mb-2 text-sm text-slate-400">{t(locale, 'summaryApiKeyDesc')}</p>
-            <input
-              type="password"
-              autoComplete="off"
-              className="wp-touch w-full rounded-xl border border-white/10 bg-dastresa-surface/90 px-3 text-base text-dastresa-text"
-              placeholder={hasApiKey ? '••••••••••••' : 'LU_…'}
-              value={apiKeyDraft}
-              onChange={(e) => setApiKeyDraft(e.target.value)}
-              aria-label={t(locale, 'summaryApiKey')}
-            />
-          </label>
-          <div className="flex flex-wrap gap-2 px-1 py-2">
-            <Button
-              variant="primary"
-              onClick={() => {
-                void (async () => {
-                  await writeSecrets({ lumaApiKey: apiKeyDraft });
-                  setHasApiKey(Boolean(apiKeyDraft.trim()));
-                  setApiKeyDraft('');
-                  setKeyStatus(t(locale, 'summaryKeySaved'));
-                })();
-              }}
-            >
-              {t(locale, 'summarySaveKey')}
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                void (async () => {
-                  await writeSecrets({ lumaApiKey: '' });
-                  setHasApiKey(false);
-                  setApiKeyDraft('');
-                  setKeyStatus(t(locale, 'summaryKeyCleared'));
-                })();
-              }}
-            >
-              {t(locale, 'summaryClearKey')}
-            </Button>
-          </div>
-          {keyStatus ? (
-            <p className="px-1 text-sm text-sky-200" role="status">
-              {keyStatus}
-            </p>
-          ) : null}
           <SelectField
-            label={t(locale, 'summaryModel')}
-            value={summaryModel ?? LUMA_API.DEFAULT_MODEL}
+            label={t(locale, 'summaryProvider')}
+            value={summaryProvider ?? 'free'}
             onChange={(e) => {
-              applyNow({ summaryModel: e.target.value });
+              applyNow({
+                summaryProvider: e.target.value === 'custom' ? 'custom' : 'free',
+              });
             }}
           >
-            {SUMMARY_MODELS.map((model) => (
-              <option key={model} value={model}>
-                {model}
-              </option>
-            ))}
-            {summaryModel &&
-            !SUMMARY_MODELS.includes(summaryModel as (typeof SUMMARY_MODELS)[number]) ? (
-              <option value={summaryModel}>{summaryModel}</option>
-            ) : null}
+            <option value="free">{t(locale, 'summaryProviderFree')}</option>
+            <option value="custom">{t(locale, 'summaryProviderCustom')}</option>
           </SelectField>
+
+          {isCustomProvider ? (
+            <>
+              <label className="block px-1 py-2">
+                <span className="mb-2 block text-sm font-semibold text-slate-200">
+                  {t(locale, 'summaryApiKey')}
+                </span>
+                <p className="mb-2 text-sm text-slate-400">{t(locale, 'summaryApiKeyDesc')}</p>
+                <input
+                  type="password"
+                  autoComplete="off"
+                  className="wp-touch w-full rounded-xl border border-white/10 bg-dastresa-surface/90 px-3 text-base text-dastresa-text"
+                  placeholder={hasApiKey ? '••••••••••••' : 'sk-…'}
+                  value={apiKeyDraft}
+                  onChange={(e) => setApiKeyDraft(e.target.value)}
+                  aria-label={t(locale, 'summaryApiKey')}
+                />
+              </label>
+              <div className="flex flex-wrap gap-2 px-1 py-2">
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    void (async () => {
+                      await writeSecrets({ summaryApiKey: apiKeyDraft });
+                      setHasApiKey(Boolean(apiKeyDraft.trim()));
+                      setApiKeyDraft('');
+                      setKeyStatus(t(locale, 'summaryKeySaved'));
+                    })();
+                  }}
+                >
+                  {t(locale, 'summarySaveKey')}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    void (async () => {
+                      await writeSecrets({ summaryApiKey: '' });
+                      setHasApiKey(false);
+                      setApiKeyDraft('');
+                      setKeyStatus(t(locale, 'summaryKeyCleared'));
+                    })();
+                  }}
+                >
+                  {t(locale, 'summaryClearKey')}
+                </Button>
+              </div>
+              {keyStatus ? (
+                <p className="px-1 text-sm text-sky-200" role="status">
+                  {keyStatus}
+                </p>
+              ) : null}
+
+              <label className="block px-1 py-2">
+                <span className="mb-2 block text-sm font-semibold text-slate-200">
+                  {t(locale, 'summaryBaseUrl')}
+                </span>
+                <p className="mb-2 text-sm text-slate-400">{t(locale, 'summaryBaseUrlDesc')}</p>
+                <input
+                  type="url"
+                  autoComplete="off"
+                  className="wp-touch w-full rounded-xl border border-white/10 bg-dastresa-surface/90 px-3 text-base text-dastresa-text"
+                  value={summaryBaseUrl ?? 'https://api.openai.com/v1'}
+                  onChange={(e) => {
+                    form.setValue('summaryBaseUrl', e.target.value, { shouldDirty: true });
+                    applyDebounced();
+                  }}
+                  aria-label={t(locale, 'summaryBaseUrl')}
+                />
+              </label>
+
+              <label className="block px-1 py-2">
+                <span className="mb-2 block text-sm font-semibold text-slate-200">
+                  {t(locale, 'summaryModel')}
+                </span>
+                <p className="mb-2 text-sm text-slate-400">{t(locale, 'summaryModelDesc')}</p>
+                <input
+                  type="text"
+                  autoComplete="off"
+                  className="wp-touch w-full rounded-xl border border-white/10 bg-dastresa-surface/90 px-3 text-base text-dastresa-text"
+                  value={summaryModel ?? 'gpt-4o-mini'}
+                  onChange={(e) => {
+                    form.setValue('summaryModel', e.target.value, { shouldDirty: true });
+                    applyDebounced();
+                  }}
+                  aria-label={t(locale, 'summaryModel')}
+                  placeholder="gpt-4o-mini"
+                />
+              </label>
+
+              <SelectField
+                label={t(locale, 'summaryApiStyle')}
+                value={summaryApiStyle ?? 'chat'}
+                onChange={(e) => {
+                  applyNow({
+                    summaryApiStyle: e.target.value === 'responses' ? 'responses' : 'chat',
+                  });
+                }}
+              >
+                <option value="chat">{t(locale, 'summaryApiStyleChat')}</option>
+                <option value="responses">{t(locale, 'summaryApiStyleResponses')}</option>
+              </SelectField>
+            </>
+          ) : null}
         </Section>
       )}
 

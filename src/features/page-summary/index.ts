@@ -70,8 +70,13 @@ export class PageSummaryFeature implements IFeature {
             ? t(locale, 'summaryNeedKey')
             : code === 'rate_limited'
               ? t(locale, 'summaryRateLimited')
-              : (response && 'error' in response ? response.error : null) ||
-                t(locale, 'summaryFailed');
+              : code === 'offline' ||
+                  /failed to fetch|networkerror|load failed/i.test(
+                    (response && 'error' in response ? response.error : '') || '',
+                  )
+                ? t(locale, 'summaryOffline')
+                : (response && 'error' in response ? response.error : null) ||
+                  t(locale, 'summaryFailed');
         this.overlay.showError(this.ctx.document, locale, dir, content.title, message);
         this.ctx.bus.emit(EVENTS.SUMMARY_FAILED, { message });
         return;
