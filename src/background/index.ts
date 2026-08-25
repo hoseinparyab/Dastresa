@@ -2,12 +2,12 @@
  * Dastresa MV3 service worker — lean coordinator only.
  */
 
-import { ONBOARDING_VERSION, STORAGE_KEYS, SUMMARY_API } from '@/core/constants';
+import { LUMA_API, ONBOARDING_VERSION, STORAGE_KEYS, SUMMARY_API } from '@/core/constants';
 import { parseSettings } from '@/core/settings';
 import type { OnboardingState } from '@/features/onboarding/onboarding-storage';
 import {
   summarizeViaBackend,
-  summarizeWithCustomProvider,
+  summarizeWithLuma,
 } from '@/features/page-summary/luma-client';
 import { readSecrets } from '@/features/storage/secrets';
 
@@ -49,26 +49,18 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     void (async () => {
       try {
         const secrets = await readSecrets();
-        const customKey = secrets.summaryApiKey?.trim();
+        const lumaKey = secrets.summaryApiKey?.trim();
         const stored = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
         const settings = parseSettings(stored[STORAGE_KEYS.SETTINGS]);
         const title = String(message.title ?? '');
         const text = String(message.text ?? '');
         const locale = message.locale === 'en' ? 'en' : 'fa';
 
-        const useCustom = settings.summaryProvider === 'custom';
-
-        if (useCustom && !customKey) {
-          sendResponse({ ok: false, code: 'missing_api_key', error: 'missing_api_key' });
-          return;
-        }
-
-        const summary = useCustom
-          ? await summarizeWithCustomProvider({
-              apiKey: customKey!,
-              baseUrl: settings.summaryBaseUrl,
-              model: settings.summaryModel,
-              apiStyle: settings.summaryApiStyle,
+        // Own Luma key → bypass free daily quota. Otherwise → free backend.
+        const summary = lumaKey
+          ? await summarizeWithLuma({
+              apiKey: lumaKey,
+              model: settings.summaryModel || LUMA_API.DEFAULT_MODEL,
               title,
               text,
               locale,

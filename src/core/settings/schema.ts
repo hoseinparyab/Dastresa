@@ -69,14 +69,8 @@ export const DastresaSettingsSchema = z.object({
   toolbarPosition: ToolbarPositionSchema.default({ x: 24, y: 24 }),
   locale: z.enum(['en', 'fa']).default('fa'),
   dir: z.enum(['ltr', 'rtl']).default('rtl'),
-  /** free = Dastresa backend; custom = user OpenAI-compatible provider */
-  summaryProvider: z.enum(['free', 'custom']).default('free'),
-  /** Base URL like https://api.openai.com/v1 or https://dash.lumai.ir/api/v1 */
-  summaryBaseUrl: z.string().default('https://api.openai.com/v1'),
-  /** Any model id the provider accepts */
-  summaryModel: z.string().default('gpt-4o-mini'),
-  /** chat = /chat/completions (most providers); responses = /responses (OpenAI/Luma) */
-  summaryApiStyle: z.enum(['chat', 'responses']).default('chat'),
+  /** Luma model id when using the user's own API key */
+  summaryModel: z.string().default('openai/gpt-4o-mini'),
 });
 
 export type DastresaSettings = z.infer<typeof DastresaSettingsSchema>;
@@ -140,10 +134,7 @@ export function createPageResetSettings(current?: Partial<DastresaSettings>): Da
     toolbarPosition: current?.toolbarPosition ?? { x: 24, y: 24 },
     locale,
     dir,
-    summaryProvider: current?.summaryProvider ?? 'free',
-    summaryBaseUrl: current?.summaryBaseUrl ?? 'https://api.openai.com/v1',
-    summaryModel: current?.summaryModel ?? 'gpt-4o-mini',
-    summaryApiStyle: current?.summaryApiStyle ?? 'chat',
+    summaryModel: current?.summaryModel ?? 'openai/gpt-4o-mini',
   });
 }
 
@@ -199,10 +190,7 @@ export function parseSettings(input: unknown): DastresaSettings {
   assignIfValid('focusCursorColor', FocusCursorColorSchema, raw.focusCursorColor);
   assignIfValid('locale', z.enum(['en', 'fa']), raw.locale);
   assignIfValid('dir', z.enum(['ltr', 'rtl']), raw.dir);
-  assignIfValid('summaryProvider', z.enum(['free', 'custom']), raw.summaryProvider);
-  assignIfValid('summaryBaseUrl', z.string().min(1), raw.summaryBaseUrl);
   assignIfValid('summaryModel', z.string().min(1), raw.summaryModel);
-  assignIfValid('summaryApiStyle', z.enum(['chat', 'responses']), raw.summaryApiStyle);
 
   if (raw.zoom && typeof raw.zoom === 'object') {
     const zoom = ZoomSettingsSchema.safeParse({ ...base.zoom, ...(raw.zoom as object) });
