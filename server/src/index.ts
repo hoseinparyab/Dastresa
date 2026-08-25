@@ -29,7 +29,7 @@ export default {
       return json({ ok: false, error: 'not_found' }, 404);
     }
 
-    const limit = Number(env.RATE_LIMIT_PER_HOUR) || 30;
+    const limit = Number(env.RATE_LIMIT_PER_DAY) || 5;
     const gate = await allowRequest(request, limit);
     if (!gate.ok) {
       return json(

@@ -10,7 +10,7 @@
   "vars": {
     "LUMA_BASE_URL": "https://dash.lumai.ir/api/v1",
     "LUMA_MODEL": "openai/gpt-4o-mini",
-    "RATE_LIMIT_PER_HOUR": "30"
+    "RATE_LIMIT_PER_DAY": "5"
   },
   "secrets": {
     "required": ["LUMA_API_KEY"]

@@ -9,7 +9,8 @@ Proxies page-summary requests to Luma so the API key never ships inside the Chro
 | `GET` | `/health` | Liveness |
 | `POST` | `/api/summarize` | `{ title, text, locale }` → `{ ok, summary }` |
 
-Rate limit: ~30 requests / IP / hour (configurable).
+**Free tier:** ~5 requests / IP / day (configurable via `RATE_LIMIT_PER_DAY`).
+Users who need more can add their own Luma key in the extension Settings (bypasses this backend).
 
 ## Local setup
 
