@@ -20,10 +20,10 @@ export const STORAGE_KEYS = {
   SECRETS: 'Dastresa.secrets',
 } as const;
 
-/** Luma Responses API (used only when user supplies their own key). */
+/** Defaults for optional custom OpenAI-compatible providers (incl. Luma). */
 export const LUMA_API = {
-  BASE_URL: 'https://dash.lumai.ir/api/v1',
-  DEFAULT_MODEL: 'openai/gpt-4o-mini',
+  BASE_URL: 'https://api.openai.com/v1',
+  DEFAULT_MODEL: 'gpt-4o-mini',
 } as const;
 
 /**

@@ -2,10 +2,13 @@
  * Dastresa MV3 service worker — lean coordinator only.
  */
 
-import { LUMA_API, ONBOARDING_VERSION, STORAGE_KEYS, SUMMARY_API } from '@/core/constants';
+import { ONBOARDING_VERSION, STORAGE_KEYS, SUMMARY_API } from '@/core/constants';
 import { parseSettings } from '@/core/settings';
 import type { OnboardingState } from '@/features/onboarding/onboarding-storage';
-import { summarizeViaBackend, summarizeWithLuma } from '@/features/page-summary/luma-client';
+import {
+  summarizeViaBackend,
+  summarizeWithCustomProvider,
+} from '@/features/page-summary/luma-client';
 import { readSecrets } from '@/features/storage/secrets';
 
 async function seedOnboardingOnInstall(): Promise<void> {
@@ -46,18 +49,26 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     void (async () => {
       try {
         const secrets = await readSecrets();
-        const customKey = secrets.lumaApiKey?.trim();
+        const customKey = secrets.summaryApiKey?.trim();
         const stored = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
         const settings = parseSettings(stored[STORAGE_KEYS.SETTINGS]);
         const title = String(message.title ?? '');
         const text = String(message.text ?? '');
         const locale = message.locale === 'en' ? 'en' : 'fa';
 
-        // Prefer free backend (key stays server-side). Optional user key → direct Luma.
-        const summary = customKey
-          ? await summarizeWithLuma({
-              apiKey: customKey,
-              model: settings.summaryModel || LUMA_API.DEFAULT_MODEL,
+        const useCustom = settings.summaryProvider === 'custom';
+
+        if (useCustom && !customKey) {
+          sendResponse({ ok: false, code: 'missing_api_key', error: 'missing_api_key' });
+          return;
+        }
+
+        const summary = useCustom
+          ? await summarizeWithCustomProvider({
+              apiKey: customKey!,
+              baseUrl: settings.summaryBaseUrl,
+              model: settings.summaryModel,
+              apiStyle: settings.summaryApiStyle,
               title,
               text,
               locale,
