@@ -1,6 +1,6 @@
 {
   "name": "Dastresa",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "private": true,
   "description": "Make every website easier to read and use — offline accessibility Chrome extension",
   "type": "module",
