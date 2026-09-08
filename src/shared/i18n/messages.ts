@@ -103,18 +103,25 @@ const EN = {
   summaryCopied: 'Copied',
   summaryLoading: 'Summarizing…',
   summaryFailed: 'Could not summarize this page.',
-  summaryNeedKey: 'Free daily quota used up. Add your Luma API key in Settings for more summaries.',
+  summaryNeedKey: 'Add your Luma or Gemini API key in Settings, or switch back to Free.',
   summaryOffline: 'Cannot reach the summary server. Run npm run server:dev or deploy the backend.',
-  summaryPrivacyHint: 'Page text is sent only when you tap Summary (free backend, or Luma if you added a key).',
+  summaryPrivacyHint:
+    'Page text is sent only when you tap Summary (free backend, or Luma/Gemini if you chose them).',
   summarySection: 'Page summary',
   summarySectionDesc:
-    'Free: a few summaries per day via Dastresa. Need more? Optionally add your own Luma API key.',
-  summaryApiKey: 'Luma API key (optional)',
-  summaryApiKeyDesc:
-    'Leave empty for free summaries. Your key is stored only on this browser and bypasses the daily limit.',
-  summaryModel: 'Luma model (with your key)',
+    'Free: a few summaries per day via Dastresa. Need more? Use your own Luma or Gemini API key.',
+  summaryProvider: 'Summary provider',
+  summaryProviderFree: 'Free (Dastresa backend)',
+  summaryProviderLuma: 'Luma (your API key)',
+  summaryProviderGemini: 'Gemini (your API key)',
+  summaryLumaKey: 'Luma API key',
+  summaryLumaKeyDesc: 'Stored only on this browser. Required for Luma mode; bypasses the free daily limit.',
+  summaryGeminiKey: 'Gemini API key',
+  summaryGeminiKeyDesc:
+    'From Google AI Studio. Stored only on this browser. Required for Gemini mode.',
+  summaryModel: 'Model',
   summaryRateLimited:
-    'Free daily limit reached. Try again tomorrow, or add your Luma API key in Settings.',
+    'Free daily limit reached. Try again tomorrow, or switch to Luma/Gemini in Settings.',
   summarySaveKey: 'Save API key',
   summaryKeySaved: 'API key saved.',
   summaryKeyCleared: 'API key cleared.',
@@ -261,18 +268,26 @@ const FA: Record<MessageKey, string> = {
   summaryCopied: 'کپی شد',
   summaryLoading: 'در حال خلاصه‌سازی…',
   summaryFailed: 'خلاصه‌سازی این صفحه ممکن نشد.',
-  summaryNeedKey: 'سهمیه رایگان امروز تمام شده. برای خلاصه بیشتر، کلید لوما را در تنظیمات وارد کنید.',
+  summaryNeedKey: 'در تنظیمات کلید لوما یا جمینای را وارد کنید، یا به حالت رایگان برگردید.',
   summaryOffline: 'به سرور خلاصه وصل نشد. npm run server:dev را بزنید یا بک‌اند را دیپلوی کنید.',
-  summaryPrivacyHint: 'متن صفحه فقط با زدن خلاصه فرستاده می‌شود (بک‌اند رایگان، یا لوما اگر کلید گذاشته باشید).',
+  summaryPrivacyHint:
+    'متن صفحه فقط با زدن خلاصه فرستاده می‌شود (بک‌اند رایگان، یا لوما/جمینای در صورت انتخاب).',
   summarySection: 'خلاصه صفحه',
   summarySectionDesc:
-    'رایگان: چند خلاصه در روز از بک‌اند دسترسا. سهمیه بیشتر؟ اختیاری کلید لومای خودتان را اضافه کنید.',
-  summaryApiKey: 'کلید API لوما (اختیاری)',
-  summaryApiKeyDesc:
-    'خالی بگذارید تا از سهمیه رایگان استفاده شود. کلید فقط روی همین مرورگر ذخیره می‌شود و محدودیت روزانه را رد می‌کند.',
-  summaryModel: 'مدل لوما (با کلید خودتان)',
+    'رایگان: چند خلاصه در روز از بک‌اند دسترسا. سهمیه بیشتر؟ کلید لوما یا جمینای خودتان را بگذارید.',
+  summaryProvider: 'منبع خلاصه',
+  summaryProviderFree: 'رایگان (بک‌اند دسترسا)',
+  summaryProviderLuma: 'لوما (کلید خودتان)',
+  summaryProviderGemini: 'جمینای (کلید خودتان)',
+  summaryLumaKey: 'کلید API لوما',
+  summaryLumaKeyDesc:
+    'فقط روی همین مرورگر ذخیره می‌شود. برای حالت لوما لازم است و محدودیت روزانه را رد می‌کند.',
+  summaryGeminiKey: 'کلید API جمینای',
+  summaryGeminiKeyDesc:
+    'از Google AI Studio. فقط روی همین مرورگر ذخیره می‌شود. برای حالت جمینای لازم است.',
+  summaryModel: 'مدل',
   summaryRateLimited:
-    'سهمیه رایگان امروز تمام شد. فردا دوباره، یا کلید لوما را در تنظیمات وارد کنید.',
+    'سهمیه رایگان امروز تمام شد. فردا دوباره، یا در تنظیمات لوما/جمینای را انتخاب کنید.',
   summarySaveKey: 'ذخیره کلید',
   summaryKeySaved: 'کلید ذخیره شد.',
   summaryKeyCleared: 'کلید پاک شد.',

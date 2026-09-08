@@ -2,11 +2,18 @@
  * Dastresa MV3 service worker — lean coordinator only.
  */
 
-import { LUMA_API, ONBOARDING_VERSION, STORAGE_KEYS, SUMMARY_API } from '@/core/constants';
+import {
+  GEMINI_API,
+  LUMA_API,
+  ONBOARDING_VERSION,
+  STORAGE_KEYS,
+  SUMMARY_API,
+} from '@/core/constants';
 import { parseSettings } from '@/core/settings';
 import type { OnboardingState } from '@/features/onboarding/onboarding-storage';
 import {
   summarizeViaBackend,
+  summarizeWithGemini,
   summarizeWithLuma,
 } from '@/features/page-summary/luma-client';
 import { readSecrets } from '@/features/storage/secrets';
@@ -49,28 +56,48 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     void (async () => {
       try {
         const secrets = await readSecrets();
-        const lumaKey = secrets.summaryApiKey?.trim();
         const stored = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
         const settings = parseSettings(stored[STORAGE_KEYS.SETTINGS]);
         const title = String(message.title ?? '');
         const text = String(message.text ?? '');
         const locale = message.locale === 'en' ? 'en' : 'fa';
+        const provider = settings.summaryProvider;
 
-        // Own Luma key → bypass free daily quota. Otherwise → free backend.
-        const summary = lumaKey
-          ? await summarizeWithLuma({
-              apiKey: lumaKey,
-              model: settings.summaryModel || LUMA_API.DEFAULT_MODEL,
-              title,
-              text,
-              locale,
-            })
-          : await summarizeViaBackend({
-              baseUrl: SUMMARY_API.BASE_URL,
-              title,
-              text,
-              locale,
-            });
+        let summary: string;
+        if (provider === 'luma') {
+          const lumaKey = secrets.lumaApiKey?.trim();
+          if (!lumaKey) {
+            sendResponse({ ok: false, code: 'missing_api_key', error: 'missing_api_key' });
+            return;
+          }
+          summary = await summarizeWithLuma({
+            apiKey: lumaKey,
+            model: settings.summaryModel || LUMA_API.DEFAULT_MODEL,
+            title,
+            text,
+            locale,
+          });
+        } else if (provider === 'gemini') {
+          const geminiKey = secrets.geminiApiKey?.trim();
+          if (!geminiKey) {
+            sendResponse({ ok: false, code: 'missing_api_key', error: 'missing_api_key' });
+            return;
+          }
+          summary = await summarizeWithGemini({
+            apiKey: geminiKey,
+            model: settings.summaryModel || GEMINI_API.DEFAULT_MODEL,
+            title,
+            text,
+            locale,
+          });
+        } else {
+          summary = await summarizeViaBackend({
+            baseUrl: SUMMARY_API.BASE_URL,
+            title,
+            text,
+            locale,
+          });
+        }
 
         sendResponse({ ok: true, summary });
       } catch (error) {

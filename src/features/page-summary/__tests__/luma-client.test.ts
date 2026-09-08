@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   extractChatText,
+  extractGeminiText,
   extractLumaText,
   truncateForSummary,
 } from '@/features/page-summary/luma-client';
@@ -24,6 +25,14 @@ describe('luma-client helpers', () => {
         choices: [{ message: { content: 'hello summary' } }],
       }),
     ).toBe('hello summary');
+  });
+
+  it('extracts text from Gemini generateContent payload', () => {
+    expect(
+      extractGeminiText({
+        candidates: [{ content: { parts: [{ text: 'gemini summary' }] } }],
+      }),
+    ).toBe('gemini summary');
   });
 
   it('truncates long page text', () => {

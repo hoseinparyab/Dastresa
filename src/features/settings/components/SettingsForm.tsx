@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Controller, useWatch } from 'react-hook-form';
-import { LUMA_API } from '@/core/constants';
+import { GEMINI_API, LUMA_API } from '@/core/constants';
 import { createPageResetSettings, type DastresaSettings } from '@/core/settings';
 import { readSecrets, writeSecrets } from '@/features/storage/secrets';
 import { useInstantSettings } from '@/shared/hooks/useInstantSettings';
@@ -24,6 +24,13 @@ const LUMA_MODELS = [
   'anthropic/claude-haiku-4.5',
 ] as const;
 
+const GEMINI_MODELS = [
+  'gemini-2.0-flash',
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-1.5-flash',
+] as const;
+
 export function SettingsForm({ compact = false }: { compact?: boolean }) {
   const { form, settings, hydrated, replace, applyNow, applyDebounced } = useInstantSettings();
   const textScale = useWatch({ control: form.control, name: 'zoom.textScale' });
@@ -31,10 +38,13 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
   const theme = useWatch({ control: form.control, name: 'theme' });
   const localeWatch = useWatch({ control: form.control, name: 'locale' });
   const focusCursorColor = useWatch({ control: form.control, name: 'focusCursorColor' });
+  const summaryProvider = useWatch({ control: form.control, name: 'summaryProvider' });
   const summaryModel = useWatch({ control: form.control, name: 'summaryModel' });
   const locale = (localeWatch ?? settings.locale) === 'en' ? 'en' : 'fa';
+  const provider = summaryProvider ?? settings.summaryProvider ?? 'free';
   const [apiKeyDraft, setApiKeyDraft] = useState('');
-  const [hasApiKey, setHasApiKey] = useState(false);
+  const [hasLumaKey, setHasLumaKey] = useState(false);
+  const [hasGeminiKey, setHasGeminiKey] = useState(false);
   const [keyStatus, setKeyStatus] = useState('');
 
   const themeOptions: Array<{ value: DastresaSettings['theme']; label: string }> = [
@@ -49,10 +59,11 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
   useEffect(() => {
     if (compact) return;
     void readSecrets().then((secrets) => {
-      setHasApiKey(Boolean(secrets.summaryApiKey));
+      setHasLumaKey(Boolean(secrets.lumaApiKey));
+      setHasGeminiKey(Boolean(secrets.geminiApiKey));
       setApiKeyDraft('');
     });
-  }, [compact]);
+  }, [compact, provider]);
 
   if (!hydrated) {
     return (
@@ -289,72 +300,125 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
 
       {!compact && (
         <Section title={t(locale, 'summarySection')} description={t(locale, 'summarySectionDesc')}>
-          <label className="block px-1 py-2">
-            <span className="mb-2 block text-sm font-semibold text-slate-200">
-              {t(locale, 'summaryApiKey')}
-            </span>
-            <p className="mb-2 text-sm text-slate-400">{t(locale, 'summaryApiKeyDesc')}</p>
-            <input
-              type="password"
-              autoComplete="off"
-              className="wp-touch w-full rounded-xl border border-white/10 bg-dastresa-surface/90 px-3 text-base text-dastresa-text"
-              placeholder={hasApiKey ? '••••••••••••' : 'LU_…'}
-              value={apiKeyDraft}
-              onChange={(e) => setApiKeyDraft(e.target.value)}
-              aria-label={t(locale, 'summaryApiKey')}
-            />
-          </label>
-          <div className="flex flex-wrap gap-2 px-1 py-2">
-            <Button
-              variant="primary"
-              onClick={() => {
-                void (async () => {
-                  await writeSecrets({ summaryApiKey: apiKeyDraft });
-                  setHasApiKey(Boolean(apiKeyDraft.trim()));
-                  setApiKeyDraft('');
-                  setKeyStatus(t(locale, 'summaryKeySaved'));
-                })();
-              }}
-            >
-              {t(locale, 'summarySaveKey')}
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                void (async () => {
-                  await writeSecrets({ summaryApiKey: '' });
-                  setHasApiKey(false);
-                  setApiKeyDraft('');
-                  setKeyStatus(t(locale, 'summaryKeyCleared'));
-                })();
-              }}
-            >
-              {t(locale, 'summaryClearKey')}
-            </Button>
-          </div>
-          {keyStatus ? (
-            <p className="px-1 text-sm text-sky-200" role="status">
-              {keyStatus}
-            </p>
-          ) : null}
-          {hasApiKey ? (
-            <SelectField
-              label={t(locale, 'summaryModel')}
-              value={summaryModel ?? LUMA_API.DEFAULT_MODEL}
-              onChange={(e) => {
-                applyNow({ summaryModel: e.target.value });
-              }}
-            >
-              {LUMA_MODELS.map((model) => (
-                <option key={model} value={model}>
-                  {model}
-                </option>
-              ))}
-              {summaryModel &&
-              !LUMA_MODELS.includes(summaryModel as (typeof LUMA_MODELS)[number]) ? (
-                <option value={summaryModel}>{summaryModel}</option>
+          <SelectField
+            label={t(locale, 'summaryProvider')}
+            value={provider}
+            onChange={(e) => {
+              const next = e.target.value as DastresaSettings['summaryProvider'];
+              const nextModel =
+                next === 'gemini'
+                  ? GEMINI_API.DEFAULT_MODEL
+                  : next === 'luma'
+                    ? LUMA_API.DEFAULT_MODEL
+                    : summaryModel ?? LUMA_API.DEFAULT_MODEL;
+              applyNow({
+                summaryProvider: next,
+                ...(next === 'free' ? {} : { summaryModel: nextModel }),
+              });
+              setApiKeyDraft('');
+              setKeyStatus('');
+            }}
+          >
+            <option value="free">{t(locale, 'summaryProviderFree')}</option>
+            <option value="luma">{t(locale, 'summaryProviderLuma')}</option>
+            <option value="gemini">{t(locale, 'summaryProviderGemini')}</option>
+          </SelectField>
+
+          {provider === 'luma' || provider === 'gemini' ? (
+            <>
+              <label className="block px-1 py-2">
+                <span className="mb-2 block text-sm font-semibold text-slate-200">
+                  {provider === 'gemini' ? t(locale, 'summaryGeminiKey') : t(locale, 'summaryLumaKey')}
+                </span>
+                <p className="mb-2 text-sm text-slate-400">
+                  {provider === 'gemini'
+                    ? t(locale, 'summaryGeminiKeyDesc')
+                    : t(locale, 'summaryLumaKeyDesc')}
+                </p>
+                <input
+                  type="password"
+                  autoComplete="off"
+                  className="wp-touch w-full rounded-xl border border-white/10 bg-dastresa-surface/90 px-3 text-base text-dastresa-text"
+                  placeholder={
+                    (provider === 'gemini' ? hasGeminiKey : hasLumaKey)
+                      ? '••••••••••••'
+                      : provider === 'gemini'
+                        ? 'AIza…'
+                        : 'LU_…'
+                  }
+                  value={apiKeyDraft}
+                  onChange={(e) => setApiKeyDraft(e.target.value)}
+                  aria-label={
+                    provider === 'gemini' ? t(locale, 'summaryGeminiKey') : t(locale, 'summaryLumaKey')
+                  }
+                />
+              </label>
+              <div className="flex flex-wrap gap-2 px-1 py-2">
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    void (async () => {
+                      if (provider === 'gemini') {
+                        await writeSecrets({ geminiApiKey: apiKeyDraft });
+                        setHasGeminiKey(Boolean(apiKeyDraft.trim()));
+                      } else {
+                        await writeSecrets({ lumaApiKey: apiKeyDraft });
+                        setHasLumaKey(Boolean(apiKeyDraft.trim()));
+                      }
+                      setApiKeyDraft('');
+                      setKeyStatus(t(locale, 'summaryKeySaved'));
+                    })();
+                  }}
+                >
+                  {t(locale, 'summarySaveKey')}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    void (async () => {
+                      if (provider === 'gemini') {
+                        await writeSecrets({ geminiApiKey: '' });
+                        setHasGeminiKey(false);
+                      } else {
+                        await writeSecrets({ lumaApiKey: '' });
+                        setHasLumaKey(false);
+                      }
+                      setApiKeyDraft('');
+                      setKeyStatus(t(locale, 'summaryKeyCleared'));
+                    })();
+                  }}
+                >
+                  {t(locale, 'summaryClearKey')}
+                </Button>
+              </div>
+              {keyStatus ? (
+                <p className="px-1 text-sm text-sky-200" role="status">
+                  {keyStatus}
+                </p>
               ) : null}
-            </SelectField>
+              <SelectField
+                label={t(locale, 'summaryModel')}
+                value={
+                  summaryModel ??
+                  (provider === 'gemini' ? GEMINI_API.DEFAULT_MODEL : LUMA_API.DEFAULT_MODEL)
+                }
+                onChange={(e) => {
+                  applyNow({ summaryModel: e.target.value });
+                }}
+              >
+                {(provider === 'gemini' ? GEMINI_MODELS : LUMA_MODELS).map((model) => (
+                  <option key={model} value={model}>
+                    {model}
+                  </option>
+                ))}
+                {summaryModel &&
+                !(provider === 'gemini' ? GEMINI_MODELS : LUMA_MODELS).includes(
+                  summaryModel as never,
+                ) ? (
+                  <option value={summaryModel}>{summaryModel}</option>
+                ) : null}
+              </SelectField>
+            </>
           ) : null}
         </Section>
       )}

@@ -1,4 +1,4 @@
-import { LUMA_API } from '@/core/constants';
+import { GEMINI_API, LUMA_API } from '@/core/constants';
 
 export type SummaryLocale = 'en' | 'fa';
 
@@ -71,6 +71,21 @@ export function extractChatText(payload: unknown): string {
   return '';
 }
 
+export function extractGeminiText(payload: unknown): string {
+  if (!payload || typeof payload !== 'object') return '';
+  const candidates = (
+    payload as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    }
+  ).candidates;
+  const parts = candidates?.[0]?.content?.parts ?? [];
+  return parts
+    .map((part) => part.text?.trim() ?? '')
+    .filter(Boolean)
+    .join('\n\n')
+    .trim();
+}
+
 function buildPrompt(params: { title: string; text: string; locale: SummaryLocale }): string {
   const body = truncateForSummary(params.text);
   if (params.locale === 'fa') {
@@ -119,8 +134,7 @@ export async function summarizeWithCustomProvider(params: CustomSummarizeParams)
   const model = params.model.trim() || LUMA_API.DEFAULT_MODEL;
   const style = params.apiStyle === 'responses' ? 'responses' : 'chat';
 
-  const url =
-    style === 'responses' ? `${base}/responses` : `${base}/chat/completions`;
+  const url = style === 'responses' ? `${base}/responses` : `${base}/chat/completions`;
 
   const body =
     style === 'responses'
@@ -146,13 +160,11 @@ export async function summarizeWithCustomProvider(params: CustomSummarizeParams)
     throw new Error(errorMessage(json, `HTTP ${response.status}`));
   }
 
-  const text =
-    style === 'responses' ? extractLumaText(json) : extractChatText(json);
+  const text = style === 'responses' ? extractLumaText(json) : extractChatText(json);
   if (!text) throw new Error('empty_summary');
   return text;
 }
 
-/** @deprecated use summarizeWithCustomProvider */
 export async function summarizeWithLuma(
   params: Omit<CustomSummarizeParams, 'baseUrl' | 'apiStyle'> & { baseUrl?: string },
 ): Promise<string> {
@@ -161,6 +173,44 @@ export async function summarizeWithLuma(
     baseUrl: params.baseUrl || LUMA_API.BASE_URL,
     apiStyle: 'responses',
   });
+}
+
+/** Call Google Gemini generateContent with the user's API key. */
+export async function summarizeWithGemini(params: {
+  apiKey: string;
+  model?: string;
+  title: string;
+  text: string;
+  locale: SummaryLocale;
+}): Promise<string> {
+  const apiKey = params.apiKey.trim();
+  if (!apiKey) throw new Error('missing_api_key');
+
+  const model = (params.model?.trim() || GEMINI_API.DEFAULT_MODEL).replace(/^models\//, '');
+  const prompt = buildPrompt(params);
+  const url = `${normalizeBaseUrl(GEMINI_API.BASE_URL)}/models/${encodeURIComponent(model)}:generateContent`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'x-goog-api-key': apiKey,
+    },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.3 },
+    }),
+  });
+
+  const json = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw new Error(errorMessage(json, `HTTP ${response.status}`));
+  }
+
+  const text = extractGeminiText(json);
+  if (!text) throw new Error('empty_summary');
+  return text;
 }
 
 /** Call Dastresa summary backend (API key stays on the server). */
