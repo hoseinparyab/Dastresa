@@ -46,7 +46,7 @@ This is **not** a screen reader. Core reading tools (themes, zoom, reader, TTS, 
 | Mode | Behavior |
 |------|----------|
 | **Free (default)** | Uses the Dastresa Summary API (~**5 summaries / IP / day**) |
-| **Own Luma key** | Optional key in Settings → calls Luma directly (your quota; bypasses free limit) |
+| **Own Luma / Gemini key** | Choose Luma or Gemini in Settings → your key + model (bypasses free limit) |
 
 - Page text is sent **only** when you use Summary.
 - Free API key stays on the server (`server/` Cloudflare Worker), not inside the extension package.

@@ -20,10 +20,16 @@ export const STORAGE_KEYS = {
   SECRETS: 'Dastresa.secrets',
 } as const;
 
-/** Luma API — used when the user adds their own key (bypass free daily quota). */
+/** Luma API — optional user key (bypass free daily quota). */
 export const LUMA_API = {
   BASE_URL: 'https://dash.lumai.ir/api/v1',
   DEFAULT_MODEL: 'openai/gpt-4o-mini',
+} as const;
+
+/** Google Gemini API — optional user key (bypass free daily quota). */
+export const GEMINI_API = {
+  BASE_URL: 'https://generativelanguage.googleapis.com/v1beta',
+  DEFAULT_MODEL: 'gemini-2.0-flash',
 } as const;
 
 /**
