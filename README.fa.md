@@ -49,8 +49,8 @@
 | **کلید لوما / جمینای** | در تنظیمات یکی را انتخاب کنید → کلید و مدل خودتان (محدودیت رایگان اعمال نمی‌شود) |
 
 - متن صفحه **فقط** با زدن خلاصه فرستاده می‌شود.
-- کلید رایگان روی سرور می‌ماند (`server/` — Cloudflare Worker)، نه داخل پکیج افزونه.
-- جزئیات: [`src/features/page-summary/README.md`](src/features/page-summary/README.md) · [`server/README.md`](server/README.md)
+- کلید رایگان روی پروژهٔ **جداگانهٔ** Summary API می‌ماند (نه داخل پکیج افزونه).
+- جزئیات: [`src/features/page-summary/README.md`](src/features/page-summary/README.md) · [`../Dastresa-Summary-API`](../Dastresa-Summary-API)
 
 ## شروع سریع
 
@@ -73,17 +73,19 @@ npm run build
 npm run dev
 ```
 
-### بک‌اند محلی برای خلاصه رایگان
+### بک‌اند محلی خلاصه رایگان (پروژه جدا)
 
 ```bash
-npm run server:install
-# کلید را در server/.dev.vars بگذارید (نمونه: server/.dev.vars.example)
-npm run server:dev
+cd ../Dastresa-Summary-API
+npm install
+cp .dev.vars.example .dev.vars
+# کلید LUMA_API_KEY را در .dev.vars بگذارید
+npm run dev
 ```
 
-آدرس پیش‌فرض: `http://127.0.0.1:8787` (ثابت `SUMMARY_API.BASE_URL` در `src/core/constants/index.ts`).
+آدرس پیش‌فرض: `http://127.0.0.1:8787` → در `SUMMARY_API.BASE_URL` تنظیم کنید.
 
-بعد از دیپلوی، همان ثابت را به URL ورکر خودتان تغییر دهید.
+بعد از دیپلوی، همان ثابت را به URL ورکر تغییر دهید.
 
 ## دستورها
 
@@ -92,9 +94,6 @@ npm run server:dev
 | `npm run dev` | ساخت زنده با Vite + CRX |
 | `npm run build` | تایپ‌چک + بیلد نهایی |
 | `npm run pack:mvp` | فشرده‌سازی `dist/` در `release/` برای آپلود استور |
-| `npm run server:install` | نصب وابستگی‌های ورکر |
-| `npm run server:dev` | اجرای محلی API خلاصه (Wrangler) |
-| `npm run server:deploy` | دیپلوی ورکر خلاصه |
 | `npm run typecheck` | فقط TypeScript |
 | `npm run lint` | ESLint |
 | `npm test` | تست‌های Vitest |
@@ -115,7 +114,7 @@ npm run server:dev
 
 - ساختار feature-plugin در `src/features/` با ports/adapters ([`docs/adr/001-feature-plugin-ports.md`](docs/adr/001-feature-plugin-ports.md))
 - اسکیمای تنظیمات: `src/core/settings/`
-- پروکسی خلاصه: `server/` (Cloudflare Worker)
+- API خلاصه: پروژهٔ خواهر [`../Dastresa-Summary-API`](../Dastresa-Summary-API) (فقط HTTP)
 
 ## مستندات
 
@@ -128,7 +127,7 @@ npm run server:dev
 | [`docs/PRIVACY.md`](docs/PRIVACY.md) | سیاست حریم خصوصی |
 | [`docs/STORE_LISTING.md`](docs/STORE_LISTING.md) | متن Chrome Web Store |
 | [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md) | چک‌لیست انتشار |
-| [`server/README.md`](server/README.md) | ورکر API خلاصه |
+| [`../Dastresa-Summary-API/README.md`](../Dastresa-Summary-API/README.md) | API خلاصه (مستقل) |
 | [`src/features/page-summary/README.md`](src/features/page-summary/README.md) | قابلیت خلاصه صفحه |
 
 ## ناشر

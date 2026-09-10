@@ -49,8 +49,8 @@ This is **not** a screen reader. Core reading tools (themes, zoom, reader, TTS, 
 | **Own Luma / Gemini key** | Choose Luma or Gemini in Settings → your key + model (bypasses free limit) |
 
 - Page text is sent **only** when you use Summary.
-- Free API key stays on the server (`server/` Cloudflare Worker), not inside the extension package.
-- Details: [`src/features/page-summary/README.md`](src/features/page-summary/README.md) · [`server/README.md`](server/README.md)
+- Free API key stays on the **standalone** Summary API project (not inside the extension package).
+- Details: [`src/features/page-summary/README.md`](src/features/page-summary/README.md) · sibling repo [`../Dastresa-Summary-API`](../Dastresa-Summary-API)
 
 ## Quick start
 
@@ -73,17 +73,19 @@ Development watch mode:
 npm run dev
 ```
 
-### Local free Summary backend
+### Local free Summary backend (separate project)
 
 ```bash
-npm run server:install
-# put LUMA_API_KEY in server/.dev.vars (see server/.dev.vars.example)
-npm run server:dev
+cd ../Dastresa-Summary-API
+npm install
+cp .dev.vars.example .dev.vars
+# put LUMA_API_KEY in .dev.vars
+npm run dev
 ```
 
-Default URL: `http://127.0.0.1:8787` (see `SUMMARY_API.BASE_URL` in `src/core/constants/index.ts`).
+Default URL: `http://127.0.0.1:8787` → set `SUMMARY_API.BASE_URL` in `src/core/constants/index.ts`.
 
-After deploy, set that constant to your Worker URL.
+After deploy, point that constant at your Worker URL.
 
 ## Scripts
 
@@ -92,9 +94,6 @@ After deploy, set that constant to your Worker URL.
 | `npm run dev` | Vite + CRX watch build |
 | `npm run build` | Typecheck + production build |
 | `npm run pack:mvp` | Zip `dist/` into `release/` for store upload |
-| `npm run server:install` | Install Worker dependencies |
-| `npm run server:dev` | Run Summary API locally (Wrangler) |
-| `npm run server:deploy` | Deploy Summary API Worker |
 | `npm run typecheck` | TypeScript only |
 | `npm run lint` | ESLint |
 | `npm test` | Vitest unit / component / integration |
@@ -115,7 +114,7 @@ Full policy: [`docs/PRIVACY.md`](docs/PRIVACY.md) *(update store privacy copy be
 
 - Feature-plugin layout under `src/features/` with ports/adapters (see [`docs/adr/001-feature-plugin-ports.md`](docs/adr/001-feature-plugin-ports.md))
 - Settings schema: `src/core/settings/`
-- Summary proxy: `server/` (Cloudflare Worker)
+- Summary API: sibling project [`../Dastresa-Summary-API`](../Dastresa-Summary-API) (HTTP only)
 
 ## Docs
 
@@ -128,7 +127,7 @@ Full policy: [`docs/PRIVACY.md`](docs/PRIVACY.md) *(update store privacy copy be
 | [`docs/PRIVACY.md`](docs/PRIVACY.md) | Privacy policy |
 | [`docs/STORE_LISTING.md`](docs/STORE_LISTING.md) | Chrome Web Store copy |
 | [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md) | Ship checklist |
-| [`server/README.md`](server/README.md) | Summary API Worker |
+| [`../Dastresa-Summary-API/README.md`](../Dastresa-Summary-API/README.md) | Summary API (standalone) |
 | [`src/features/page-summary/README.md`](src/features/page-summary/README.md) | Page Summary feature |
 
 ## Publisher
