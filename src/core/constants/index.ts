@@ -33,8 +33,9 @@ export const GEMINI_API = {
 } as const;
 
 /**
- * Dastresa Summary backend (Cloudflare Worker).
- * Local: `cd server && npm run dev` → http://127.0.0.1:8787
+ * Dastresa Summary backend (standalone project).
+ * Repo: ../Dastresa-Summary-API
+ * Local: `cd ../Dastresa-Summary-API && npm run dev` → http://127.0.0.1:8787
  * After deploy: replace with your workers.dev / custom domain URL.
  */
 export const SUMMARY_API = {

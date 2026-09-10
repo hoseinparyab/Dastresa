@@ -1,3 +1,0 @@
-# Local secrets for `wrangler dev` — never commit real keys.
-# Copy to `.dev.vars` and fill in:
-LUMA_API_KEY=LU_your_key_here
