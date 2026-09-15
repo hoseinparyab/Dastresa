@@ -13,6 +13,65 @@ type PaintTokens = {
   controlBorder: string;
 };
 
+/** Marks the full search/control shell (input + icons), not the inner field. */
+export const THEME_CHROME_ATTR = 'data-dastresa-theme-chrome';
+
+const SEARCH_CONTROL_SELECTOR = [
+  'input[name="q"]',
+  'textarea[name="q"]',
+  'input[type="search"]',
+  '[role="combobox"]',
+  '[role="searchbox"]',
+].join(',');
+
+/**
+ * The visible search box is usually a rounded ancestor with a 1px box-shadow
+ * ring. Painting the <input> only draws a broken inner frame and misses icons.
+ */
+export function findControlChrome(el: Element): HTMLElement | null {
+  if (!(el instanceof HTMLElement)) return null;
+  const ir = el.getBoundingClientRect();
+  if (ir.width < 20 || ir.height < 8) return null;
+
+  let best: HTMLElement | null = null;
+  let bestScore = -1;
+  let node = el.parentElement;
+  const doc = el.ownerDocument;
+
+  while (node && node !== doc.body && node !== doc.documentElement) {
+    if (node.hasAttribute(HOST_STYLE_ATTR) || node.closest(`[${HOST_STYLE_ATTR}]`)) break;
+    const r = node.getBoundingClientRect();
+    if (r.height > ir.height + 28) break;
+    if (r.width < ir.width - 4) {
+      node = node.parentElement;
+      continue;
+    }
+    const cs = doc.defaultView?.getComputedStyle(node);
+    if (!cs) break;
+    const radius = Number.parseFloat(cs.borderRadius) || 0;
+    const hasShadow = cs.boxShadow !== 'none' && Boolean(cs.boxShadow);
+    const hasBorder =
+      Number.parseFloat(cs.borderTopWidth) > 0 ||
+      Number.parseFloat(cs.borderRightWidth) > 0 ||
+      Number.parseFloat(cs.borderBottomWidth) > 0 ||
+      Number.parseFloat(cs.borderLeftWidth) > 0;
+    const containsActions = Boolean(
+      node.querySelector('button, [role="button"], input[type="submit"], input[type="image"]'),
+    );
+    let score = r.width;
+    if (radius > 0) score += 1000;
+    if (hasShadow) score += 500;
+    if (containsActions) score += 300;
+    if (hasBorder) score += 200;
+    if (score > bestScore) {
+      best = node;
+      bestScore = score;
+    }
+    node = node.parentElement;
+  }
+  return best;
+}
+
 /**
  * Prefer `color-scheme` so modern sites (Google) adapt natively.
  * Only force-paint semantic surfaces + controls — painting every `div`
@@ -48,8 +107,35 @@ function paintTheme({
       background-image: none !important;
       color: ${fg} !important;
       border-color: ${border} !important;
-      box-shadow: none !important;
+      outline-color: ${border} !important;
       text-shadow: none !important;
+    }
+    /* Recolor existing edges; do not invent a second box on <form>
+       (that box is square and looks like a broken search frame). */
+    html body :where(
+      form, [role="search"], [role="dialog"], [role="menu"], [role="listbox"],
+      [role="grid"], [role="tree"], [role="tablist"], [role="toolbar"],
+      [popover]
+    ):not([data-Dastresa]):not([data-Dastresa] *) {
+      border-color: ${controlBorder} !important;
+      outline-color: ${controlBorder} !important;
+    }
+    html body :where(
+      [role="dialog"], [role="menu"], [role="listbox"], dialog, [popover]
+    ):not([data-Dastresa]):not([data-Dastresa] *) {
+      background-color: ${surface} !important;
+      background-image: none !important;
+      box-shadow: 0 0 0 1px ${controlBorder} !important;
+    }
+    /* Full search chrome (input + icons). Sites draw this with a 1px
+       box-shadow ring that vanishes on forced dark backgrounds. */
+    html body [${THEME_CHROME_ATTR}] {
+      box-shadow: 0 0 0 1px ${controlBorder} !important;
+    }
+    html body *:has(> * > :is(
+      [role="combobox"], [role="searchbox"], input[name="q"], textarea[name="q"], input[type="search"]
+    )):has(:is(button, [role="button"], input[type="submit"])):not([data-Dastresa]):not([data-Dastresa] *) {
+      box-shadow: 0 0 0 1px ${controlBorder} !important;
     }
     /* Readable text without opaque tiles on spans/labels */
     html body :where(
@@ -66,18 +152,15 @@ function paintTheme({
       color: ${link} !important;
       background-color: transparent !important;
       background-image: none !important;
-      box-shadow: none !important;
       text-shadow: none !important;
     }
     html body :where(a) * {
       color: inherit !important;
       background-color: transparent !important;
       background-image: none !important;
-      box-shadow: none !important;
     }
     html body :where(img, picture, video, canvas, svg, iframe) {
       background-color: transparent !important;
-      box-shadow: none !important;
     }
     /* Soft frame behind bright logo tiles in dark themes */
     html body :where(img) {
@@ -94,7 +177,6 @@ function paintTheme({
       background-image: none !important;
       color: ${fg} !important;
       border: 1px solid ${controlBorder} !important;
-      box-shadow: none !important;
       outline-color: ${controlBorder} !important;
       caret-color: ${fg} !important;
     }
@@ -104,14 +186,11 @@ function paintTheme({
     ):not([data-Dastresa]):not([data-Dastresa] *) *:not(img):not(svg):not(path):not(br) {
       background-color: transparent !important;
       background-image: none !important;
-      box-shadow: none !important;
-      border-color: transparent !important;
       color: inherit !important;
     }
-    html body :where(hr) {
+    html body :where(hr, [role="separator"]) {
       border-color: ${border} !important;
       background-color: ${border} !important;
-      box-shadow: none !important;
     }
   `;
 }
@@ -158,7 +237,7 @@ export const THEME_CSS: Record<ThemeId, string> = {
     surface: '#1a1a00',
     fg: '#ffe566',
     link: '#fff176',
-    border: '#665c00',
+    border: '#c4b400',
     controlBorder: '#ffe566',
   }),
 };
@@ -255,11 +334,39 @@ export class ThemesFeature implements IFeature {
       this.ctx.document.documentElement.setAttribute(`${HOST_STYLE_ATTR}-theme`, this.theme);
     }
     this.ctx.bus.emit(EVENTS.THEME_APPLIED, { theme: this.theme });
+    this.markControlChrome();
+  }
+
+  private clearControlChrome(): void {
+    const doc = this.ctx?.document;
+    if (!doc) return;
+    doc.querySelectorAll(`[${THEME_CHROME_ATTR}]`).forEach((el) => {
+      el.removeAttribute(THEME_CHROME_ATTR);
+    });
+  }
+
+  private markControlChrome(): void {
+    this.paintControlChromeMarks();
+    this.ctx?.document.defaultView?.requestAnimationFrame(() => {
+      this.paintControlChromeMarks();
+    });
+  }
+
+  private paintControlChromeMarks(): void {
+    this.clearControlChrome();
+    if (!this.ctx || !this.enabled) return;
+    if (this.theme === 'normal' || this.theme === 'black-white') return;
+    const doc = this.ctx.document;
+    doc.querySelectorAll(SEARCH_CONTROL_SELECTOR).forEach((el) => {
+      const chrome = findControlChrome(el);
+      chrome?.setAttribute(THEME_CHROME_ATTR, '');
+    });
   }
 
   dispose(): void {
     this.unsubs.forEach((u) => u());
     this.unsubs = [];
+    this.clearControlChrome();
     this.styleEl?.remove();
     this.styleEl = undefined;
   }
@@ -271,6 +378,7 @@ export class ThemesFeature implements IFeature {
 
   disable(): void {
     this.enabled = false;
+    this.clearControlChrome();
     if (this.styleEl) this.styleEl.textContent = '';
     this.ctx?.document.documentElement.removeAttribute(`${HOST_STYLE_ATTR}-theme`);
   }
