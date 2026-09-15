@@ -7,7 +7,6 @@ import {
   LUMA_API,
   ONBOARDING_VERSION,
   STORAGE_KEYS,
-  SUMMARY_API,
 } from '@/core/constants';
 import { parseSettings } from '@/core/settings';
 import type { OnboardingState } from '@/features/onboarding/onboarding-storage';
@@ -91,8 +90,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             locale,
           });
         } else {
+          // Free tier → Dastresa-API-Core per docs.json
           summary = await summarizeViaBackend({
-            baseUrl: SUMMARY_API.BASE_URL,
             title,
             text,
             locale,
@@ -104,15 +103,20 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         const errMessage = error instanceof Error ? error.message : 'summary_failed';
         const isOffline =
           /failed to fetch|networkerror|load failed|could not connect/i.test(errMessage);
+        const known = [
+          'missing_api_key',
+          'rate_limited',
+          'text_too_short',
+          'server_misconfigured',
+          'invalid_json',
+          'summary_failed',
+        ] as const;
+        const code = isOffline
+          ? 'offline'
+          : (known.find((k) => k === errMessage) ?? 'api_error');
         sendResponse({
           ok: false,
-          code: isOffline
-            ? 'offline'
-            : errMessage === 'missing_api_key'
-              ? 'missing_api_key'
-              : errMessage === 'rate_limited'
-                ? 'rate_limited'
-                : 'api_error',
+          code,
           error: errMessage,
         });
       }

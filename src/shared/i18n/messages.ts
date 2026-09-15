@@ -122,6 +122,8 @@ const EN = {
   summaryModel: 'Model',
   summaryRateLimited:
     'Free daily limit reached. Try again tomorrow, or switch to Luma/Gemini in Settings.',
+  summaryTextTooShort: 'This page does not have enough text to summarize.',
+  summaryServerError: 'Summary service is misconfigured. Please try again later.',
   summarySaveKey: 'Save API key',
   summaryKeySaved: 'API key saved.',
   summaryKeyCleared: 'API key cleared.',
@@ -288,6 +290,8 @@ const FA: Record<MessageKey, string> = {
   summaryModel: 'مدل',
   summaryRateLimited:
     'سهمیه رایگان امروز تمام شد. فردا دوباره، یا در تنظیمات لوما/جمینای را انتخاب کنید.',
+  summaryTextTooShort: 'این صفحه متن کافی برای خلاصه‌سازی ندارد.',
+  summaryServerError: 'سرویس خلاصه درست پیکربندی نشده. کمی بعد دوباره تلاش کنید.',
   summarySaveKey: 'ذخیره کلید',
   summaryKeySaved: 'کلید ذخیره شد.',
   summaryKeyCleared: 'کلید پاک شد.',

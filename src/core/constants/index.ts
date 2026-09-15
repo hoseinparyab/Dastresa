@@ -32,15 +32,12 @@ export const GEMINI_API = {
   DEFAULT_MODEL: 'gemini-2.0-flash',
 } as const;
 
-/**
- * Dastresa Summary backend (standalone project).
- * Repo: ../Dastresa-Summary-API
- * Local: `cd ../Dastresa-Summary-API && npm run dev` → http://127.0.0.1:8787
- * After deploy: replace with your workers.dev / custom domain URL.
- */
-export const SUMMARY_API = {
-  BASE_URL: 'http://127.0.0.1:8787',
-} as const;
+export {
+  SUMMARY_API,
+  summaryApiUrl,
+  isSummaryApiError,
+} from '@/core/api/summary-api';
+export type { SummaryApiDocs, SummaryApiErrorCode } from '@/core/api/summary-api';
 
 /** Bump when tour content changes so returning users can see an updated intro. */
 export const ONBOARDING_VERSION = 1;

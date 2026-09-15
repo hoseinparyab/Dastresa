@@ -19,5 +19,5 @@
     },
     "types": ["chrome", "vite/client", "vitest/globals"]
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "docs.json"]
 }
