@@ -1,0 +1,33 @@
+{
+  "name": "dastresa-summary-api",
+  "version": "1.0.0",
+  "description": "Standalone free-tier summary API for the Dastresa Chrome extension",
+  "baseUrl": "https://api.dastresa.najino.com",
+  "endpoints": {
+    "health": {
+      "method": "GET",
+      "path": "/health"
+    },
+    "summarize": {
+      "method": "POST",
+      "path": "/api/summarize",
+      "body": {
+        "title": "string",
+        "text": "string",
+        "locale": "fa | en"
+      },
+      "success": {
+        "ok": true,
+        "summary": "string"
+      },
+      "errors": [
+        "invalid_json",
+        "text_too_short",
+        "rate_limited",
+        "server_misconfigured",
+        "summary_failed"
+      ]
+    }
+  },
+  "rateLimit": "RATE_LIMIT_PER_DAY per IP (default 5)"
+}

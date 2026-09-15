@@ -23,7 +23,7 @@
 > برند، متن استور و حریم خصوصی: [`docs/BRAND.md`](docs/BRAND.md) · [`docs/STORE_LISTING.md`](docs/STORE_LISTING.md) · [`docs/PRIVACY.md`](docs/PRIVACY.md)  
 > مراحل انتشار: [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md)
 
-**نسخهٔ فعلی:** `1.0.0`
+**نسخهٔ فعلی:** `1.1.0`
 
 ## امکانات نسخهٔ MVP
 

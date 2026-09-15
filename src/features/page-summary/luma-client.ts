@@ -1,4 +1,4 @@
-import { GEMINI_API, LUMA_API } from '@/core/constants';
+import { GEMINI_API, LUMA_API, SUMMARY_API, summaryApiUrl } from '@/core/constants';
 
 export type SummaryLocale = 'en' | 'fa';
 
@@ -213,14 +213,18 @@ export async function summarizeWithGemini(params: {
   return text;
 }
 
-/** Call Dastresa summary backend (API key stays on the server). */
+/** Call Dastresa free summary API (`docs.json` → POST /api/summarize). */
 export async function summarizeViaBackend(params: {
-  baseUrl: string;
+  baseUrl?: string;
   title: string;
   text: string;
   locale: SummaryLocale;
 }): Promise<string> {
-  const response = await fetch(`${params.baseUrl.replace(/\/$/, '')}/api/summarize`, {
+  const url = params.baseUrl
+    ? `${params.baseUrl.replace(/\/$/, '')}${SUMMARY_API.SUMMARIZE_PATH}`
+    : summaryApiUrl(SUMMARY_API.SUMMARIZE_PATH);
+
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -236,14 +240,15 @@ export async function summarizeViaBackend(params: {
   const json = await parseJsonResponse(response);
   if (!response.ok) {
     const error = errorMessage(json, `HTTP ${response.status}`);
-    if (error === 'rate_limited') throw new Error('rate_limited');
     throw new Error(error);
   }
 
+  if (!json || typeof json !== 'object' || !('ok' in json) || !(json as { ok?: boolean }).ok) {
+    throw new Error('summary_failed');
+  }
+
   const summary =
-    json && typeof json === 'object' && json !== null && 'summary' in json
-      ? String((json as { summary?: string }).summary ?? '')
-      : '';
+    'summary' in json ? String((json as { summary?: string }).summary ?? '') : '';
   if (!summary.trim()) throw new Error('empty_summary');
   return summary.trim();
 }
