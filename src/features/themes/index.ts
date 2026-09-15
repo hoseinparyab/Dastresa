@@ -9,15 +9,24 @@ type PaintTokens = {
   fg: string;
   link: string;
   border: string;
-  /** Slightly elevated surface for inputs/controls */
   surface: string;
+  controlBorder: string;
 };
 
 /**
- * Force readable surfaces on complex sites (Google, Wikipedia, etc.).
- * Avoid harsh white borders/box-shadows that create "ghost" lines and nested boxes.
+ * Prefer `color-scheme` so modern sites (Google) adapt natively.
+ * Only force-paint semantic surfaces + controls — painting every `div`
+ * creates nested grey shells, ghost underlines, and broken search UI.
  */
-function paintTheme({ scheme, bg, fg, link, border, surface }: PaintTokens): string {
+function paintTheme({
+  scheme,
+  bg,
+  fg,
+  link,
+  border,
+  surface,
+  controlBorder,
+}: PaintTokens): string {
   return `
     html {
       color-scheme: ${scheme} !important;
@@ -29,56 +38,80 @@ function paintTheme({ scheme, bg, fg, link, border, surface }: PaintTokens): str
       background-image: none !important;
       color: ${fg} !important;
     }
-    /* Broad paint: sites nest many wrappers with their own light fills/shadows */
-    html body *:not(img):not(picture):not(video):not(canvas):not(svg):not(path):not(iframe):not([data-Dastresa]):not([data-Dastresa] *) {
+    /* Semantic page chrome only — not every nested div/li wrapper */
+    html body :where(
+      main, article, section, aside, nav, header, footer,
+      table, thead, tbody, tfoot, tr, th, td,
+      pre, blockquote, dialog, fieldset, figure, figcaption
+    ):not([data-Dastresa]):not([data-Dastresa] *) {
       background-color: ${bg} !important;
       background-image: none !important;
       color: ${fg} !important;
       border-color: ${border} !important;
-      outline-color: ${border} !important;
       box-shadow: none !important;
       text-shadow: none !important;
-      caret-color: ${fg} !important;
     }
-    html body :where(img, picture, video, canvas, svg, iframe) {
+    /* Readable text without opaque tiles on spans/labels */
+    html body :where(
+      p, span, li, dt, dd, label, h1, h2, h3, h4, h5, h6,
+      small, em, b, strong, code, cite, abbr, time, figcaption
+    ):not([data-Dastresa]):not([data-Dastresa] *) {
+      color: ${fg} !important;
       background-color: transparent !important;
-      box-shadow: none !important;
+      background-image: none !important;
+      text-shadow: none !important;
+      caret-color: ${fg} !important;
     }
     html body :where(a, a:link, a:visited, a:hover, a:active) {
       color: ${link} !important;
       background-color: transparent !important;
       background-image: none !important;
       box-shadow: none !important;
+      text-shadow: none !important;
     }
     html body :where(a) * {
       color: inherit !important;
       background-color: transparent !important;
       background-image: none !important;
+      box-shadow: none !important;
     }
-    /* Form controls: one solid surface so nested search shells don't look patchy */
+    html body :where(img, picture, video, canvas, svg, iframe) {
+      background-color: transparent !important;
+      box-shadow: none !important;
+    }
+    /* Soft frame behind bright logo tiles in dark themes */
+    html body :where(img) {
+      background-color: ${surface} !important;
+      border-radius: 6px;
+    }
+    /* Visible controls without fighting site layout shells */
     html body :where(
       input, textarea, select, button,
-      [role="textbox"], [role="searchbox"], [role="combobox"], [contenteditable="true"]
+      [role="textbox"], [role="searchbox"], [role="combobox"], [role="button"],
+      [contenteditable="true"]
     ):not([data-Dastresa]):not([data-Dastresa] *) {
       background-color: ${surface} !important;
       background-image: none !important;
       color: ${fg} !important;
-      border: 1px solid ${border} !important;
+      border: 1px solid ${controlBorder} !important;
       box-shadow: none !important;
-      outline-color: ${border} !important;
+      outline-color: ${controlBorder} !important;
       caret-color: ${fg} !important;
+    }
+    html body :where(
+      button, [role="button"], [role="textbox"], [role="searchbox"],
+      [role="combobox"], [contenteditable="true"]
+    ):not([data-Dastresa]):not([data-Dastresa] *) *:not(img):not(svg):not(path):not(br) {
+      background-color: transparent !important;
+      background-image: none !important;
+      box-shadow: none !important;
+      border-color: transparent !important;
+      color: inherit !important;
     }
     html body :where(hr) {
       border-color: ${border} !important;
       background-color: ${border} !important;
       box-shadow: none !important;
-    }
-    /* Pseudo underlines/dividers (Google tabs, etc.) */
-    html body *:not([data-Dastresa]):not([data-Dastresa] *)::before,
-    html body *:not([data-Dastresa]):not([data-Dastresa] *)::after {
-      border-color: ${border} !important;
-      box-shadow: none !important;
-      text-shadow: none !important;
     }
   `;
 }
@@ -95,24 +128,26 @@ export const THEME_CSS: Record<ThemeId, string> = {
     surface: '#1e293b',
     fg: '#e2e8f0',
     link: '#7dd3fc',
-    border: '#334155',
+    border: '#475569',
+    controlBorder: '#94a3b8',
   }),
   light: paintTheme({
     scheme: 'light',
     bg: '#ffffff',
-    surface: '#f1f5f9',
+    surface: '#f8fafc',
     fg: '#0f172a',
     link: '#0369a1',
     border: '#cbd5e1',
+    controlBorder: '#64748b',
   }),
   'high-contrast': paintTheme({
     scheme: 'dark',
     bg: '#000000',
-    surface: '#171717',
+    surface: '#262626',
     fg: '#ffffff',
     link: '#ffe566',
-    // Soft grey borders — pure white creates harsh ghost lines on Google tabs/search
     border: '#a3a3a3',
+    controlBorder: '#e5e5e5',
   }),
   'black-white': `
     html { filter: grayscale(1) contrast(1.2) !important; }
@@ -124,6 +159,7 @@ export const THEME_CSS: Record<ThemeId, string> = {
     fg: '#ffe566',
     link: '#fff176',
     border: '#665c00',
+    controlBorder: '#ffe566',
   }),
 };
 
