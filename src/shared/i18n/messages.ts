@@ -105,8 +105,7 @@ const EN = {
   summaryFailed: 'Could not summarize this page.',
   summaryNeedKey: 'Add your Luma or Gemini API key in Settings, or switch back to Free.',
   summaryOffline: 'Cannot reach the summary server. Start Dastresa-Summary-API (Docker or npm run dev).',
-  summaryPrivacyHint:
-    'Page text is sent only when you tap Summary (free backend, or Luma/Gemini if you chose them).',
+  summaryPrivacyHint: 'Nothing is sent until you ask for a summary. Your privacy stays in your control.',
   summarySection: 'Page summary',
   summarySectionDesc:
     'Free: a few summaries per day via Dastresa. Need more? Use your own Luma or Gemini API key.',
@@ -272,8 +271,7 @@ const FA: Record<MessageKey, string> = {
   summaryFailed: 'خلاصه‌سازی این صفحه ممکن نشد.',
   summaryNeedKey: 'در تنظیمات کلید لوما یا جمینای را وارد کنید، یا به حالت رایگان برگردید.',
   summaryOffline: 'به سرور خلاصه وصل نشد. Dastresa-Summary-API را با Docker یا npm run dev اجرا کنید.',
-  summaryPrivacyHint:
-    'متن صفحه فقط با زدن خلاصه فرستاده می‌شود (بک‌اند رایگان، یا لوما/جمینای در صورت انتخاب).',
+  summaryPrivacyHint: 'تا وقتی خودتان خلاصه نخواهید، چیزی از صفحه فرستاده نمی‌شود.',
   summarySection: 'خلاصه صفحه',
   summarySectionDesc:
     'رایگان: چند خلاصه در روز از بک‌اند دسترسا. سهمیه بیشتر؟ کلید لوما یا جمینای خودتان را بگذارید.',

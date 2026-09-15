@@ -9,50 +9,76 @@ type PaintTokens = {
   fg: string;
   link: string;
   border: string;
+  /** Slightly elevated surface for inputs/controls */
+  surface: string;
 };
 
 /**
- * Force readable surfaces. Sites like Wikipedia paint white panels with their own
- * colors, so html/body-only rules leave light text on white (text "disappears").
+ * Force readable surfaces on complex sites (Google, Wikipedia, etc.).
+ * Avoid harsh white borders/box-shadows that create "ghost" lines and nested boxes.
  */
-function paintTheme({ scheme, bg, fg, link, border }: PaintTokens): string {
+function paintTheme({ scheme, bg, fg, link, border, surface }: PaintTokens): string {
   return `
     html {
       color-scheme: ${scheme} !important;
       background-color: ${bg} !important;
+      background-image: none !important;
     }
     html body {
       background-color: ${bg} !important;
+      background-image: none !important;
       color: ${fg} !important;
     }
-    html body :where(
-      div, section, article, main, aside, nav, header, footer,
-      p, span, li, ul, ol, dl, dt, dd, td, th, tr, table, thead, tbody, tfoot,
-      h1, h2, h3, h4, h5, h6, label, figcaption, blockquote,
-      pre, code, form, fieldset, legend, summary, details
-    ):not([data-Dastresa]) {
+    /* Broad paint: sites nest many wrappers with their own light fills/shadows */
+    html body *:not(img):not(picture):not(video):not(canvas):not(svg):not(path):not(iframe):not([data-Dastresa]):not([data-Dastresa] *) {
       background-color: ${bg} !important;
+      background-image: none !important;
       color: ${fg} !important;
       border-color: ${border} !important;
+      outline-color: ${border} !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
       caret-color: ${fg} !important;
+    }
+    html body :where(img, picture, video, canvas, svg, iframe) {
+      background-color: transparent !important;
+      box-shadow: none !important;
     }
     html body :where(a, a:link, a:visited, a:hover, a:active) {
       color: ${link} !important;
       background-color: transparent !important;
+      background-image: none !important;
+      box-shadow: none !important;
     }
     html body :where(a) * {
       color: inherit !important;
       background-color: transparent !important;
+      background-image: none !important;
     }
-    html body :where(input, textarea, select, button) {
-      background-color: ${bg} !important;
+    /* Form controls: one solid surface so nested search shells don't look patchy */
+    html body :where(
+      input, textarea, select, button,
+      [role="textbox"], [role="searchbox"], [role="combobox"], [contenteditable="true"]
+    ):not([data-Dastresa]):not([data-Dastresa] *) {
+      background-color: ${surface} !important;
+      background-image: none !important;
       color: ${fg} !important;
-      border-color: ${border} !important;
+      border: 1px solid ${border} !important;
+      box-shadow: none !important;
+      outline-color: ${border} !important;
       caret-color: ${fg} !important;
     }
     html body :where(hr) {
       border-color: ${border} !important;
       background-color: ${border} !important;
+      box-shadow: none !important;
+    }
+    /* Pseudo underlines/dividers (Google tabs, etc.) */
+    html body *:not([data-Dastresa]):not([data-Dastresa] *)::before,
+    html body *:not([data-Dastresa]):not([data-Dastresa] *)::after {
+      border-color: ${border} !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
     }
   `;
 }
@@ -66,6 +92,7 @@ export const THEME_CSS: Record<ThemeId, string> = {
   dark: paintTheme({
     scheme: 'dark',
     bg: '#0f172a',
+    surface: '#1e293b',
     fg: '#e2e8f0',
     link: '#7dd3fc',
     border: '#334155',
@@ -73,6 +100,7 @@ export const THEME_CSS: Record<ThemeId, string> = {
   light: paintTheme({
     scheme: 'light',
     bg: '#ffffff',
+    surface: '#f1f5f9',
     fg: '#0f172a',
     link: '#0369a1',
     border: '#cbd5e1',
@@ -80,9 +108,11 @@ export const THEME_CSS: Record<ThemeId, string> = {
   'high-contrast': paintTheme({
     scheme: 'dark',
     bg: '#000000',
+    surface: '#171717',
     fg: '#ffffff',
     link: '#ffe566',
-    border: '#ffffff',
+    // Soft grey borders — pure white creates harsh ghost lines on Google tabs/search
+    border: '#a3a3a3',
   }),
   'black-white': `
     html { filter: grayscale(1) contrast(1.2) !important; }
@@ -90,6 +120,7 @@ export const THEME_CSS: Record<ThemeId, string> = {
   'yellow-black': paintTheme({
     scheme: 'dark',
     bg: '#000000',
+    surface: '#1a1a00',
     fg: '#ffe566',
     link: '#fff176',
     border: '#665c00',
