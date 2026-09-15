@@ -48,7 +48,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
   if (message?.type === 'ping') {
-    sendResponse({ ok: true, version: '1.1.0' });
+    sendResponse({ ok: true, version: '1.1.1' });
     return true;
   }
   if (message?.type === 'dastresa-summarize') {

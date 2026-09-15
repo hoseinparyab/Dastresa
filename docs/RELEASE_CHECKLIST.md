@@ -1,4 +1,4 @@
-# Release Checklist — Dastresa 1.1.0
+# Release Checklist — Dastresa 1.1.1
 
 **Goal:** First public Chrome Web Store (or closed testers) submission that matches the brand promise: offline, private, opt-in accessibility.
 
