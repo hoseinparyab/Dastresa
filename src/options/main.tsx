@@ -1,5 +1,6 @@
-import { StrictMode, useEffect } from 'react';
+import { StrictMode, useCallback, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import type { UiChrome } from '@/core/settings';
 import {
   openOnboardingPage,
   resetOnboarding,
@@ -7,56 +8,94 @@ import {
 import { SettingsForm } from '@/features/settings/components/SettingsForm';
 import { useSettingsStore } from '@/shared/hooks/useSettingsStore';
 import { t } from '@/shared/i18n/messages';
-import { Button, PublisherCredit } from '@/shared/ui';
+import { ChromeToggle, PublisherCredit } from '@/shared/ui';
 import '@/shared/styles/globals.css';
+import './options.css';
 
 function OptionsApp() {
-  const { settings, hydrate } = useSettingsStore();
+  const { settings, hydrated, hydrate, update } = useSettingsStore();
   const locale = settings.locale === 'en' ? 'en' : 'fa';
+  const dir = settings.dir === 'ltr' ? 'ltr' : 'rtl';
+  const uiChrome: UiChrome = settings.uiChrome === 'dark' ? 'dark' : 'light';
 
   useEffect(() => {
     void hydrate();
   }, [hydrate]);
 
   useEffect(() => {
+    if (!hydrated) return;
     document.documentElement.lang = locale;
-    document.documentElement.dir = settings.dir;
-  }, [locale, settings.dir]);
+    document.documentElement.dir = dir;
+    document.documentElement.dataset.chrome = uiChrome;
+    document.title = locale === 'fa' ? 'تنظیمات دسترسا' : 'Dastresa Settings';
+  }, [dir, hydrated, locale, uiChrome]);
+
+  const setUiChrome = useCallback(
+    (next: UiChrome) => {
+      void update({ uiChrome: next });
+    },
+    [update],
+  );
 
   const replayTour = async () => {
     await resetOnboarding();
     await openOnboardingPage();
   };
 
+  if (!hydrated) {
+    return (
+      <main className="dastresa-options" data-chrome={uiChrome} dir="rtl" lang="fa">
+        <div className="opt-shell">
+          <p className="opt-subtitle" style={{ textAlign: 'center', paddingTop: '2.5rem' }}>
+            …
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="mx-auto max-w-2xl px-6 py-10" dir={settings.dir} lang={locale}>
-      <header className="relative mb-8 overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -end-16 -top-20 size-56 rounded-full bg-sky-400/20 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-24 start-10 size-48 rounded-full bg-cyan-500/10 blur-3xl"
-        />
-        <p className="relative text-sm font-bold text-dastresa-accent">{t(locale, 'brand')}</p>
-        <h1 className="relative mt-2 font-display text-4xl font-bold tracking-tight">
-          {t(locale, 'optionsTitle')}
-        </h1>
-        <p className="relative mt-3 max-w-xl text-base leading-relaxed text-slate-300">
-          {t(locale, 'optionsSubtitle')}
-        </p>
-        <Button
-          variant="secondary"
-          className="relative mt-5"
-          onClick={() => void replayTour()}
-        >
-          {t(locale, 'tourReplay')}
-        </Button>
-      </header>
-      <SettingsForm />
-      <p className="mt-6 text-center text-sm text-slate-300">{t(locale, 'tagline')}</p>
-      <PublisherCredit locale={locale} className="mx-auto mt-4 max-w-md" />
+    <main
+      className="dastresa-options"
+      data-chrome={uiChrome}
+      dir={dir}
+      lang={locale}
+    >
+      <div className="opt-shell">
+        <header className="opt-header">
+          <div className="opt-top">
+            <div className="opt-brand-block">
+              <p className="opt-eyebrow">{t(locale, 'accessibility')}</p>
+              <h1 className="opt-title">{t(locale, 'optionsTitle')}</h1>
+            </div>
+            <div className="opt-controls">
+              <ChromeToggle
+                value={uiChrome}
+                onChange={setUiChrome}
+                lightLabel={t(locale, 'chromeLight')}
+                darkLabel={t(locale, 'chromeDark')}
+              />
+            </div>
+          </div>
+          <p className="opt-subtitle">{t(locale, 'optionsSubtitle')}</p>
+          <div className="opt-actions">
+            <button
+              type="button"
+              className="opt-secondary"
+              onClick={() => void replayTour()}
+            >
+              {t(locale, 'tourReplay')}
+            </button>
+          </div>
+        </header>
+
+        <p className="opt-hint">{t(locale, 'instantApply')}</p>
+
+        <SettingsForm />
+
+        <p className="opt-tagline">{t(locale, 'tagline')}</p>
+        <PublisherCredit locale={locale} className="opt-credit" />
+      </div>
     </main>
   );
 }
