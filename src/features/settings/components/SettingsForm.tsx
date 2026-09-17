@@ -169,6 +169,17 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
             </option>
           ))}
         </SelectField>
+        <SelectField
+          label={t(locale, 'languageDefault')}
+          value={localeWatch ?? 'fa'}
+          onChange={(e) => {
+            const nextLocale = e.target.value as 'en' | 'fa';
+            applyNow({ locale: nextLocale, dir: nextLocale === 'fa' ? 'rtl' : 'ltr' });
+          }}
+        >
+          <option value="fa">فارسی</option>
+          <option value="en">English</option>
+        </SelectField>
       </Section>
 
       {/* Essential reading tools — always visible (elderly primary path) */}
@@ -202,20 +213,6 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
             }}
           />
         </label>
-
-        {!compact ? (
-          <SelectField
-            label={t(locale, 'language')}
-            value={localeWatch}
-            onChange={(e) => {
-              const nextLocale = e.target.value as 'en' | 'fa';
-              applyNow({ locale: nextLocale, dir: nextLocale === 'fa' ? 'rtl' : 'ltr' });
-            }}
-          >
-            <option value="fa">فارسی</option>
-            <option value="en">English</option>
-          </SelectField>
-        ) : null}
 
         <Controller
           name="readerMode"
