@@ -139,6 +139,21 @@ export const TOOLBAR_CSS = `
     font-size: 12px;
     color: #cbd5e1;
   }
+  .page-type {
+    margin: 0 2px 4px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.28);
+    color: #e0f2fe;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .page-type strong {
+    font-weight: 800;
+    color: #f8fafc;
+  }
   .header-actions {
     display: flex;
     align-items: center;

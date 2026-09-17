@@ -86,6 +86,8 @@ export interface ToolbarAppProps {
   readerMode: boolean;
   readingFocus: boolean;
   summarizing?: boolean;
+  /** Friendly page-type label already localized (e.g. "مقاله") */
+  pageTypeLabel?: string;
   onCommand: (command: Command) => void;
   onMoved: (x: number, y: number) => void;
 }
@@ -126,6 +128,7 @@ export function ToolbarApp({
   readerMode,
   readingFocus,
   summarizing = false,
+  pageTypeLabel,
   onCommand,
   onMoved,
 }: ToolbarAppProps) {
@@ -385,6 +388,12 @@ export function ToolbarApp({
               </button>
             </div>
           </div>
+
+          {pageTypeLabel ? (
+            <p className="page-type" role="status" aria-live="polite">
+              {t(locale, 'pageType')}: <strong>{pageTypeLabel}</strong>
+            </p>
+          ) : null}
 
           <BtnGrid
             items={primary}

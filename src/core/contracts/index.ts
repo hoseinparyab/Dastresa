@@ -1,5 +1,10 @@
 import type { EventMap, EventName, Unsubscribe } from '@/core/types/events';
 import type { FeatureId } from '@/core/constants';
+import type {
+  FormAnalysisResult,
+  PageStructure,
+  PageTypeResult,
+} from '@/core/semantics';
 
 export interface FeatureContext {
   bus: IEventBus;
@@ -50,10 +55,10 @@ export interface IDomAnalyzer {
 
 /** Optional semantic layer (1.2.0) — implemented by DomAnalyzerService. */
 export interface ISemanticPageAnalyzer {
-  analyzeStructure(doc?: Document): import('@/core/semantics').PageStructure;
-  detectType(doc?: Document): import('@/core/semantics').PageTypeResult;
-  analyzeForms(doc?: Document): import('@/core/semantics').FormAnalysisResult;
-  getCachedStructure(): import('@/core/semantics').PageStructure | null;
+  analyzeStructure(doc?: Document): PageStructure;
+  detectType(doc?: Document): PageTypeResult;
+  analyzeForms(doc?: Document): FormAnalysisResult;
+  getCachedStructure(): PageStructure | null;
 }
 
 export interface ReadableDocument {

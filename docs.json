@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Standalone free-tier summary API for the Dastresa Chrome extension",
   "baseUrl": "https://api.dastresa.najino.com",
-  "endpoints": {
+  "endpoints": { 
+    
     "health": {
       "method": "GET",
       "path": "/health"

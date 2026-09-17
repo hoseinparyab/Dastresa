@@ -1,17 +1,18 @@
 import { createRoot, type Root } from 'react-dom/client';
 import type { FeatureContext, IFeature } from '@/core/contracts';
 import { EVENTS, FEATURE_IDS, STORAGE_KEYS } from '@/core/constants';
+import { analyzePage, classifyPage, type PageType } from '@/core/semantics';
 import { parseSettings, type DastresaSettings } from '@/core/settings';
 import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 import { ToolbarApp } from '@/features/toolbar/ToolbarApp';
 import { isLegacyTopLeft, resolveToolbarPosition } from '@/features/toolbar/geometry';
 import { TOOLBAR_CSS } from '@/features/toolbar/styles';
-import type { AppLocale } from '@/shared/i18n/messages';
+import { pageTypeMessageKey, t, type AppLocale } from '@/shared/i18n/messages';
 
 export class ToolbarFeature implements IFeature {
   readonly id = FEATURE_IDS.TOOLBAR;
   readonly name = 'Accessibility Toolbar';
-  readonly version = '0.1.0';
+  readonly version = '1.2.0';
   private enabled = true;
   private host?: HTMLElement;
   private root?: Root;
@@ -22,12 +23,14 @@ export class ToolbarFeature implements IFeature {
   private readerMode = false;
   private readingFocus = false;
   private summarizing = false;
+  private pageType: PageType = 'UNKNOWN';
   private unsubs: Array<() => void> = [];
   private migrated = false;
 
   initialize(ctx: FeatureContext): void {
     this.ctx = ctx;
     void this.hydrateFromStorage().then(() => {
+      this.refreshPageType();
       this.mount();
       this.render();
     });
@@ -36,6 +39,12 @@ export class ToolbarFeature implements IFeature {
       ctx.bus.on(EVENTS.SETTINGS_CHANGED, ({ settings }) => {
         this.applySettings(settings);
         this.pos = resolveToolbarPosition(ctx.window, settings.toolbarPosition, false);
+        this.render();
+      }),
+    );
+    this.unsubs.push(
+      ctx.bus.on(EVENTS.PAGE_TYPE_DETECTED, ({ result }) => {
+        this.pageType = result.type;
         this.render();
       }),
     );
@@ -64,6 +73,15 @@ export class ToolbarFeature implements IFeature {
     this.dir = settings.dir === 'ltr' ? 'ltr' : 'rtl';
     this.readerMode = settings.readerMode;
     this.readingFocus = settings.readingFocus;
+  }
+
+  private refreshPageType(): void {
+    if (!this.ctx) return;
+    try {
+      this.pageType = classifyPage(analyzePage(this.ctx.document)).type;
+    } catch {
+      this.pageType = 'UNKNOWN';
+    }
   }
 
   private async hydrateFromStorage(): Promise<void> {
@@ -104,6 +122,7 @@ export class ToolbarFeature implements IFeature {
 
   private render(): void {
     if (!this.root || !this.ctx) return;
+    const pageTypeLabel = t(this.locale, pageTypeMessageKey(this.pageType));
     this.root.render(
       <ToolbarApp
         x={this.pos.x}
@@ -113,6 +132,7 @@ export class ToolbarFeature implements IFeature {
         readerMode={this.readerMode}
         readingFocus={this.readingFocus}
         summarizing={this.summarizing}
+        pageTypeLabel={pageTypeLabel}
         onCommand={(command) => {
           if (command === 'settings') {
             try {
