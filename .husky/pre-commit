@@ -1,9 +1,16 @@
 #!/usr/bin/env sh
+# Block commits that break lint/format on staged files.
 export NO_COLOR=1
 export FORCE_COLOR=0
 
-# Use local .bin shims — avoids Git Bash failing on Windows `npx` path
-# (`C:/Program Files/nodejs/npx: No such file or directory`)
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
-# --quiet: stop Cursor from treating lint-staged stderr/warnings as Git errors
-"$ROOT/node_modules/.bin/lint-staged" --no-stash --quiet --concurrent false
+BIN="$ROOT/node_modules/.bin"
+
+if [ ! -x "$BIN/lint-staged" ] && [ ! -f "$BIN/lint-staged" ]; then
+  echo "pre-commit: lint-staged not found — run npm install" >&2
+  exit 1
+fi
+
+# --quiet: Cursor/Git for Windows treats noisy stderr as errors
+# --no-stash: avoid stash races with the IDE
+"$BIN/lint-staged" --no-stash --quiet --concurrent false

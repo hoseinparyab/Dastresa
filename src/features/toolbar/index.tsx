@@ -5,7 +5,7 @@ import { analyzePage, classifyPage, type PageType } from '@/core/semantics';
 import { parseSettings, type DastresaSettings, type UiChrome } from '@/core/settings';
 import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 import { ToolbarApp } from '@/features/toolbar/ToolbarApp';
-import { isLegacyTopLeft, resolveToolbarPosition } from '@/features/toolbar/geometry';
+import { clampPos, CHIP_H, CHIP_W, isLegacyTopLeft, resolveToolbarPosition } from '@/features/toolbar/geometry';
 import { TOOLBAR_CSS } from '@/features/toolbar/styles';
 import { pageTypeMessageKey, t, type AppLocale } from '@/shared/i18n/messages';
 
@@ -39,7 +39,13 @@ export class ToolbarFeature implements IFeature {
     this.unsubs.push(
       ctx.bus.on(EVENTS.SETTINGS_CHANGED, ({ settings }) => {
         this.applySettings(settings);
-        this.pos = resolveToolbarPosition(ctx.window, settings.toolbarPosition, false);
+        // Keep saved XY; only re-clamp so locale/chrome refreshes don't jump the chip.
+        this.pos = clampPos(
+          ctx.window,
+          settings.toolbarPosition ?? this.pos,
+          CHIP_W,
+          CHIP_H,
+        );
         this.render();
       }),
     );

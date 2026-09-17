@@ -111,15 +111,18 @@ export const TOOLBAR_CSS = `
     overflow: hidden;
     max-height: none;
     background: var(--tb-bg);
-    border-color: var(--tb-border);
+    border: 1px solid var(--tb-border);
+    box-shadow: var(--tb-shadow);
   }
   .dock:active { cursor: grabbing; }
 
   .chip {
     display: flex;
-    align-items: center;
+    flex-direction: row;
+    align-items: stretch;
     gap: 0;
     min-height: 52px;
+    min-width: 168px;
     padding: 0;
     text-align: start;
     border: 0;
@@ -140,7 +143,7 @@ export const TOOLBAR_CSS = `
     align-items: center;
     justify-content: center;
     width: 52px;
-    height: 52px;
+    min-height: 52px;
     flex-shrink: 0;
     background: var(--tb-chip-side);
     color: #fff;
@@ -176,6 +179,14 @@ export const TOOLBAR_CSS = `
     letter-spacing: 0.01em;
     white-space: nowrap;
     color: var(--tb-text);
+  }
+  .chip .title {
+    font-size: 16px;
+    line-height: 1;
+  }
+  .chip .title[lang="fa"] {
+    font-size: 17px;
+    letter-spacing: 0;
   }
   .dock.collapsed .title { color: #f8fafc; }
   .dock[data-chrome="light"].collapsed .title { color: var(--tb-text); }
