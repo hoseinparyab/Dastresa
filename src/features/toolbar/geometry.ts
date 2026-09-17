@@ -1,9 +1,9 @@
 import { clamp } from '@/core/utils';
 
-export const CHIP_W = 168;
-export const CHIP_H = 56;
-export const PANEL_W = 280;
-export const PANEL_H = 320;
+export const CHIP_W = 178;
+export const CHIP_H = 52;
+export const PANEL_W = 300;
+export const PANEL_H = 360;
 export const MARGIN = 12;
 
 /** Legacy default sat under site headers and looked broken on refresh. */

@@ -37,6 +37,9 @@ export const ToolbarPositionSchema = z.object({
 
 export const FocusCursorColorSchema = z.enum(['sky', 'yellow', 'lime', 'magenta', 'white']);
 
+/** Chrome UI of popup/options — independent from page theme. */
+export const UiChromeSchema = z.enum(['light', 'dark']);
+
 export const ProfileIdSchema = z.enum([
   'normal',
   'low-vision',
@@ -100,6 +103,8 @@ export const DastresaSettingsSchema = z.object({
   toolbarPosition: ToolbarPositionSchema.default({ x: 24, y: 24 }),
   locale: z.enum(['en', 'fa']).default('fa'),
   dir: z.enum(['ltr', 'rtl']).default('rtl'),
+  /** Popup / options chrome: light or dark (from design mockups). */
+  uiChrome: UiChromeSchema.default('light'),
   /**
    * free = Dastresa backend (daily quota)
    * luma / gemini = user's own API key (bypass free limit)
@@ -114,6 +119,7 @@ export type ThemeId = z.infer<typeof ThemeIdSchema>;
 export type ZoomSettings = z.infer<typeof ZoomSettingsSchema>;
 export type SpeechSettings = z.infer<typeof SpeechSettingsSchema>;
 export type FocusCursorColor = z.infer<typeof FocusCursorColorSchema>;
+export type UiChrome = z.infer<typeof UiChromeSchema>;
 export type ProfileId = z.infer<typeof ProfileIdSchema>;
 export type SitePreferences = z.infer<typeof SitePreferencesSchema>;
 
@@ -258,6 +264,7 @@ export function parseSettings(input: unknown): DastresaSettings {
   assignIfValid('focusCursorColor', FocusCursorColorSchema, raw.focusCursorColor);
   assignIfValid('locale', z.enum(['en', 'fa']), raw.locale);
   assignIfValid('dir', z.enum(['ltr', 'rtl']), raw.dir);
+  assignIfValid('uiChrome', UiChromeSchema, raw.uiChrome);
   assignIfValid('summaryProvider', z.enum(['free', 'luma', 'gemini']), raw.summaryProvider);
   assignIfValid('summaryModel', z.string().min(1), raw.summaryModel);
 

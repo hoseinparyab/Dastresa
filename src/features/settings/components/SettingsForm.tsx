@@ -49,7 +49,8 @@ const GEMINI_MODELS = [
 ] as const;
 
 export function SettingsForm({ compact = false }: { compact?: boolean }) {
-  const { form, settings, hydrated, replace, applyNow, applyDebounced } = useInstantSettings();
+  const { form, settings, hydrated, replaceAndApply, applyNow, applyDebounced, persist } =
+    useInstantSettings();
   const textScale = useWatch({ control: form.control, name: 'zoom.textScale' });
   const speechRate = useWatch({ control: form.control, name: 'speech.rate' });
   const theme = useWatch({ control: form.control, name: 'theme' });
@@ -146,7 +147,7 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
           onChange={(e) => {
             const profileId = e.target.value as ProfileId;
             const next = applyProfileSettings(form.getValues(), profileId);
-            void replace(next);
+            void replaceAndApply(next);
           }}
         >
           {profileOptions.map((opt) => (
@@ -489,8 +490,7 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
           onClick={() => {
             void (async () => {
               const reset = createPageResetSettings(form.getValues());
-              form.reset(reset);
-              await replace(reset);
+              await persist(reset);
               await notifyActiveTab('dastresa-reset');
             })();
           }}

@@ -7,3 +7,4 @@ export { SelectField } from '@/shared/ui/SelectField';
 export { StatusPill } from '@/shared/ui/StatusPill';
 export { Button } from '@/shared/ui/Button';
 export { PublisherCredit } from '@/shared/ui/PublisherCredit';
+export { ChromeToggle } from '@/shared/ui/ChromeToggle';

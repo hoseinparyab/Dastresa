@@ -4,12 +4,29 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   DastresaSettingsSchema,
   mergeSettings,
+  parseSettings,
   type DastresaSettings,
 } from '@/core/settings';
 import { useSettingsStore } from '@/shared/hooks/useSettingsStore';
 import { notifyActiveTab } from '@/shared/messaging/tab';
 
-/** Instant-apply settings form wired to chrome.storage. */
+/** Settings that change how the open page looks/behaves. */
+function patchAffectsPage(patch: Partial<DastresaSettings>): boolean {
+  return (
+    patch.theme !== undefined ||
+    patch.zoom !== undefined ||
+    patch.readerMode !== undefined ||
+    patch.readingFocus !== undefined ||
+    patch.readingRuler !== undefined ||
+    patch.largeButtons !== undefined ||
+    patch.largeCursor !== undefined ||
+    patch.focusCursorColor !== undefined ||
+    patch.activeProfile !== undefined ||
+    patch.extensionActive === true
+  );
+}
+
+/** Instant-apply settings form wired to chrome.storage + active tab. */
 export function useInstantSettings() {
   const { settings, hydrated, hydrate, replace } = useSettingsStore();
   const form = useForm<DastresaSettings>({
@@ -32,22 +49,31 @@ export function useInstantSettings() {
     async (values: DastresaSettings) => {
       applying.current = true;
       try {
-        await replace(values);
-        await notifyActiveTab('dastresa-apply-settings', { settings: values });
+        const parsed = parseSettings(values);
+        form.reset(parsed);
+        await replace(parsed);
+        // Push to content script so Look/zoom/reader apply without waiting for storage echo.
+        await notifyActiveTab('dastresa-apply-settings', { settings: parsed });
+        if (parsed.extensionActive) {
+          await notifyActiveTab('dastresa-activate');
+        }
       } finally {
         window.setTimeout(() => {
           applying.current = false;
-        }, 50);
+        }, 80);
       }
     },
-    [replace],
+    [form, replace],
   );
 
   const applyNow = useCallback(
     (patch: Partial<DastresaSettings>) => {
       const current = form.getValues();
-      const next = mergeSettings(current, patch);
-      form.reset(next);
+      let next = mergeSettings(current, patch);
+      // Elderly path: changing Look/reading while off should turn Dastresa on.
+      if (patchAffectsPage(patch) && !next.extensionActive) {
+        next = mergeSettings(next, { extensionActive: true });
+      }
       void persist(next);
     },
     [form, persist],
@@ -56,9 +82,25 @@ export function useInstantSettings() {
   const applyDebounced = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      void persist(form.getValues());
+      const current = form.getValues();
+      let next = parseSettings(current);
+      if (!next.extensionActive && (current.zoom || current.theme)) {
+        next = mergeSettings(next, { extensionActive: true });
+      }
+      void persist(next);
     }, 200);
   }, [form, persist]);
+
+  const replaceAndApply = useCallback(
+    async (next: DastresaSettings) => {
+      let parsed = parseSettings(next);
+      if (!parsed.extensionActive) {
+        parsed = mergeSettings(parsed, { extensionActive: true });
+      }
+      await persist(parsed);
+    },
+    [persist],
+  );
 
   useEffect(
     () => () => {
@@ -71,7 +113,9 @@ export function useInstantSettings() {
     form,
     settings,
     hydrated,
+    /** @deprecated Prefer replaceAndApply so the open page updates. */
     replace,
+    replaceAndApply,
     applyNow,
     applyDebounced,
     persist,
