@@ -33,7 +33,7 @@ export function Switch({
       aria-describedby={ariaDescribedBy}
       disabled={disabled}
       className={cn(
-        'relative inline-flex h-11 w-[4.25rem] shrink-0 cursor-pointer items-center rounded-full p-1',
+        'relative inline-flex h-12 w-[4.75rem] shrink-0 cursor-pointer items-center rounded-full p-1',
         'border border-transparent transition-colors duration-fast',
         'focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-dastresa-accent',
         'disabled:cursor-not-allowed disabled:opacity-50',
@@ -46,7 +46,7 @@ export function Switch({
       <span
         aria-hidden
         className={cn(
-          'pointer-events-none block size-8 rounded-full bg-white shadow-md',
+          'pointer-events-none block size-9 rounded-full bg-white shadow-md',
           'transition-[margin] duration-fast motion-reduce:transition-none',
           // Logical margin keeps the knob on the “end” side in both LTR and RTL.
           checked ? 'ms-auto' : 'ms-0',

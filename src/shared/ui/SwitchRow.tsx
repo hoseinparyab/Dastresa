@@ -26,7 +26,7 @@ export function SwitchRow({
   return (
     <div
       className={cn(
-        'flex min-h-touch items-center justify-between gap-4 rounded-xl px-2 py-2',
+        'flex min-h-touch items-center justify-between gap-4 rounded-xl px-2 py-3',
         'transition-colors duration-fast hover:bg-white/[0.03] motion-reduce:transition-none',
         className,
       )}
@@ -35,12 +35,12 @@ export function SwitchRow({
         <label
           id={labelId}
           htmlFor={id}
-          className="cursor-pointer text-base font-semibold leading-snug text-dastresa-text"
+          className="cursor-pointer text-lg font-semibold leading-snug text-dastresa-text"
         >
           {label}
         </label>
         {description ? (
-          <p id={descId} className="mt-1 text-sm leading-snug text-slate-300">
+          <p id={descId} className="mt-1.5 text-base leading-snug text-slate-200">
             {description}
           </p>
         ) : null}
