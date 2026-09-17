@@ -1,6 +1,6 @@
 import { clamp } from '@/core/utils';
 
-export const CHIP_W = 178;
+export const CHIP_W = 190;
 export const CHIP_H = 52;
 export const PANEL_W = 300;
 export const PANEL_H = 360;

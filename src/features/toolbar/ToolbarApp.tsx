@@ -371,6 +371,8 @@ export function ToolbarApp({
         <button
           type="button"
           className="chip"
+          dir="ltr"
+          lang={locale}
           aria-label={t(locale, 'toolbarOpen')}
           aria-expanded={false}
           title={t(locale, 'toolbarOpen')}
@@ -389,15 +391,17 @@ export function ToolbarApp({
             </svg>
           </span>
           <span className="chip-label">
-            <span className="title">{t(locale, 'brand')}</span>
-            <span className="dot" />
+            <span className="title" lang={locale} key={locale}>
+              {t(locale, 'brand')}
+            </span>
+            <span className="dot" aria-hidden />
           </span>
         </button>
       ) : (
         <>
           <div className="header">
             <div className="brand">
-              <p className="title" aria-hidden>
+              <p className="title" lang={locale} key={`brand-${locale}`} aria-hidden>
                 {t(locale, 'brand')}
               </p>
               <span className="dot" aria-hidden />

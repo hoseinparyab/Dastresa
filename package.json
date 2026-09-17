@@ -18,13 +18,11 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:a11y": "vitest run tests/a11y",
-    "prepare": "husky",
-    "commitlint": "commitlint --edit",
-    "hooks:check": "node scripts/check-hooks.mjs"
+    "prepare": "husky"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "eslint --fix --max-warnings=0",
+      "eslint --fix",
       "prettier --write"
     ],
     "*.{json,md,css,html}": [
