@@ -86,6 +86,8 @@ export interface ToolbarAppProps {
   readerMode: boolean;
   readingFocus: boolean;
   summarizing?: boolean;
+  /** Popup/toolbar chrome: light | dark */
+  uiChrome?: 'light' | 'dark';
   /** Friendly page-type label already localized (e.g. "مقاله") */
   pageTypeLabel?: string;
   onCommand: (command: Command) => void;
@@ -128,6 +130,7 @@ export function ToolbarApp({
   readerMode,
   readingFocus,
   summarizing = false,
+  uiChrome = 'dark',
   pageTypeLabel,
   onCommand,
   onMoved,
@@ -321,6 +324,7 @@ export function ToolbarApp({
       role="toolbar"
       aria-label={t(locale, 'toolbarAria')}
       className={`dock${open ? '' : ' collapsed'}`}
+      data-chrome={uiChrome === 'light' ? 'light' : 'dark'}
       dir={dir}
       tabIndex={open ? 0 : -1}
       onPointerDown={onPointerDown}
@@ -341,18 +345,8 @@ export function ToolbarApp({
           aria-expanded={false}
           title={t(locale, 'toolbarOpen')}
           onClick={onChipClick}
-          style={{
-            border: 0,
-            background: 'transparent',
-            color: 'inherit',
-            font: 'inherit',
-            width: '100%',
-            cursor: 'grab',
-          }}
         >
-          <span className="dot" aria-hidden />
-          <span className="title">{t(locale, 'brand')}</span>
-          <span className="icon-btn" aria-hidden>
+          <span className="chip-badge" aria-hidden>
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
               <path
@@ -364,15 +358,19 @@ export function ToolbarApp({
               />
             </svg>
           </span>
+          <span className="chip-label">
+            <span className="title">{t(locale, 'brand')}</span>
+            <span className="dot" />
+          </span>
         </button>
       ) : (
         <>
           <div className="header">
             <div className="brand">
-              <span className="dot" aria-hidden />
               <p className="title" aria-hidden>
                 {t(locale, 'brand')}
               </p>
+              <span className="dot" aria-hidden />
               <p className="hint">{t(locale, 'toolbarDrag')}</p>
             </div>
             <div className="header-actions">

@@ -2,7 +2,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import type { FeatureContext, IFeature } from '@/core/contracts';
 import { EVENTS, FEATURE_IDS, STORAGE_KEYS } from '@/core/constants';
 import { analyzePage, classifyPage, type PageType } from '@/core/semantics';
-import { parseSettings, type DastresaSettings } from '@/core/settings';
+import { parseSettings, type DastresaSettings, type UiChrome } from '@/core/settings';
 import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 import { ToolbarApp } from '@/features/toolbar/ToolbarApp';
 import { isLegacyTopLeft, resolveToolbarPosition } from '@/features/toolbar/geometry';
@@ -24,6 +24,7 @@ export class ToolbarFeature implements IFeature {
   private readingFocus = false;
   private summarizing = false;
   private pageType: PageType = 'UNKNOWN';
+  private uiChrome: UiChrome = 'dark';
   private unsubs: Array<() => void> = [];
   private migrated = false;
 
@@ -73,6 +74,7 @@ export class ToolbarFeature implements IFeature {
     this.dir = settings.dir === 'ltr' ? 'ltr' : 'rtl';
     this.readerMode = settings.readerMode;
     this.readingFocus = settings.readingFocus;
+    this.uiChrome = settings.uiChrome === 'light' ? 'light' : 'dark';
   }
 
   private refreshPageType(): void {
@@ -132,6 +134,7 @@ export class ToolbarFeature implements IFeature {
         readerMode={this.readerMode}
         readingFocus={this.readingFocus}
         summarizing={this.summarizing}
+        uiChrome={this.uiChrome}
         pageTypeLabel={pageTypeLabel}
         onCommand={(command) => {
           if (command === 'settings') {

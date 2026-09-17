@@ -1,3 +1,4 @@
+/** Floating toolbar styles — light/dark chrome aligned with popup mockups. */
 export const TOOLBAR_CSS = `
   :host {
     all: initial !important;
@@ -12,147 +13,161 @@ export const TOOLBAR_CSS = `
   * { box-sizing: border-box; }
 
   .dock {
+    --tb-bg: #0b1220;
+    --tb-surface: #111827;
+    --tb-text: #f8fafc;
+    --tb-muted: #94a3b8;
+    --tb-accent: #38bdf8;
+    --tb-accent-soft: rgba(56, 189, 248, 0.16);
+    --tb-border: #334155;
+    --tb-chip-side: #0f172a;
+    --tb-btn-hover: rgba(56, 189, 248, 0.14);
+    --tb-btn-pressed-bg: rgba(56, 189, 248, 0.22);
+    --tb-btn-pressed-border: rgba(56, 189, 248, 0.65);
+    --tb-danger-bg: rgba(127, 29, 29, 0.45);
+    --tb-danger-text: #fecaca;
+    --tb-shadow: 0 12px 32px rgba(2, 6, 23, 0.55);
+
     position: fixed;
     z-index: 2147483646;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     width: max-content;
-    max-width: min(260px, calc(100vw - 16px));
-    padding: 6px;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: #0f172a;
-    color: #f8fafc;
+    max-width: min(300px, calc(100vw - 16px));
+    padding: 10px;
+    border-radius: 18px;
+    border: 1px solid var(--tb-border);
+    background: var(--tb-bg);
+    color: var(--tb-text);
     font-family: Tahoma, "Segoe UI", "Source Sans 3", sans-serif;
-    box-shadow: 0 10px 28px rgba(2, 6, 23, 0.55);
+    box-shadow: var(--tb-shadow);
     pointer-events: auto;
     cursor: grab;
     touch-action: none;
     user-select: none;
   }
+
+  .dock[data-chrome="light"] {
+    --tb-bg: #f1f5f9;
+    --tb-surface: #ffffff;
+    --tb-text: #0f172a;
+    --tb-muted: #475569;
+    --tb-accent: #2563eb;
+    --tb-accent-soft: #eff6ff;
+    --tb-border: #e2e8f0;
+    --tb-chip-side: #1e3a8a;
+    --tb-btn-hover: rgba(37, 99, 235, 0.1);
+    --tb-btn-pressed-bg: rgba(37, 99, 235, 0.14);
+    --tb-btn-pressed-border: rgba(37, 99, 235, 0.55);
+    --tb-danger-bg: #fef2f2;
+    --tb-danger-text: #b91c1c;
+    --tb-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+  }
+
   .dock.collapsed {
     padding: 0;
     border-radius: 999px;
     overflow: hidden;
+    background: var(--tb-bg);
+    border-color: var(--tb-border);
   }
   .dock:active { cursor: grabbing; }
 
   .chip {
     display: flex;
     align-items: center;
-    gap: 8px;
-    min-height: 48px;
-    padding-block: 0;
-    padding-inline: 10px 6px;
+    gap: 0;
+    min-height: 52px;
+    padding: 0;
     text-align: start;
-  }
-  .dock.collapsed .chip {
-    /* Icon sits on inline-end (left in RTL) — no gap on that side */
-    padding-block: 0;
-    padding-inline-start: 12px;
-    padding-inline-end: 0;
-    gap: 10px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    width: 100%;
     cursor: grab;
-    touch-action: none;
   }
-  .dock.collapsed:active .chip {
-    cursor: grabbing;
-  }
+  .dock.collapsed:active .chip { cursor: grabbing; }
   .chip:focus-visible {
-    outline: 2px solid #38bdf8;
+    outline: 3px solid var(--tb-accent);
     outline-offset: 2px;
   }
-  .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: #38bdf8;
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+
+  .chip-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
     flex-shrink: 0;
+    background: var(--tb-chip-side);
+    color: #fff;
   }
+  .dock[data-chrome="light"] .chip-badge {
+    background: var(--tb-accent);
+  }
+  .chip-badge svg {
+    width: 26px;
+    height: 26px;
+    display: block;
+  }
+
+  .chip-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-inline: 12px 14px;
+    min-height: 52px;
+    background: var(--tb-surface);
+  }
+  .dock.collapsed .chip-label {
+    background: #020617;
+  }
+  .dock[data-chrome="light"].collapsed .chip-label {
+    background: var(--tb-surface);
+  }
+
   .title {
     margin: 0;
     font-size: 16px;
     font-weight: 800;
     letter-spacing: 0.01em;
     white-space: nowrap;
-    color: #f8fafc;
+    color: var(--tb-text);
   }
-  .icon-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 48px;
-    min-height: 48px;
-    padding: 0;
-    border: 0;
+  .dock.collapsed .title { color: #f8fafc; }
+  .dock[data-chrome="light"].collapsed .title { color: var(--tb-text); }
+
+  .dot {
+    width: 9px;
+    height: 9px;
     border-radius: 999px;
-    background: rgba(56, 189, 248, 0.16);
-    color: #e0f2fe;
-    font-size: 16px;
-    font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-  }
-  .dock.collapsed .icon-btn {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-    min-height: 48px;
-    border-radius: 0;
-    /* Match the pill’s outer curve on the free edge */
-    border-start-end-radius: 999px;
-    border-end-end-radius: 999px;
-    background: rgba(56, 189, 248, 0.2);
-  }
-  .icon-btn svg {
-    width: 22px;
-    height: 22px;
-    display: block;
-  }
-  .dock.collapsed .icon-btn svg {
-    width: 24px;
-    height: 24px;
-  }
-  .icon-btn:hover { background: rgba(56, 189, 248, 0.28); }
-  .icon-btn:focus-visible {
-    outline: 3px solid #38bdf8;
-    outline-offset: 2px;
+    background: var(--tb-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--tb-accent) 28%, transparent);
+    flex-shrink: 0;
   }
 
   .header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 6px;
-    padding: 0 2px 2px;
+    gap: 8px;
+    padding: 2px 2px 4px;
   }
   .brand {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     min-width: 0;
   }
+  .brand .title { color: var(--tb-text); }
   .hint {
     margin: 0;
     font-size: 12px;
-    color: #cbd5e1;
-  }
-  .page-type {
-    margin: 0 2px 6px;
-    padding: 10px 12px;
-    border-radius: 12px;
-    background: rgba(56, 189, 248, 0.14);
-    border: 1px solid rgba(56, 189, 248, 0.32);
-    color: #e0f2fe;
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1.4;
-  }
-  .page-type strong {
-    font-weight: 800;
-    color: #f8fafc;
+    font-weight: 600;
+    color: var(--tb-muted);
+    white-space: nowrap;
   }
   .header-actions {
     display: flex;
@@ -163,28 +178,44 @@ export const TOOLBAR_CSS = `
     min-width: 44px;
     min-height: 44px;
     border: 0;
-    border-radius: 10px;
+    border-radius: 12px;
     background: transparent;
-    color: #e2e8f0;
+    color: var(--tb-muted);
     font-size: 16px;
     font-weight: 700;
     font-family: inherit;
     cursor: pointer;
   }
-  .mini:hover { background: rgba(148, 163, 184, 0.12); color: #fff; }
+  .mini:hover { background: var(--tb-btn-hover); color: var(--tb-text); }
   .mini:focus-visible {
-    outline: 3px solid #38bdf8;
+    outline: 3px solid var(--tb-accent);
     outline-offset: 2px;
+  }
+
+  .page-type {
+    margin: 0;
+    padding: 11px 12px;
+    border-radius: 14px;
+    background: var(--tb-accent-soft);
+    border: 1px solid color-mix(in srgb, var(--tb-accent) 35%, transparent);
+    color: var(--tb-text);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+  .page-type strong {
+    font-weight: 800;
+    color: var(--tb-accent);
   }
 
   .strip {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 4px;
-    padding: 4px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(2, 6, 23, 0.45);
+    gap: 6px;
+    padding: 8px;
+    border-radius: 14px;
+    border: 1px solid var(--tb-border);
+    background: var(--tb-surface);
   }
   .btn {
     min-width: 0;
@@ -193,48 +224,53 @@ export const TOOLBAR_CSS = `
     border-radius: 12px;
     border: 1px solid transparent;
     background: transparent;
-    color: #f1f5f9;
+    color: var(--tb-text);
     font-size: 14px;
     font-weight: 800;
     font-family: inherit;
     cursor: pointer;
-    transition: background 120ms ease, color 120ms ease;
+    transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
   }
   .btn:hover {
-    background: rgba(56, 189, 248, 0.14);
-    color: #fff;
+    background: var(--tb-btn-hover);
   }
   .btn.pressed {
-    background: rgba(56, 189, 248, 0.22);
-    border-color: rgba(56, 189, 248, 0.55);
-    color: #fff;
+    background: var(--tb-btn-pressed-bg);
+    border-color: var(--tb-btn-pressed-border);
+    color: var(--tb-text);
   }
   .btn:focus-visible {
-    outline: 3px solid #38bdf8;
+    outline: 3px solid var(--tb-accent);
     outline-offset: 2px;
   }
   .btn.soft {
-    border-color: rgba(56, 189, 248, 0.4);
-    color: #e0f2fe;
+    border-color: color-mix(in srgb, var(--tb-accent) 40%, transparent);
   }
   .btn.danger {
-    border-color: rgba(248, 113, 113, 0.45);
-    background: rgba(127, 29, 29, 0.45);
-    color: #fecaca;
+    border-color: color-mix(in srgb, var(--tb-danger-text) 40%, transparent);
+    background: var(--tb-danger-bg);
+    color: var(--tb-danger-text);
   }
   .btn.ghost {
     width: 100%;
     min-height: 48px;
-    border-color: rgba(148, 163, 184, 0.28);
-    color: #e2e8f0;
+    border-color: var(--tb-border);
+    background: var(--tb-surface);
+    color: var(--tb-text);
+    font-weight: 800;
+  }
+  .btn.ghost:hover {
+    background: var(--tb-accent-soft);
+    border-color: color-mix(in srgb, var(--tb-accent) 40%, transparent);
   }
   .panel-title {
-    margin: 4px 0 0 2px;
+    margin: 6px 0 2px 2px;
     font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    color: #cbd5e1;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--tb-muted);
   }
+
   @media (prefers-reduced-motion: reduce) {
     .btn, .dock { transition: none !important; }
   }
