@@ -4,8 +4,8 @@ export const TOOLBAR_CSS = `
     all: initial !important;
     position: fixed !important;
     inset: 0 !important;
-    width: 0 !important;
-    height: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
     overflow: visible !important;
     pointer-events: none !important;
     z-index: 2147483646 !important;
@@ -35,6 +35,10 @@ export const TOOLBAR_CSS = `
     gap: 8px;
     width: max-content;
     max-width: min(300px, calc(100vw - 16px));
+    max-height: calc(100vh - 24px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 10px;
     border-radius: 18px;
     border: 1px solid var(--tb-border);
@@ -69,6 +73,7 @@ export const TOOLBAR_CSS = `
     padding: 0;
     border-radius: 999px;
     overflow: hidden;
+    max-height: none;
     background: var(--tb-bg);
     border-color: var(--tb-border);
   }

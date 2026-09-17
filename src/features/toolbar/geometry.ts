@@ -4,6 +4,13 @@ export const CHIP_W = 178;
 export const CHIP_H = 52;
 export const PANEL_W = 300;
 export const PANEL_H = 360;
+/** Open panel with speech + system sections expanded. */
+export const PANEL_H_MORE = 580;
+
+export function panelHeight(open: boolean, moreOpen = false): number {
+  if (!open) return CHIP_H;
+  return moreOpen ? PANEL_H_MORE : PANEL_H;
+}
 export const MARGIN = 12;
 
 /** Legacy default sat under site headers and looked broken on refresh. */

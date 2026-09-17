@@ -1,0 +1,400 @@
+/**
+ * Onboarding tour chrome — same light/dark language as popup mockups.
+ */
+
+html.tour-shell,
+html.tour-shell body,
+html.tour-shell #root {
+  margin: 0 !important;
+  min-height: 100%;
+}
+
+html.tour-shell[data-chrome='light'],
+html.tour-shell[data-chrome='light'] body,
+html.tour-shell[data-chrome='light'] #root {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+html.tour-shell[data-chrome='dark'],
+html.tour-shell[data-chrome='dark'] body,
+html.tour-shell[data-chrome='dark'] #root {
+  background: #0b1220 !important;
+  color: #f8fafc !important;
+}
+
+.dastresa-tour {
+  box-sizing: border-box;
+  min-height: 100vh;
+  font-size: 16px;
+  line-height: 1.5;
+  font-family: Tahoma, 'Segoe UI', 'Source Sans 3', sans-serif;
+  background: var(--tour-bg);
+  color: var(--tour-text);
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.dastresa-tour *,
+.dastresa-tour *::before,
+.dastresa-tour *::after {
+  box-sizing: border-box;
+}
+
+.dastresa-tour[data-chrome='light'] {
+  --tour-bg: #f1f5f9;
+  --tour-surface: #ffffff;
+  --tour-text: #0f172a;
+  --tour-muted: #475569;
+  --tour-accent: #2563eb;
+  --tour-accent-hover: #1d4ed8;
+  --tour-accent-soft: #eff6ff;
+  --tour-border: #e2e8f0;
+  --tour-chrome-track: #e2e8f0;
+  --tour-dot-idle: #cbd5e1;
+  --tour-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+  --tour-visual-bg: linear-gradient(145deg, #eff6ff 0%, #ffffff 55%, #e0e7ff 100%);
+  --tour-visual-icon: #1d4ed8;
+}
+
+.dastresa-tour[data-chrome='dark'] {
+  --tour-bg: #0b1220;
+  --tour-surface: #111827;
+  --tour-text: #f8fafc;
+  --tour-muted: #94a3b8;
+  --tour-accent: #38bdf8;
+  --tour-accent-hover: #7dd3fc;
+  --tour-accent-soft: rgba(56, 189, 248, 0.14);
+  --tour-border: #334155;
+  --tour-chrome-track: #1e293b;
+  --tour-dot-idle: #475569;
+  --tour-shadow: 0 12px 32px rgba(2, 6, 23, 0.45);
+  --tour-visual-bg: linear-gradient(145deg, rgba(56, 189, 248, 0.18) 0%, #0f172a 50%, rgba(14, 165, 233, 0.1) 100%);
+  --tour-visual-icon: #e0f2fe;
+}
+
+.dastresa-tour .tour-shell-inner {
+  width: min(560px, 100%);
+  margin: 0 auto;
+  padding: 1.25rem 1.1rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dastresa-tour .tour-header {
+  background: var(--tour-surface);
+  border: 1px solid var(--tour-border);
+  border-radius: 18px;
+  padding: 1.05rem 1.1rem 1rem;
+  box-shadow: var(--tour-shadow);
+}
+
+.dastresa-tour .tour-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dastresa-tour .tour-brand-block {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dastresa-tour .tour-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.45rem;
+  flex: 0 0 auto;
+}
+
+.dastresa-tour .tour-eyebrow {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--tour-accent);
+}
+
+.dastresa-tour .tour-brand {
+  margin: 0.28rem 0 0;
+  font-size: 1.85rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--tour-text);
+}
+
+.dastresa-tour .tour-tagline {
+  margin: 0.55rem 0 0;
+  font-size: 0.96rem;
+  line-height: 1.45;
+  color: var(--tour-muted);
+}
+
+.dastresa-tour .tour-lang {
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.18rem;
+  border-radius: 999px;
+  border: 1px solid var(--tour-border);
+  background: var(--tour-chrome-track);
+}
+
+.dastresa-tour .tour-lang-btn {
+  min-height: 2rem;
+  min-width: 2.6rem;
+  padding: 0.2rem 0.55rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--tour-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.dastresa-tour .tour-lang-btn.is-active {
+  background: var(--tour-surface);
+  color: var(--tour-accent);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+/* ChromeToggle uses pop-* class names */
+.dastresa-tour .pop-chrome-toggle {
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.18rem;
+  border-radius: 999px;
+  border: 1px solid var(--tour-border);
+  background: var(--tour-chrome-track);
+}
+
+.dastresa-tour .pop-chrome-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  min-height: 2rem;
+  padding: 0.2rem 0.55rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--tour-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.dastresa-tour .pop-chrome-btn.is-active {
+  background: var(--tour-surface);
+  color: var(--tour-accent);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.dastresa-tour .tour-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid var(--tour-border);
+  background: var(--tour-surface);
+  padding: 1.35rem 1.2rem 1.25rem;
+  box-shadow: var(--tour-shadow);
+}
+
+.dastresa-tour .tour-progress {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--tour-muted);
+}
+
+.dastresa-tour .tour-title {
+  margin: 0.45rem 0 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--tour-text);
+}
+
+.dastresa-tour .tour-body {
+  margin: 0.7rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--tour-muted);
+}
+
+.dastresa-tour .tour-dots {
+  margin-top: 1.15rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.dastresa-tour .tour-dot {
+  height: 0.7rem;
+  width: 0.7rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--tour-dot-idle);
+  cursor: pointer;
+  transition: width 140ms ease, background 140ms ease;
+}
+
+.dastresa-tour .tour-dot.is-active {
+  width: 2rem;
+  background: var(--tour-accent);
+}
+
+.dastresa-tour .tour-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+@media (min-width: 480px) {
+  .dastresa-tour .tour-actions {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .dastresa-tour .tour-actions-end {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 0.55rem;
+  }
+}
+
+.dastresa-tour .tour-actions-end {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  .dastresa-tour .tour-actions-end {
+    width: auto;
+  }
+}
+
+.dastresa-tour .tour-cta,
+.dastresa-tour .tour-secondary,
+.dastresa-tour .tour-ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.1rem;
+  padding: 0.65rem 1rem;
+  border-radius: 14px;
+  font-size: 1.02rem;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dastresa-tour .tour-cta {
+  border: 0;
+  background: var(--tour-accent);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.28);
+  min-width: 11rem;
+}
+
+.dastresa-tour[data-chrome='dark'] .tour-cta {
+  color: #0f172a;
+  box-shadow: 0 6px 18px rgba(56, 189, 248, 0.28);
+}
+
+.dastresa-tour .tour-cta:hover:not(:disabled) {
+  background: var(--tour-accent-hover);
+}
+
+.dastresa-tour .tour-secondary {
+  border: 1px solid var(--tour-border);
+  background: var(--tour-surface);
+  color: var(--tour-text);
+  min-width: 8rem;
+}
+
+.dastresa-tour .tour-ghost {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--tour-muted);
+  min-width: 7rem;
+}
+
+.dastresa-tour .tour-ghost:hover:not(:disabled) {
+  background: var(--tour-accent-soft);
+  color: var(--tour-text);
+}
+
+.dastresa-tour .tour-cta:disabled,
+.dastresa-tour .tour-secondary:disabled,
+.dastresa-tour .tour-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dastresa-tour .tour-cta:focus-visible,
+.dastresa-tour .tour-secondary:focus-visible,
+.dastresa-tour .tour-ghost:focus-visible,
+.dastresa-tour .tour-dot:focus-visible,
+.dastresa-tour .tour-lang-btn:focus-visible,
+.dastresa-tour .pop-chrome-btn:focus-visible {
+  outline: 3px solid var(--tour-accent);
+  outline-offset: 2px;
+}
+
+.dastresa-tour .tour-visual {
+  position: relative;
+  margin: 0 auto 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 7rem;
+  height: 7rem;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--tour-accent) 30%, transparent);
+  background: var(--tour-visual-bg);
+  overflow: hidden;
+}
+
+.dastresa-tour .tour-visual svg {
+  width: 3rem;
+  height: 3rem;
+  color: var(--tour-visual-icon);
+  position: relative;
+  z-index: 1;
+}
+
+.dastresa-tour .tour-visual-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 30% 20%,
+    color-mix(in srgb, var(--tour-accent) 35%, transparent),
+    transparent 55%
+  );
+}
+
+.dastresa-tour .tour-done {
+  text-align: center;
+  padding: 2.5rem 1rem;
+}
+
+.dastresa-tour .tour-credit {
+  margin-top: 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dastresa-tour,
+  .dastresa-tour .tour-dot {
+    transition: none;
+  }
+}

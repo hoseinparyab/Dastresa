@@ -5,9 +5,9 @@ import { t, type AppLocale } from '@/shared/i18n/messages';
 import {
   CHIP_H,
   CHIP_W,
-  PANEL_H,
   PANEL_W,
   clampPos,
+  panelHeight,
 } from '@/features/toolbar/geometry';
 
 type Command = EventMap['toolbar:command']['command'];
@@ -159,18 +159,48 @@ export function ToolbarApp({
   const speech = useMemo(() => speechButtons(locale), [locale]);
   const system = useMemo(() => systemButtons(locale), [locale]);
 
+  const liveHeight = useCallback(() => {
+    const el = dockRef.current;
+    if (el) {
+      const h = el.getBoundingClientRect().height;
+      if (h > 0) return Math.min(h, window.innerHeight - 24);
+    }
+    return panelHeight(open, moreOpen);
+  }, [moreOpen, open]);
+
+  const reclampToViewport = useCallback(() => {
+    const width = open ? PANEL_W : CHIP_W;
+    const height = liveHeight();
+    const next = clampPos(window, pos, width, height);
+    if (next.x === pos.x && next.y === pos.y) return;
+    setDragPos(next);
+    onMoved(next.x, next.y);
+  }, [liveHeight, onMoved, open, pos]);
+
   useEffect(() => {
-    const onResize = () => {
-      const width = open ? PANEL_W : CHIP_W;
-      const height = open ? PANEL_H : CHIP_H;
-      const next = clampPos(window, pos, width, height);
+    window.addEventListener('resize', reclampToViewport);
+    return () => window.removeEventListener('resize', reclampToViewport);
+  }, [reclampToViewport]);
+
+  /** After open/more toggles, measure real dock height and keep it on-screen. */
+  useEffect(() => {
+    const el = dockRef.current;
+    if (!el || !open) return;
+
+    const run = () => {
+      const height = Math.min(el.getBoundingClientRect().height || panelHeight(true, moreOpen), window.innerHeight - 24);
+      const next = clampPos(window, { x: pos.x, y: pos.y }, PANEL_W, height);
       if (next.x === pos.x && next.y === pos.y) return;
       setDragPos(next);
       onMoved(next.x, next.y);
     };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [onMoved, open, pos]);
+
+    run();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => run()) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+    // Intentionally depend on expand state only; pos is read fresh inside run via closure update each effect.
+  }, [moreOpen, open, onMoved, pos.x, pos.y]);
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -205,7 +235,7 @@ export function ToolbarApp({
       drag.moved = true;
 
       const width = open ? PANEL_W : CHIP_W;
-      const height = open ? PANEL_H : CHIP_H;
+      const height = liveHeight();
       const next = clampPos(
         window,
         {
@@ -219,7 +249,7 @@ export function ToolbarApp({
       drag.y = next.y;
       setDragPos(next);
     },
-    [open],
+    [liveHeight, open],
   );
 
   const endPointer = useCallback(
@@ -243,7 +273,7 @@ export function ToolbarApp({
       if (drag.fromChip) {
         // Swallow the following click so we don't open twice.
         skipChipClick.current = true;
-        const next = clampPos(window, { x: drag.x, y: drag.y }, PANEL_W, PANEL_H);
+        const next = clampPos(window, { x: drag.x, y: drag.y }, PANEL_W, panelHeight(true, false));
         if (next.x !== drag.x || next.y !== drag.y) {
           setDragPos(next);
           onMoved(next.x, next.y);
@@ -263,7 +293,7 @@ export function ToolbarApp({
         return;
       }
       // Keyboard activation.
-      const next = clampPos(window, pos, PANEL_W, PANEL_H);
+      const next = clampPos(window, pos, PANEL_W, panelHeight(true, false));
       if (next.x !== pos.x || next.y !== pos.y) {
         setDragPos(next);
         onMoved(next.x, next.y);
@@ -308,13 +338,13 @@ export function ToolbarApp({
       else if (e.key === 'ArrowDown') ny += step;
       else return;
       e.preventDefault();
-      const next = clampPos(window, { x: nx, y: ny }, PANEL_W, PANEL_H);
+      const next = clampPos(window, { x: nx, y: ny }, PANEL_W, liveHeight());
       setDragPos(next);
       onMoved(next.x, next.y);
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
-  }, [open, onMoved, pos, collapseToolbar]);
+  }, [liveHeight, open, onMoved, pos, collapseToolbar]);
 
   const moreId = 'dastresa-toolbar-more';
 
