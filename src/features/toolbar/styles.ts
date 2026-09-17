@@ -73,8 +73,8 @@ export const TOOLBAR_CSS = `
   }
   .title {
     margin: 0;
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 16px;
+    font-weight: 800;
     letter-spacing: 0.01em;
     white-space: nowrap;
     color: #f8fafc;
@@ -140,15 +140,15 @@ export const TOOLBAR_CSS = `
     color: #cbd5e1;
   }
   .page-type {
-    margin: 0 2px 4px;
-    padding: 8px 10px;
-    border-radius: 10px;
-    background: rgba(56, 189, 248, 0.12);
-    border: 1px solid rgba(56, 189, 248, 0.28);
+    margin: 0 2px 6px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(56, 189, 248, 0.14);
+    border: 1px solid rgba(56, 189, 248, 0.32);
     color: #e0f2fe;
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.35;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
   }
   .page-type strong {
     font-weight: 800;
@@ -188,14 +188,14 @@ export const TOOLBAR_CSS = `
   }
   .btn {
     min-width: 0;
-    min-height: 48px;
-    padding: 0 6px;
-    border-radius: 10px;
+    min-height: 52px;
+    padding: 0 8px;
+    border-radius: 12px;
     border: 1px solid transparent;
     background: transparent;
     color: #f1f5f9;
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 800;
     font-family: inherit;
     cursor: pointer;
     transition: background 120ms ease, color 120ms ease;

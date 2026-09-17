@@ -57,9 +57,9 @@ describe('SettingsForm', () => {
 
   it('renders core accessibility controls', () => {
     render(<SettingsForm compact />);
-    expect(screen.getByLabelText('Theme')).toBeInTheDocument();
+    expect(screen.getByLabelText('Page theme')).toBeInTheDocument();
     expect(screen.getByLabelText('Reader Mode')).toBeInTheDocument();
-    expect(screen.getByText(/changes apply instantly/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('Change text size')).toBeInTheDocument();
   });
 
   it('allows toggling reader mode and persists immediately', async () => {

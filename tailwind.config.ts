@@ -10,10 +10,10 @@ const config: Config = {
         display: ['Tahoma', 'Segoe UI', 'Georgia', 'serif'],
       },
       minWidth: {
-        touch: '48px',
+        touch: '52px',
       },
       minHeight: {
-        touch: '48px',
+        touch: '52px',
       },
       transitionDuration: {
         fast: '120ms',

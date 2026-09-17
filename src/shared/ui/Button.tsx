@@ -23,7 +23,7 @@ export function Button({
     <button
       type="button"
       className={cn(
-        'wp-touch inline-flex items-center justify-center rounded-xl px-4 text-base font-bold',
+        'wp-touch inline-flex items-center justify-center rounded-2xl px-5 text-lg font-bold',
         'transition-all duration-fast motion-reduce:transition-none',
         'disabled:cursor-not-allowed disabled:opacity-50',
         variants[variant],

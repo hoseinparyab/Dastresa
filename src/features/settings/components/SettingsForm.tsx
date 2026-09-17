@@ -8,6 +8,23 @@ import { notifyActiveTab } from '@/shared/messaging/tab';
 import { t } from '@/shared/i18n/messages';
 import { Button, Section, SelectField, SwitchRow } from '@/shared/ui';
 
+function PersonIcon() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2">
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5 19c1.5-3.5 4-5 7-5s5.5 1.5 7 5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function TextIcon() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2">
+      <path d="M4 7h16M4 12h12M4 17h14" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 const CURSOR_KEYS = {
   sky: 'cursorSky',
   yellow: 'cursorYellow',
@@ -58,12 +75,12 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
   ];
 
   const profileOptions: Array<{ value: ProfileId; label: string }> = [
-    { value: 'custom', label: t(locale, 'profileCustom') },
     { value: 'normal', label: t(locale, 'profileNormal') },
     { value: 'low-vision', label: t(locale, 'profileLowVision') },
     { value: 'elderly', label: t(locale, 'profileElderly') },
     { value: 'reading', label: t(locale, 'profileReading') },
     { value: 'high-contrast', label: t(locale, 'profileHighContrast') },
+    { value: 'custom', label: t(locale, 'profileCustom') },
   ];
 
   useEffect(() => {
@@ -90,10 +107,12 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
   const textSizePercent = Math.round((textScale ?? 1) * 100);
 
   return (
-    <form className="flex flex-col gap-3" dir={settings.dir} onSubmit={(e) => e.preventDefault()}>
-      <p className="rounded-xl bg-sky-500/10 px-3 py-2.5 text-sm font-medium leading-snug text-sky-100 ring-1 ring-sky-400/20">
-        {t(locale, 'instantApply')}
-      </p>
+    <form className="flex flex-col gap-4" dir={settings.dir} onSubmit={(e) => e.preventDefault()}>
+      {!compact ? (
+        <p className="rounded-xl bg-sky-500/10 px-3.5 py-3 text-base font-medium leading-snug text-sky-100 ring-1 ring-sky-400/20">
+          {t(locale, 'instantApply')}
+        </p>
+      ) : null}
 
       {!compact && (
         <Section title={t(locale, 'general')} description={t(locale, 'generalDesc')}>
@@ -116,7 +135,11 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
         </Section>
       )}
 
-      <Section title={t(locale, 'look')} description={t(locale, 'lookDesc')}>
+      <Section
+        title={t(locale, 'look')}
+        description={compact ? undefined : t(locale, 'lookDesc')}
+        icon={compact ? <PersonIcon /> : undefined}
+      >
         <SelectField
           label={t(locale, 'profile')}
           value={activeProfile ?? 'custom'}
@@ -148,10 +171,17 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
       </Section>
 
       {/* Essential reading tools — always visible (elderly primary path) */}
-      <Section title={t(locale, 'reading')} description={t(locale, 'readingDesc')}>
-        <label className="block px-1 py-2">
-          <span className="mb-2 block text-sm font-semibold text-slate-200">
-            {t(locale, 'textSize')} ({textSizePercent}%)
+      <Section
+        title={t(locale, 'reading')}
+        description={compact ? undefined : t(locale, 'readingDesc')}
+        icon={compact ? <TextIcon /> : undefined}
+      >
+        <label className="block px-1 py-3">
+          <span className="mb-3 flex items-center justify-between gap-3 text-base font-semibold text-slate-100">
+            <span>{t(locale, 'textSize')}</span>
+            <span className="pop-percent rounded-lg bg-sky-500/20 px-2.5 py-1 text-base font-bold text-sky-100">
+              {textSizePercent}%
+            </span>
           </span>
           <input
             type="range"
@@ -172,17 +202,19 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
           />
         </label>
 
-        <SelectField
-          label={t(locale, 'language')}
-          value={localeWatch}
-          onChange={(e) => {
-            const nextLocale = e.target.value as 'en' | 'fa';
-            applyNow({ locale: nextLocale, dir: nextLocale === 'fa' ? 'rtl' : 'ltr' });
-          }}
-        >
-          <option value="fa">فارسی</option>
-          <option value="en">English</option>
-        </SelectField>
+        {!compact ? (
+          <SelectField
+            label={t(locale, 'language')}
+            value={localeWatch}
+            onChange={(e) => {
+              const nextLocale = e.target.value as 'en' | 'fa';
+              applyNow({ locale: nextLocale, dir: nextLocale === 'fa' ? 'rtl' : 'ltr' });
+            }}
+          >
+            <option value="fa">فارسی</option>
+            <option value="en">English</option>
+          </SelectField>
+        ) : null}
 
         <Controller
           name="readerMode"
@@ -250,21 +282,23 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
             />
           )}
         />
-        <Controller
-          name="largeButtons"
-          control={form.control}
-          render={({ field }) => (
-            <SwitchRow
-              id="largeButtons"
-              label={t(locale, 'largeButtons')}
-              checked={field.value}
-              onCheckedChange={(checked) => {
-                field.onChange(checked);
-                applyNow({ largeButtons: checked });
-              }}
-            />
-          )}
-        />
+        {!compact ? (
+          <Controller
+            name="largeButtons"
+            control={form.control}
+            render={({ field }) => (
+              <SwitchRow
+                id="largeButtons"
+                label={t(locale, 'largeButtons')}
+                checked={field.value}
+                onCheckedChange={(checked) => {
+                  field.onChange(checked);
+                  applyNow({ largeButtons: checked });
+                }}
+              />
+            )}
+          />
+        ) : null}
         {!compact && (
           <Controller
             name="largeCursor"
