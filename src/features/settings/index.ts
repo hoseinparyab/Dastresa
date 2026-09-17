@@ -3,6 +3,7 @@ import { EVENTS, FEATURE_IDS, STORAGE_KEYS } from '@/core/constants';
 import {
   createDefaultSettings,
   mergeSettings,
+  migrateSettings,
   parseSettings,
   type DastresaSettings,
 } from '@/core/settings';
@@ -20,9 +21,17 @@ export class SettingsService {
 
   async hydrate(): Promise<DastresaSettings> {
     const raw = await this.storage.get<unknown>(STORAGE_KEYS.SETTINGS);
-    this.settings = parseSettings(raw);
+    this.settings = migrateSettings(raw);
+    // Persist migrated shape once so older installs upgrade cleanly.
+    if (
+      !raw ||
+      typeof raw !== 'object' ||
+      (raw as { schemaVersion?: number }).schemaVersion !== this.settings.schemaVersion
+    ) {
+      await this.storage.set(STORAGE_KEYS.SETTINGS, this.settings);
+    }
     this.unwatch = this.storage.watch<unknown>(STORAGE_KEYS.SETTINGS, (value) => {
-      this.settings = parseSettings(value);
+      this.settings = migrateSettings(value);
       if (this.suppressWatch > 0) return;
       this.onChange(this.settings);
     });
@@ -64,15 +73,21 @@ export class SettingsService {
 export class SettingsFeature implements IFeature {
   readonly id = FEATURE_IDS.SETTINGS;
   readonly name = 'Settings';
-  readonly version = '0.1.0';
+  readonly version = '1.2.0';
   private enabled = true;
   private service?: SettingsService;
+  private lastProfile?: DastresaSettings['activeProfile'];
 
   async initialize(ctx: FeatureContext): Promise<void> {
     this.service = new SettingsService(ctx.storage, (settings) => {
       ctx.bus.emit(EVENTS.SETTINGS_CHANGED, { settings });
+      if (this.lastProfile !== settings.activeProfile) {
+        this.lastProfile = settings.activeProfile;
+        ctx.bus.emit(EVENTS.PROFILE_CHANGED, { profileId: settings.activeProfile });
+      }
     });
     await this.service.hydrate();
+    this.lastProfile = this.service.get().activeProfile;
     ctx.bus.emit(EVENTS.SETTINGS_CHANGED, { settings: this.service.get() });
   }
 

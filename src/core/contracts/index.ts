@@ -48,12 +48,22 @@ export interface IDomAnalyzer {
   isReady(doc?: Document): boolean;
 }
 
+/** Optional semantic layer (1.2.0) — implemented by DomAnalyzerService. */
+export interface ISemanticPageAnalyzer {
+  analyzeStructure(doc?: Document): import('@/core/semantics').PageStructure;
+  detectType(doc?: Document): import('@/core/semantics').PageTypeResult;
+  analyzeForms(doc?: Document): import('@/core/semantics').FormAnalysisResult;
+  getCachedStructure(): import('@/core/semantics').PageStructure | null;
+}
+
 export interface ReadableDocument {
   title: string;
   byline?: string;
   html: string;
   text: string;
   paragraphs: string[];
+  /** Optional TOC for Reader 2.0 */
+  toc?: Array<{ id: string; level: number; text: string }>;
 }
 
 export interface IReadableContentProvider {

@@ -1,6 +1,6 @@
 import type { FeatureContext, IFeature } from '@/core/contracts';
 import { EVENTS, FEATURE_IDS, HOST_STYLE_ATTR, STORAGE_KEYS } from '@/core/constants';
-import { parseSettings, type ThemeId } from '@/core/settings';
+import { parseSettings, resolveEffectiveSettings, type ThemeId } from '@/core/settings';
 import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 
 type PaintTokens = {
@@ -287,9 +287,10 @@ export class ThemesFeature implements IFeature {
 
     this.unsubs.push(
       ctx.bus.on(EVENTS.SETTINGS_CHANGED, ({ settings }) => {
-        this.theme = settings.theme;
-        this.largeCursor = settings.largeCursor;
-        this.largeButtons = settings.largeButtons;
+        const effective = resolveEffectiveSettings(settings, ctx.document.location?.hostname ?? '');
+        this.theme = effective.theme;
+        this.largeCursor = effective.largeCursor;
+        this.largeButtons = effective.largeButtons;
         if (this.enabled) this.apply();
       }),
     );

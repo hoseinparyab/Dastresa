@@ -1,7 +1,7 @@
 import type { FeatureContext, IFeature, IStyleController, StyleTokenMap } from '@/core/contracts';
 import { EVENTS, FEATURE_IDS, HOST_STYLE_ATTR, STORAGE_KEYS } from '@/core/constants';
 import { clamp } from '@/core/utils';
-import { parseSettings, type ZoomSettings } from '@/core/settings';
+import { parseSettings, resolveEffectiveSettings, type ZoomSettings } from '@/core/settings';
 import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 
 const ZOOMED_ATTR = 'data-Dastresa-zoomed';
@@ -188,7 +188,11 @@ export class SmartZoomFeature implements IFeature {
 
     this.unsubs.push(
       ctx.bus.on(EVENTS.SETTINGS_CHANGED, ({ settings }) => {
-        this.zoom = { ...settings.zoom, imageScale: 1 };
+        const effective = resolveEffectiveSettings(
+          settings,
+          ctx.document.location?.hostname ?? '',
+        );
+        this.zoom = { ...effective.zoom, imageScale: 1 };
         if (this.enabled) this.apply();
       }),
     );
