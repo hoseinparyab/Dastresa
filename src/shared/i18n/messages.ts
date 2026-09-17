@@ -32,6 +32,17 @@ const EN = {
   profileReading: 'Reading',
   profileHighContrast: 'High contrast',
   profileCustom: 'Custom',
+  pageType: 'Page type',
+  pageTypeArticle: 'Article',
+  pageTypeNews: 'News',
+  pageTypeDocument: 'Document',
+  pageTypeForm: 'Form',
+  pageTypeShopping: 'Shopping',
+  pageTypeGovernment: 'Government',
+  pageTypeBanking: 'Banking',
+  pageTypeSearch: 'Search',
+  pageTypeSocial: 'Social',
+  pageTypeUnknown: 'Unknown',
   theme: 'Theme',
   themeDark: 'Dark',
   themeLight: 'Light',
@@ -205,6 +216,17 @@ const FA: Record<MessageKey, string> = {
   profileReading: 'مطالعه',
   profileHighContrast: 'کنتراست بالا',
   profileCustom: 'سفارشی',
+  pageType: 'نوع صفحه',
+  pageTypeArticle: 'مقاله',
+  pageTypeNews: 'خبر',
+  pageTypeDocument: 'سند',
+  pageTypeForm: 'فرم',
+  pageTypeShopping: 'خرید',
+  pageTypeGovernment: 'دولتی',
+  pageTypeBanking: 'بانکی',
+  pageTypeSearch: 'جستجو',
+  pageTypeSocial: 'شبکه اجتماعی',
+  pageTypeUnknown: 'نامشخص',
   theme: 'تم',
   themeDark: 'تیره',
   themeLight: 'روشن',
@@ -352,6 +374,25 @@ const TABLES: Record<AppLocale, Record<MessageKey, string>> = {
 export function t(locale: AppLocale | undefined, key: MessageKey): string {
   const table = TABLES[locale === 'fa' ? 'fa' : 'en'];
   return table[key] ?? EN[key];
+}
+
+const PAGE_TYPE_KEYS = {
+  ARTICLE: 'pageTypeArticle',
+  NEWS: 'pageTypeNews',
+  DOCUMENT: 'pageTypeDocument',
+  FORM: 'pageTypeForm',
+  SHOPPING: 'pageTypeShopping',
+  GOVERNMENT: 'pageTypeGovernment',
+  BANKING: 'pageTypeBanking',
+  SEARCH: 'pageTypeSearch',
+  SOCIAL: 'pageTypeSocial',
+  UNKNOWN: 'pageTypeUnknown',
+} as const satisfies Record<string, MessageKey>;
+
+export function pageTypeMessageKey(
+  type: keyof typeof PAGE_TYPE_KEYS | string,
+): MessageKey {
+  return PAGE_TYPE_KEYS[type as keyof typeof PAGE_TYPE_KEYS] ?? 'pageTypeUnknown';
 }
 
 export function tFormat(
