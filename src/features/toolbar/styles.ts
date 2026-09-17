@@ -27,6 +27,9 @@ export const TOOLBAR_CSS = `
     --tb-danger-bg: rgba(127, 29, 29, 0.45);
     --tb-danger-text: #fecaca;
     --tb-shadow: 0 12px 32px rgba(2, 6, 23, 0.55);
+    --tb-scroll-track: rgba(15, 23, 42, 0.35);
+    --tb-scroll-thumb: rgba(56, 189, 248, 0.45);
+    --tb-scroll-thumb-hover: rgba(56, 189, 248, 0.75);
 
     position: fixed;
     z-index: 2147483646;
@@ -39,6 +42,8 @@ export const TOOLBAR_CSS = `
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--tb-scroll-thumb) var(--tb-scroll-track);
     padding: 10px;
     border-radius: 18px;
     border: 1px solid var(--tb-border);
@@ -50,6 +55,34 @@ export const TOOLBAR_CSS = `
     cursor: grab;
     touch-action: none;
     user-select: none;
+  }
+
+  .dock::-webkit-scrollbar {
+    width: 8px;
+  }
+  .dock::-webkit-scrollbar-track {
+    margin: 10px 0;
+    background: var(--tb-scroll-track);
+    border-radius: 999px;
+  }
+  .dock::-webkit-scrollbar-thumb {
+    background: var(--tb-scroll-thumb);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  .dock::-webkit-scrollbar-thumb:hover {
+    background: var(--tb-scroll-thumb-hover);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  .dock::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  .dock::-webkit-scrollbar-corner {
+    background: transparent;
   }
 
   .dock[data-chrome="light"] {
@@ -67,6 +100,9 @@ export const TOOLBAR_CSS = `
     --tb-danger-bg: #fef2f2;
     --tb-danger-text: #b91c1c;
     --tb-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+    --tb-scroll-track: rgba(148, 163, 184, 0.28);
+    --tb-scroll-thumb: rgba(37, 99, 235, 0.45);
+    --tb-scroll-thumb-hover: rgba(37, 99, 235, 0.75);
   }
 
   .dock.collapsed {
