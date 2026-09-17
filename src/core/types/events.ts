@@ -1,4 +1,10 @@
-import type { DastresaSettings } from '@/core/settings';
+import type { DastresaSettings, ProfileId } from '@/core/settings';
+import type {
+  FormAnalysisResult,
+  PageStructure,
+  PageTypeResult,
+  ReaderStructure,
+} from '@/core/semantics';
 
 export type Unsubscribe = () => void;
 
@@ -31,6 +37,7 @@ export type EventMap = {
     paragraphs: string[];
     html: string;
   };
+  'reader:structure-ready': { structure: ReaderStructure };
   'speech:state': {
     state: 'idle' | 'playing' | 'paused' | 'stopped';
   };
@@ -40,6 +47,11 @@ export type EventMap = {
   'zoom:applied': { scale: number };
   'dom:ready': { ready: boolean };
   'dom:changed': { reason: string };
+  'page:analyzed': { structure: PageStructure };
+  'page:type-detected': { result: PageTypeResult };
+  'form:analyzed': { result: FormAnalysisResult };
+  'profile:changed': { profileId: ProfileId };
+  'site-preferences:changed': { siteKey: string };
   'summary:started': undefined;
   'summary:ready': { summary: string; title: string };
   'summary:failed': { message: string };

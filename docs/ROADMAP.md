@@ -1,36 +1,39 @@
 # Roadmap
 
-## MVP 0.1.0 — release candidate
+## Shipped
 
-Shipped for public / tester distribution:
-
+### MVP 0.1.0 / 1.1.1
 - Reader Mode, TTS, Smart Zoom, Themes, Reading Focus, Toolbar, Settings, Storage
 - Opt-in activation + safe Normal defaults
-- Per-site disable
-- Persian / English UI
-- Offline-only Chrome MV3 — brand promise locked in `docs/BRAND.md`
+- Per-site disable (`disabledSites`)
+- Persian / English UI · Offline-only Chrome MV3
 
-**Release package:** see `docs/RELEASE_CHECKLIST.md` and `npm run pack:mvp`.
+### 1.2.0 — Understand (current)
+- Semantic Page Analyzer + heading tree
+- Deterministic page-type detection
+- Form Analyzer (describe-only)
+- Smart Reader 2.0 (TOC, section nav, progress)
+- Accessibility profiles + `sitePreferences` + settings migration v2
+- AI provider interface stub (no AI dependency in core)
 
-## Near-term (after MVP trust is proven)
+## Near-term (after 1.2.0 trust)
 
 - Richer voice picker UI
-- Deeper per-site Look profiles (local only)
-- Improved Reader fallback heuristics
+- Deeper per-site Look UI (local only)
+- Incremental semantic invalidation for large SPAs
 - Extension Playwright e2e on real pages
 - Hosted privacy policy + store screenshots maintenance
 
-## Later (not MVP brand claims)
+## Later (not brand claims)
 
 Engineering extension points only — **do not advertise** until productized:
 
-See `src/future/*/EXTENSION_POINT.md`:
+See `src/future/*/EXTENSION_POINT.md` and `src/core/ai/provider.ts`:
 
 - AI Simplifier / Copilot / Form Assistant
 - Voice Navigation, OCR Reader
 - Accessibility Scanner
 - Banking & Government assistants
-- Page Summary
-- Cloud Sync & User Profiles
+- Cloud Sync & Accounts
 
 These remain unimplemented and must not appear in store copy or marketing.

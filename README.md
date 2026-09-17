@@ -23,7 +23,7 @@ This is **not** a screen reader. Core reading tools (themes, zoom, reader, TTS, 
 > Brand, store copy, and privacy: [`docs/BRAND.md`](docs/BRAND.md) · [`docs/STORE_LISTING.md`](docs/STORE_LISTING.md) · [`docs/PRIVACY.md`](docs/PRIVACY.md)  
 > Release steps: [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md)
 
-**Current version:** `1.1.0`
+**Current version:** `1.2.0`
 
 ## MVP features
 

@@ -1,4 +1,7 @@
 import { z } from 'zod';
+import { normalizeSiteKey } from './site-key';
+
+export const SETTINGS_SCHEMA_VERSION = 2;
 
 export const ThemeIdSchema = z.enum([
   'normal',
@@ -34,7 +37,31 @@ export const ToolbarPositionSchema = z.object({
 
 export const FocusCursorColorSchema = z.enum(['sky', 'yellow', 'lime', 'magenta', 'white']);
 
+export const ProfileIdSchema = z.enum([
+  'normal',
+  'low-vision',
+  'elderly',
+  'reading',
+  'high-contrast',
+  'custom',
+]);
+
+export const SitePreferencesSchema = z.object({
+  enabled: z.boolean().optional(),
+  theme: ThemeIdSchema.optional(),
+  textScale: z.number().min(0.8).max(2.5).optional(),
+  lineHeight: z.number().min(1.2).max(2.4).optional(),
+  letterSpacing: z.number().min(0).max(0.2).optional(),
+  wordSpacing: z.number().min(0).max(0.5).optional(),
+  contentWidth: z.number().min(40).max(100).optional(),
+  speechRate: z.number().min(0.5).max(2).optional(),
+  readerMode: z.boolean().optional(),
+  readingFocus: z.boolean().optional(),
+});
+
 export const DastresaSettingsSchema = z.object({
+  /** Settings shape version for migrations. */
+  schemaVersion: z.number().int().min(1).default(SETTINGS_SCHEMA_VERSION),
   /**
    * Global master switch. When false, no page gets the toolbar/themes/zoom.
    * Defaults off so install does not rewrite every website.
@@ -42,6 +69,10 @@ export const DastresaSettingsSchema = z.object({
   extensionActive: z.boolean().default(false),
   /** Hostnames where Dastresa stays off even if extensionActive is true. */
   disabledSites: z.array(z.string()).default([]),
+  /** Per-site overrides (normalized host keys). Only store diffs. */
+  sitePreferences: z.record(z.string(), SitePreferencesSchema).default({}),
+  /** Active accessibility profile preset id. */
+  activeProfile: ProfileIdSchema.default('custom'),
   theme: ThemeIdSchema.default('normal'),
   largeCursor: z.boolean().default(false),
   largeButtons: z.boolean().default(false),
@@ -83,6 +114,8 @@ export type ThemeId = z.infer<typeof ThemeIdSchema>;
 export type ZoomSettings = z.infer<typeof ZoomSettingsSchema>;
 export type SpeechSettings = z.infer<typeof SpeechSettingsSchema>;
 export type FocusCursorColor = z.infer<typeof FocusCursorColorSchema>;
+export type ProfileId = z.infer<typeof ProfileIdSchema>;
+export type SitePreferences = z.infer<typeof SitePreferencesSchema>;
 
 export function createDefaultSettings(): DastresaSettings {
   return DastresaSettingsSchema.parse({});
@@ -103,6 +136,7 @@ export function mergeSettings(
       ...(partial.toolbarPosition ?? {}),
     },
     disabledSites: partial.disabledSites ?? current.disabledSites,
+    sitePreferences: partial.sitePreferences ?? current.sitePreferences,
   });
 }
 
@@ -111,8 +145,11 @@ export function createPageResetSettings(current?: Partial<DastresaSettings>): Da
   const locale = current?.locale ?? 'fa';
   const dir = current?.dir ?? (locale === 'fa' ? 'rtl' : 'ltr');
   return parseSettings({
+    schemaVersion: SETTINGS_SCHEMA_VERSION,
     extensionActive: current?.extensionActive ?? true,
     disabledSites: current?.disabledSites ?? [],
+    sitePreferences: current?.sitePreferences ?? {},
+    activeProfile: 'custom',
     theme: 'normal',
     largeCursor: false,
     largeButtons: false,
@@ -146,9 +183,16 @@ export function createPageResetSettings(current?: Partial<DastresaSettings>): Da
 
 export function isSiteDisabled(settings: DastresaSettings, hostname: string): boolean {
   if (!hostname) return false;
-  return settings.disabledSites.some(
-    (site) => site === hostname || hostname.endsWith(`.${site}`),
-  );
+  const key = normalizeSiteKey(hostname);
+  if (
+    settings.disabledSites.some(
+      (site) => site === key || key.endsWith(`.${site}`) || site === hostname.toLowerCase(),
+    )
+  ) {
+    return true;
+  }
+  const prefs = settings.sitePreferences?.[key] ?? settings.sitePreferences?.[hostname.toLowerCase()];
+  return prefs?.enabled === false;
 }
 
 export function withSiteDisabled(
@@ -156,12 +200,28 @@ export function withSiteDisabled(
   hostname: string,
   disabled: boolean,
 ): DastresaSettings {
-  const host = hostname.trim().toLowerCase();
+  const host = normalizeSiteKey(hostname);
   if (!host) return settings;
-  const set = new Set(settings.disabledSites.map((s) => s.toLowerCase()));
+  const set = new Set(settings.disabledSites.map((s) => normalizeSiteKey(s) || s.toLowerCase()));
   if (disabled) set.add(host);
   else set.delete(host);
-  return parseSettings({ ...settings, disabledSites: [...set].sort() });
+
+  const sitePreferences = { ...settings.sitePreferences };
+  const existing = sitePreferences[host] ?? {};
+  if (disabled) {
+    sitePreferences[host] = { ...existing, enabled: false };
+  } else if (sitePreferences[host]) {
+    const { enabled: _removed, ...rest } = sitePreferences[host]!;
+    void _removed;
+    if (Object.keys(rest).length === 0) delete sitePreferences[host];
+    else sitePreferences[host] = { ...rest, enabled: true };
+  }
+
+  return parseSettings({
+    ...settings,
+    disabledSites: [...set].sort(),
+    sitePreferences,
+  });
 }
 
 /**
@@ -185,8 +245,10 @@ export function parseSettings(input: unknown): DastresaSettings {
     if (parsed.success) salvage[key] = parsed.data;
   };
 
+  assignIfValid('schemaVersion', z.number().int(), raw.schemaVersion);
   assignIfValid('extensionActive', z.boolean(), raw.extensionActive);
   assignIfValid('disabledSites', z.array(z.string()), raw.disabledSites);
+  assignIfValid('activeProfile', ProfileIdSchema, raw.activeProfile);
   assignIfValid('theme', ThemeIdSchema, raw.theme);
   assignIfValid('largeCursor', z.boolean(), raw.largeCursor);
   assignIfValid('largeButtons', z.boolean(), raw.largeButtons);
@@ -214,8 +276,15 @@ export function parseSettings(input: unknown): DastresaSettings {
     });
     if (pos.success) salvage.toolbarPosition = pos.data;
   }
+  if (raw.sitePreferences && typeof raw.sitePreferences === 'object') {
+    const prefs: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(raw.sitePreferences as Record<string, unknown>)) {
+      const parsed = SitePreferencesSchema.safeParse(v);
+      if (parsed.success) prefs[k] = parsed.data;
+    }
+    salvage.sitePreferences = prefs;
+  }
 
-  // Keep locale/dir paired when only one survives.
   if (salvage.locale === 'fa') salvage.dir = salvage.dir ?? 'rtl';
   if (salvage.locale === 'en' && salvage.dir === undefined) salvage.dir = 'ltr';
 

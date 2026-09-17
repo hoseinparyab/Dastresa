@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Controller, useWatch } from 'react-hook-form';
 import { GEMINI_API, LUMA_API } from '@/core/constants';
-import { createPageResetSettings, type DastresaSettings } from '@/core/settings';
+import { createPageResetSettings, applyProfileSettings, type DastresaSettings, type ProfileId } from '@/core/settings';
 import { readSecrets, writeSecrets } from '@/features/storage/secrets';
 import { useInstantSettings } from '@/shared/hooks/useInstantSettings';
 import { notifyActiveTab } from '@/shared/messaging/tab';
@@ -36,6 +36,7 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
   const textScale = useWatch({ control: form.control, name: 'zoom.textScale' });
   const speechRate = useWatch({ control: form.control, name: 'speech.rate' });
   const theme = useWatch({ control: form.control, name: 'theme' });
+  const activeProfile = useWatch({ control: form.control, name: 'activeProfile' });
   const localeWatch = useWatch({ control: form.control, name: 'locale' });
   const focusCursorColor = useWatch({ control: form.control, name: 'focusCursorColor' });
   const summaryProvider = useWatch({ control: form.control, name: 'summaryProvider' });
@@ -54,6 +55,15 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
     { value: 'high-contrast', label: t(locale, 'themeHighContrast') },
     { value: 'black-white', label: t(locale, 'themeBlackWhite') },
     { value: 'yellow-black', label: t(locale, 'themeYellowBlack') },
+  ];
+
+  const profileOptions: Array<{ value: ProfileId; label: string }> = [
+    { value: 'custom', label: t(locale, 'profileCustom') },
+    { value: 'normal', label: t(locale, 'profileNormal') },
+    { value: 'low-vision', label: t(locale, 'profileLowVision') },
+    { value: 'elderly', label: t(locale, 'profileElderly') },
+    { value: 'reading', label: t(locale, 'profileReading') },
+    { value: 'high-contrast', label: t(locale, 'profileHighContrast') },
   ];
 
   useEffect(() => {
@@ -108,10 +118,25 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
 
       <Section title={t(locale, 'look')} description={t(locale, 'lookDesc')}>
         <SelectField
+          label={t(locale, 'profile')}
+          value={activeProfile ?? 'custom'}
+          onChange={(e) => {
+            const profileId = e.target.value as ProfileId;
+            const next = applyProfileSettings(form.getValues(), profileId);
+            void replace(next);
+          }}
+        >
+          {profileOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </SelectField>
+        <SelectField
           label={t(locale, 'theme')}
           value={theme}
           onChange={(e) => {
-            applyNow({ theme: e.target.value as DastresaSettings['theme'] });
+            applyNow({ theme: e.target.value as DastresaSettings['theme'], activeProfile: 'custom' });
           }}
         >
           {themeOptions.map((opt) => (

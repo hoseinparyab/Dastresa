@@ -1,15 +1,17 @@
-# Release Checklist — Dastresa 1.1.0
+# Release Checklist — Dastresa 1.2.0 (Understand)
 
-**Goal:** First public Chrome Web Store (or closed testers) submission that matches the brand promise: offline, private, opt-in accessibility.
+**Goal:** Ship Understand layer while keeping 1.1.x MVP behavior: offline, private, opt-in accessibility.
 
 ## A. Product truth (must match listing)
 
 - [x] Opt-in activation (`extensionActive` default false)
 - [x] Safe visual defaults (theme `normal`, no forced large buttons/zoom)
-- [x] Per-site disable
+- [x] Per-site disable (`disabledSites` + `sitePreferences.enabled`)
+- [x] Accessibility profiles (presets → settings, Custom preserves tweaks)
+- [x] Semantic analysis / forms / page type stay local (no analytics)
 - [x] Persian + English UI strings
-- [x] No network calls / no analytics in extension code
 - [x] Settings persisted only via `chrome.storage.local`
+- [x] Schema migration v2 preserves 1.1.x settings
 
 ## B. Brand & store assets
 
@@ -18,7 +20,7 @@
 - [x] Privacy policy draft — `docs/PRIVACY.md`
 - [x] Extension icons 16/32/48/128 — `public/icons/`
 - [ ] Host privacy policy on HTTPS and paste URL into CWS
-- [ ] Capture 3–5 screenshots (popup, toolbar, reader, focus, options)
+- [ ] Capture 3–5 screenshots (popup, toolbar, reader TOC, focus, profiles)
 - [ ] Optional: 440×280 small promo tile from `docs/brand/icon-master.png`
 
 ## C. Engineering gate
@@ -31,6 +33,7 @@ npm run lint
 npm run typecheck
 npm test
 npm run build
+npm run pack:mvp
 ```
 
 - [ ] All commands pass on a clean machine
@@ -38,6 +41,10 @@ npm run build
   - Fresh install → page unchanged until Enable
   - Enable → toolbar appears
   - Theme Normal → page not wrecked
+  - Reader → TOC / prev-next / progress
+  - Profile Low vision → larger text + high contrast
+  - Disable site → stays off after reload
+  - Upgrade from 1.1.1 storage → settings preserved
   - Disable on this site → toolbar gone on that host only
   - Exit → global off
   - FA locale → popup/toolbar RTL labels

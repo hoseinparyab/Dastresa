@@ -1,20 +1,63 @@
-import type { DomSnapshot, FeatureContext, IDomAnalyzer, IFeature } from '@/core/contracts';
+import type {
+  DomSnapshot,
+  FeatureContext,
+  IDomAnalyzer,
+  IFeature,
+  ISemanticPageAnalyzer,
+} from '@/core/contracts';
 import { EVENTS, FEATURE_IDS } from '@/core/constants';
+import {
+  analyzeFormsOnly,
+  analyzePage,
+  classifyPage,
+  type FormAnalysisResult,
+  type PageStructure,
+  type PageTypeResult,
+} from '@/core/semantics';
 import { debounce, safeQueryAll } from '@/core/utils';
 
-export class DomAnalyzerService implements IDomAnalyzer {
+export class DomAnalyzerService implements IDomAnalyzer, ISemanticPageAnalyzer {
+  private cache: PageStructure | null = null;
+  private cacheUrl = '';
+
   analyze(doc: Document = document): DomSnapshot {
-    const paragraphs = safeQueryAll(doc, 'p, li, article p');
-    const images = safeQueryAll(doc, 'img');
-    const text = doc.body?.innerText ?? '';
+    const structure = this.analyzeStructure(doc);
     return {
-      title: doc.title || '',
-      lang: doc.documentElement.lang || 'en',
-      paragraphCount: paragraphs.length,
-      imageCount: images.length,
+      title: structure.title,
+      lang: structure.lang,
+      paragraphCount: structure.paragraphCount,
+      imageCount: structure.imageCount,
       ready: this.isReady(doc),
-      textLength: text.trim().length,
+      textLength: structure.textLength,
     };
+  }
+
+  analyzeStructure(doc: Document = document): PageStructure {
+    const url = doc.URL || doc.location?.href || '';
+    if (this.cache && this.cacheUrl === url && Date.now() - this.cache.analyzedAt < 1500) {
+      return this.cache;
+    }
+    const structure = analyzePage(doc);
+    this.cache = structure;
+    this.cacheUrl = url;
+    return structure;
+  }
+
+  detectType(doc: Document = document): PageTypeResult {
+    return classifyPage(this.analyzeStructure(doc));
+  }
+
+  analyzeForms(doc: Document = document): FormAnalysisResult {
+    return analyzeFormsOnly(doc);
+  }
+
+  getCachedStructure(): PageStructure | null {
+    return this.cache;
+  }
+
+  invalidateCache(): void {
+    this.cache = null;
+    this.cacheUrl = '';
   }
 
   findReadableRoots(doc: Document = document): HTMLElement[] {
@@ -34,26 +77,38 @@ export class DomAnalyzerService implements IDomAnalyzer {
 export class DomAnalyzerFeature implements IFeature {
   readonly id = FEATURE_IDS.DOM_ANALYZER;
   readonly name = 'DOM Analyzer';
-  readonly version = '0.1.0';
+  readonly version = '1.2.0';
   private enabled = true;
   private observer?: MutationObserver;
   private service = new DomAnalyzerService();
+  private ctx?: FeatureContext;
 
   initialize(ctx: FeatureContext): void {
+    this.ctx = ctx;
     const ready = this.service.isReady(ctx.document);
     ctx.bus.emit(EVENTS.DOM_READY, { ready });
 
-    const emitChanged = debounce(() => {
-      if (!this.enabled) return;
-      ctx.bus.emit(EVENTS.DOM_CHANGED, { reason: 'mutation' });
-    }, 250);
+    const runAnalysis = debounce(() => {
+      if (!this.enabled || !this.ctx) return;
+      this.service.invalidateCache();
+      const structure = this.service.analyzeStructure(this.ctx.document);
+      const pageType = classifyPage(structure);
+      const forms = analyzeFormsOnly(this.ctx.document);
+      this.ctx.bus.emit(EVENTS.PAGE_ANALYZED, { structure });
+      this.ctx.bus.emit(EVENTS.PAGE_TYPE_DETECTED, { result: pageType });
+      this.ctx.bus.emit(EVENTS.FORM_ANALYZED, { result: forms });
+      this.ctx.bus.emit(EVENTS.DOM_CHANGED, { reason: 'mutation' });
+    }, 400);
 
-    this.observer = new MutationObserver(emitChanged);
+    // Initial pass once DOM is ready
+    if (ready) runAnalysis();
+
+    this.observer = new MutationObserver(runAnalysis);
     if (ctx.document.body) {
       this.observer.observe(ctx.document.body, {
         childList: true,
         subtree: true,
-        characterData: true,
+        characterData: false,
       });
     }
   }
@@ -61,6 +116,7 @@ export class DomAnalyzerFeature implements IFeature {
   dispose(): void {
     this.observer?.disconnect();
     this.enabled = false;
+    this.service.invalidateCache();
   }
 
   enable(): void {
