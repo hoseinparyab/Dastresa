@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+# Fast gate before push — keep commits shippable.
+export NO_COLOR=1
+export FORCE_COLOR=0
+
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+cd "$ROOT" || exit 1
+
+echo "pre-push: typecheck…"
+npm run typecheck || exit 1
+
+echo "pre-push: lint…"
+npm run lint || exit 1
