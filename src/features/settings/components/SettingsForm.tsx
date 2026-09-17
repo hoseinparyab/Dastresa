@@ -109,12 +109,6 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
 
   return (
     <form className="flex flex-col gap-4" dir={settings.dir} onSubmit={(e) => e.preventDefault()}>
-      {!compact ? (
-        <p className="rounded-xl bg-sky-500/10 px-3.5 py-3 text-base font-medium leading-snug text-sky-100 ring-1 ring-sky-400/20">
-          {t(locale, 'instantApply')}
-        </p>
-      ) : null}
-
       {!compact && (
         <Section title={t(locale, 'general')} description={t(locale, 'generalDesc')}>
           <Controller
@@ -169,6 +163,17 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
             </option>
           ))}
         </SelectField>
+        <SelectField
+          label={t(locale, 'languageDefault')}
+          value={localeWatch ?? 'fa'}
+          onChange={(e) => {
+            const nextLocale = e.target.value as 'en' | 'fa';
+            applyNow({ locale: nextLocale, dir: nextLocale === 'fa' ? 'rtl' : 'ltr' });
+          }}
+        >
+          <option value="fa">فارسی</option>
+          <option value="en">English</option>
+        </SelectField>
       </Section>
 
       {/* Essential reading tools — always visible (elderly primary path) */}
@@ -202,20 +207,6 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
             }}
           />
         </label>
-
-        {!compact ? (
-          <SelectField
-            label={t(locale, 'language')}
-            value={localeWatch}
-            onChange={(e) => {
-              const nextLocale = e.target.value as 'en' | 'fa';
-              applyNow({ locale: nextLocale, dir: nextLocale === 'fa' ? 'rtl' : 'ltr' });
-            }}
-          >
-            <option value="fa">فارسی</option>
-            <option value="en">English</option>
-          </SelectField>
-        ) : null}
 
         <Controller
           name="readerMode"

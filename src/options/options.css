@@ -1,0 +1,416 @@
+/**
+ * Options / full settings — same light/dark chrome as popup mockups.
+ */
+
+html.options-shell,
+html.options-shell body,
+html.options-shell #root {
+  margin: 0 !important;
+  min-height: 100%;
+}
+
+html.options-shell[data-chrome='light'],
+html.options-shell[data-chrome='light'] body,
+html.options-shell[data-chrome='light'] #root {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+html.options-shell[data-chrome='dark'],
+html.options-shell[data-chrome='dark'] body,
+html.options-shell[data-chrome='dark'] #root {
+  background: #0b1220 !important;
+  color: #f8fafc !important;
+}
+
+.dastresa-options {
+  box-sizing: border-box;
+  min-height: 100vh;
+  font-size: 16px;
+  line-height: 1.5;
+  font-family: Tahoma, 'Segoe UI', 'Source Sans 3', sans-serif;
+  background: var(--opt-bg);
+  color: var(--opt-text);
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.dastresa-options *,
+.dastresa-options *::before,
+.dastresa-options *::after {
+  box-sizing: border-box;
+}
+
+.dastresa-options[data-chrome='light'] {
+  --opt-bg: #f1f5f9;
+  --opt-surface: #ffffff;
+  --opt-text: #0f172a;
+  --opt-muted: #475569;
+  --opt-accent: #2563eb;
+  --opt-accent-hover: #1d4ed8;
+  --opt-accent-soft: #eff6ff;
+  --opt-border: #e2e8f0;
+  --opt-input: #f8fafc;
+  --opt-success: #047857;
+  --opt-success-bg: #ecfdf5;
+  --opt-danger: #b91c1c;
+  --opt-danger-bg: #fef2f2;
+  --opt-switch-off: #cbd5e1;
+  --opt-chrome-track: #e2e8f0;
+  --opt-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
+}
+
+.dastresa-options[data-chrome='dark'] {
+  --opt-bg: #0b1220;
+  --opt-surface: #111827;
+  --opt-text: #f8fafc;
+  --opt-muted: #94a3b8;
+  --opt-accent: #38bdf8;
+  --opt-accent-hover: #7dd3fc;
+  --opt-accent-soft: rgba(56, 189, 248, 0.14);
+  --opt-border: #334155;
+  --opt-input: #1e293b;
+  --opt-success: #4ade80;
+  --opt-success-bg: rgba(74, 222, 128, 0.12);
+  --opt-danger: #fca5a5;
+  --opt-danger-bg: rgba(248, 113, 113, 0.12);
+  --opt-switch-off: #475569;
+  --opt-chrome-track: #1e293b;
+  --opt-shadow: 0 12px 32px rgba(2, 6, 23, 0.4);
+}
+
+.dastresa-options .opt-shell {
+  width: min(640px, 100%);
+  margin: 0 auto;
+  padding: 1.25rem 1.1rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dastresa-options .opt-header {
+  background: var(--opt-surface);
+  border: 1px solid var(--opt-border);
+  border-radius: 18px;
+  padding: 1.15rem 1.15rem 1.1rem;
+  box-shadow: var(--opt-shadow);
+}
+
+.dastresa-options .opt-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dastresa-options .opt-brand-block {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dastresa-options .opt-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.45rem;
+  flex: 0 0 auto;
+}
+
+.dastresa-options .opt-eyebrow {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--opt-accent);
+}
+
+.dastresa-options .opt-title {
+  margin: 0.3rem 0 0;
+  font-size: clamp(1.55rem, 4vw, 2rem);
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--opt-text);
+}
+
+.dastresa-options .opt-subtitle {
+  margin: 0.65rem 0 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--opt-muted);
+  font-weight: 600;
+}
+
+.dastresa-options .opt-actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.dastresa-options .opt-cta,
+.dastresa-options .opt-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.6rem 1rem;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dastresa-options .opt-cta {
+  border: 0;
+  background: var(--opt-accent);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.28);
+}
+
+.dastresa-options[data-chrome='dark'] .opt-cta {
+  color: #0f172a;
+  box-shadow: 0 6px 18px rgba(56, 189, 248, 0.28);
+}
+
+.dastresa-options .opt-cta:hover {
+  background: var(--opt-accent-hover);
+}
+
+.dastresa-options .opt-secondary {
+  border: 1px solid var(--opt-border);
+  background: var(--opt-surface);
+  color: var(--opt-text);
+}
+
+.dastresa-options .opt-secondary:hover {
+  background: var(--opt-accent-soft);
+  border-color: color-mix(in srgb, var(--opt-accent) 40%, var(--opt-border));
+}
+
+.dastresa-options .opt-hint {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  background: var(--opt-accent-soft);
+  color: var(--opt-accent);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.45;
+  border: 1px solid color-mix(in srgb, var(--opt-accent) 25%, transparent);
+}
+
+.dastresa-options[data-chrome='light'] .opt-hint {
+  color: #1e3a8a;
+}
+
+.dastresa-options .opt-tagline {
+  margin: 0.35rem 0 0;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--opt-muted);
+}
+
+.dastresa-options .opt-credit {
+  margin-top: 0.25rem;
+}
+
+/* ChromeToggle (shared pop-* class names) */
+.dastresa-options .pop-chrome-toggle {
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.18rem;
+  border-radius: 999px;
+  border: 1px solid var(--opt-border);
+  background: var(--opt-chrome-track);
+}
+
+.dastresa-options .pop-chrome-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  min-height: 2rem;
+  padding: 0.2rem 0.55rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--opt-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.dastresa-options .pop-chrome-btn.is-active {
+  background: var(--opt-surface);
+  color: var(--opt-accent);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+/* —— SettingsForm / shared UI overrides —— */
+.dastresa-options form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.dastresa-options section.rounded-2xl,
+.dastresa-options .rounded-2xl.border {
+  background: var(--opt-surface) !important;
+  border: 1px solid var(--opt-border) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--opt-shadow) !important;
+  padding: 1rem 1.05rem !important;
+}
+
+.dastresa-options section h2 {
+  color: var(--opt-accent) !important;
+  font-size: 1.1rem !important;
+  font-weight: 800 !important;
+}
+
+.dastresa-options section h2 + p,
+.dastresa-options .text-slate-200,
+.dastresa-options .text-slate-300,
+.dastresa-options .text-slate-400 {
+  color: var(--opt-muted) !important;
+}
+
+.dastresa-options .text-dastresa-text,
+.dastresa-options .text-slate-100,
+.dastresa-options .text-sky-100,
+.dastresa-options .text-sky-200,
+.dastresa-options label span,
+.dastresa-options label {
+  color: var(--opt-text) !important;
+}
+
+.dastresa-options label span {
+  font-size: 0.98rem !important;
+  font-weight: 700 !important;
+}
+
+.dastresa-options select,
+.dastresa-options input[type='password'],
+.dastresa-options input[type='text'] {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  background: var(--opt-input) !important;
+  color: var(--opt-text) !important;
+  border: 1px solid var(--opt-border) !important;
+  border-radius: 12px !important;
+  min-height: 2.85rem !important;
+  font-size: 1rem !important;
+  font-family: inherit;
+  padding-inline: 0.75rem !important;
+}
+
+.dastresa-options select:focus-visible,
+.dastresa-options input:focus-visible,
+.dastresa-options .opt-cta:focus-visible,
+.dastresa-options .opt-secondary:focus-visible,
+.dastresa-options .pop-chrome-btn:focus-visible,
+.dastresa-options button:focus-visible {
+  outline: 3px solid var(--opt-accent);
+  outline-offset: 2px;
+}
+
+.dastresa-options [role='switch'] {
+  background: var(--opt-switch-off) !important;
+  min-width: 4.75rem !important;
+  width: 4.75rem !important;
+  height: 2.65rem !important;
+  min-height: 2.65rem !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.dastresa-options [role='switch'][aria-checked='true'] {
+  background: var(--opt-accent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--opt-accent) 22%, transparent) !important;
+}
+
+.dastresa-options input[type='range'] {
+  width: 100%;
+  accent-color: var(--opt-accent);
+  height: 14px;
+  background: var(--opt-border);
+}
+
+.dastresa-options .pop-percent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.5rem;
+  background: var(--opt-accent-soft) !important;
+  color: var(--opt-accent) !important;
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.dastresa-options .bg-sky-500\/10,
+.dastresa-options .bg-sky-500\/20,
+.dastresa-options .ring-sky-400\/20 {
+  background: var(--opt-accent-soft) !important;
+  color: var(--opt-accent) !important;
+  border: 1px solid color-mix(in srgb, var(--opt-accent) 25%, transparent);
+  box-shadow: none !important;
+}
+
+.dastresa-options button.wp-touch,
+.dastresa-options button.rounded-2xl {
+  min-height: 3rem;
+  border-radius: 14px !important;
+  font-weight: 800 !important;
+  font-size: 1rem !important;
+  font-family: inherit;
+}
+
+.dastresa-options button.bg-dastresa-accent,
+.dastresa-options button[class*='bg-dastresa-accent'] {
+  background: var(--opt-accent) !important;
+  color: #fff !important;
+  border: 0 !important;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.22) !important;
+}
+
+.dastresa-options[data-chrome='dark'] button.bg-dastresa-accent,
+.dastresa-options[data-chrome='dark'] button[class*='bg-dastresa-accent'] {
+  color: #0f172a !important;
+}
+
+.dastresa-options button.border-sky-400\/40,
+.dastresa-options button[class*='border-sky-400'] {
+  background: var(--opt-surface) !important;
+  border: 1px solid var(--opt-border) !important;
+  color: var(--opt-text) !important;
+  box-shadow: none !important;
+}
+
+.dastresa-options button.border-white\/10,
+.dastresa-options button[class*='bg-transparent'] {
+  background: transparent !important;
+  border: 1px solid var(--opt-border) !important;
+  color: var(--opt-muted) !important;
+}
+
+.dastresa-options button.border-red-400\/40,
+.dastresa-options button[class*='bg-red'] {
+  background: var(--opt-danger-bg) !important;
+  border: 1px solid color-mix(in srgb, var(--opt-danger) 40%, transparent) !important;
+  color: var(--opt-danger) !important;
+}
+
+.dastresa-options .hover\:bg-white\/\[0\.03\]:hover,
+.dastresa-options [class*='hover:bg-white']:hover {
+  background: var(--opt-accent-soft) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dastresa-options {
+    transition: none;
+  }
+}
