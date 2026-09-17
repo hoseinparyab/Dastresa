@@ -1,18 +1,38 @@
-/* Popup chrome — light mockup, fixed width (Chrome popup shrink-wrap safe). */
+/**
+ * Dastresa popup chrome — light + dark textures from product mockups.
+ * Theme toggle pattern adapted from 21st.dev Theme component (button/tabs).
+ */
 
-html.popup-light,
-html.popup-light body,
-html.popup-light #root {
+html.popup-shell,
+html.popup-shell body,
+html.popup-shell #root {
   width: 380px !important;
   min-width: 380px !important;
   max-width: 380px !important;
   margin: 0 !important;
-  background: #f1f5f9 !important;
-  color: #0f172a !important;
   overflow-x: hidden !important;
 }
 
 .dastresa-popup {
+  box-sizing: border-box;
+  width: 380px;
+  min-width: 380px;
+  max-width: 380px;
+  font-size: 16px;
+  line-height: 1.5;
+  background: var(--pop-bg);
+  color: var(--pop-text);
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.dastresa-popup *,
+.dastresa-popup *::before,
+.dastresa-popup *::after {
+  box-sizing: border-box;
+}
+
+/* —— Light (mockup) —— */
+.dastresa-popup[data-chrome='light'] {
   --pop-bg: #f1f5f9;
   --pop-surface: #ffffff;
   --pop-text: #0f172a;
@@ -26,34 +46,54 @@ html.popup-light #root {
   --pop-success-bg: #ecfdf5;
   --pop-danger: #b91c1c;
   --pop-danger-bg: #fef2f2;
-
-  box-sizing: border-box;
-  width: 380px;
-  min-width: 380px;
-  max-width: 380px;
-  background: var(--pop-bg);
-  color: var(--pop-text);
-  font-size: 16px;
-  line-height: 1.5;
+  --pop-switch-off: #cbd5e1;
+  --pop-chrome-track: #e2e8f0;
 }
 
-.dastresa-popup *,
-.dastresa-popup *::before,
-.dastresa-popup *::after {
-  box-sizing: border-box;
+/* —— Dark (mockup) —— */
+.dastresa-popup[data-chrome='dark'] {
+  --pop-bg: #0b1220;
+  --pop-surface: #111827;
+  --pop-text: #f8fafc;
+  --pop-muted: #94a3b8;
+  --pop-accent: #38bdf8;
+  --pop-accent-hover: #7dd3fc;
+  --pop-accent-soft: rgba(56, 189, 248, 0.14);
+  --pop-border: #334155;
+  --pop-input: #1e293b;
+  --pop-success: #4ade80;
+  --pop-success-bg: rgba(74, 222, 128, 0.12);
+  --pop-danger: #fca5a5;
+  --pop-danger-bg: rgba(248, 113, 113, 0.12);
+  --pop-switch-off: #475569;
+  --pop-chrome-track: #1e293b;
+}
+
+html.popup-shell[data-chrome='light'],
+html.popup-shell[data-chrome='light'] body,
+html.popup-shell[data-chrome='light'] #root {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+html.popup-shell[data-chrome='dark'],
+html.popup-shell[data-chrome='dark'] body,
+html.popup-shell[data-chrome='dark'] #root {
+  background: #0b1220 !important;
+  color: #f8fafc !important;
 }
 
 .dastresa-popup .pop-header {
   background: var(--pop-surface);
   border-bottom: 1px solid var(--pop-border);
-  padding: 1.1rem 1.15rem 1.05rem;
+  padding: 1.05rem 1.1rem 1rem;
 }
 
 .dastresa-popup .pop-top {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.65rem;
 }
 
 .dastresa-popup .pop-brand-block {
@@ -61,9 +101,12 @@ html.popup-light #root {
   min-width: 0;
 }
 
-.dastresa-popup .pop-switch {
+.dastresa-popup .pop-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.45rem;
   flex: 0 0 auto;
-  margin-top: 0.15rem;
 }
 
 .dastresa-popup .pop-eyebrow {
@@ -74,37 +117,66 @@ html.popup-light #root {
 }
 
 .dastresa-popup .pop-brand {
-  margin: 0.3rem 0 0;
+  margin: 0.28rem 0 0;
   font-size: 1.85rem;
   font-weight: 800;
   line-height: 1.1;
-  letter-spacing: -0.02em;
   color: var(--pop-text);
 }
 
 .dastresa-popup .pop-tagline {
-  margin: 0.65rem 0 0;
-  font-size: 0.98rem;
+  margin: 0.6rem 0 0;
+  font-size: 0.96rem;
   line-height: 1.45;
   color: var(--pop-muted);
 }
 
+.dastresa-popup .pop-chrome-toggle {
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.18rem;
+  border-radius: 999px;
+  border: 1px solid var(--pop-border);
+  background: var(--pop-chrome-track);
+}
+
+.dastresa-popup .pop-chrome-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  min-height: 2rem;
+  padding: 0.2rem 0.55rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--pop-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.dastresa-popup .pop-chrome-btn.is-active {
+  background: var(--pop-surface);
+  color: var(--pop-accent);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
 .dastresa-popup .pop-actions {
-  margin-top: 1.1rem;
+  margin-top: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: 0.65rem;
 }
 
 .dastresa-popup .pop-cta {
   display: flex;
   width: 100%;
-  min-height: 3.25rem;
-  max-height: none;
+  min-height: 3.2rem;
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  padding: 0.75rem 1rem;
+  padding: 0.7rem 1rem;
   border: 0;
   border-radius: 14px;
   background: var(--pop-accent);
@@ -115,7 +187,12 @@ html.popup-light #root {
   line-height: 1.25;
   white-space: nowrap;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.28);
+}
+
+.dastresa-popup[data-chrome='dark'] .pop-cta {
+  color: #0f172a;
+  box-shadow: 0 6px 18px rgba(56, 189, 248, 0.28);
 }
 
 .dastresa-popup .pop-cta:hover:not(:disabled) {
@@ -127,31 +204,38 @@ html.popup-light #root {
   cursor: not-allowed;
 }
 
-.dastresa-popup .pop-cta:focus-visible {
-  outline: 3px solid #93c5fd;
-  outline-offset: 3px;
+.dastresa-popup .pop-cta:focus-visible,
+.dastresa-popup .pop-footer-btn:focus-visible,
+.dastresa-popup .pop-chrome-btn:focus-visible {
+  outline: 3px solid var(--pop-accent);
+  outline-offset: 2px;
 }
 
 .dastresa-popup .pop-hint {
   margin: 0;
-  padding: 0.7rem 0.85rem;
-  border-radius: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 999px;
   background: var(--pop-accent-soft);
-  color: #1e3a8a;
-  font-size: 0.95rem;
+  color: var(--pop-accent);
+  font-size: 0.92rem;
   font-weight: 600;
   line-height: 1.4;
+  text-align: center;
+  border: 1px solid color-mix(in srgb, var(--pop-accent) 25%, transparent);
+}
+
+.dastresa-popup[data-chrome='light'] .pop-hint {
+  color: #1e3a8a;
 }
 
 .dastresa-popup .pop-status {
   margin: 0;
-  padding: 0.8rem 0.9rem;
+  padding: 0.75rem 0.9rem;
   border-radius: 0.85rem;
   background: var(--pop-success-bg);
   color: var(--pop-success);
   font-size: 0.98rem;
   font-weight: 700;
-  line-height: 1.35;
 }
 
 .dastresa-popup .pop-row {
@@ -161,13 +245,13 @@ html.popup-light #root {
 }
 
 .dastresa-popup .pop-body {
-  max-height: 480px;
+  max-height: 460px;
   overflow-x: hidden;
   overflow-y: auto;
-  padding: 0.9rem;
+  padding: 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.7rem;
 }
 
 .dastresa-popup .pop-footer-btn {
@@ -192,11 +276,6 @@ html.popup-light #root {
   background: var(--pop-accent-soft);
 }
 
-.dastresa-popup .pop-footer-btn:focus-visible {
-  outline: 3px solid #93c5fd;
-  outline-offset: 2px;
-}
-
 .dastresa-popup .pop-secondary,
 .dastresa-popup .pop-danger {
   display: flex;
@@ -205,11 +284,11 @@ html.popup-light #root {
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  padding: 0 0.65rem;
+  padding: 0 0.55rem;
   white-space: nowrap;
 }
 
@@ -220,57 +299,45 @@ html.popup-light #root {
 }
 
 .dastresa-popup .pop-danger {
-  border: 1px solid #fecaca;
+  border: 1px solid color-mix(in srgb, var(--pop-danger) 35%, transparent);
   background: var(--pop-danger-bg);
   color: var(--pop-danger);
 }
 
-/* Form controls inside light popup */
-.dastresa-popup label span,
-.dastresa-popup .pop-field-label {
+.dastresa-popup label span {
   color: var(--pop-text) !important;
-  font-size: 0.98rem !important;
+  font-size: 0.95rem !important;
   font-weight: 700 !important;
 }
 
 .dastresa-popup select {
   display: block;
   width: 100% !important;
+  max-width: 100% !important;
   background: var(--pop-input) !important;
   color: var(--pop-text) !important;
   border: 1px solid var(--pop-border) !important;
   border-radius: 12px !important;
-  min-height: 2.9rem !important;
-  max-width: 100% !important;
+  min-height: 2.85rem !important;
   font-size: 1rem !important;
 }
 
-.dastresa-popup select:hover {
-  border-color: #93c5fd !important;
-}
-
-.dastresa-popup select:focus-visible {
-  outline: 3px solid #93c5fd !important;
-  outline-offset: 2px;
-}
-
 .dastresa-popup [role='switch'] {
-  background: #cbd5e1 !important;
-  /* Override global .wp-touch square min-width so the switch stays a pill */
+  background: var(--pop-switch-off) !important;
   min-width: 4.75rem !important;
   width: 4.75rem !important;
-  height: 2.75rem !important;
-  min-height: 2.75rem !important;
+  height: 2.65rem !important;
+  min-height: 2.65rem !important;
 }
 
 .dastresa-popup [role='switch'][aria-checked='true'] {
   background: var(--pop-accent) !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pop-accent) 22%, transparent) !important;
 }
 
 .dastresa-popup input[type='range'] {
   width: 100%;
-  background: #e2e8f0;
+  background: var(--pop-border);
   accent-color: var(--pop-accent);
   height: 14px;
 }
@@ -305,10 +372,16 @@ html.popup-light #root {
 .dastresa-popup .rounded-2xl.border {
   background: var(--pop-surface) !important;
   border-color: var(--pop-border) !important;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+  box-shadow: none !important;
   max-width: 100%;
 }
 
 .dastresa-popup h2 {
   color: var(--pop-accent) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dastresa-popup {
+    transition: none;
+  }
 }

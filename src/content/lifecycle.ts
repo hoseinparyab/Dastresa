@@ -157,7 +157,15 @@ export async function handleSiteDeactivate(runtime: ContentRuntime): Promise<voi
 }
 
 export async function handleActivate(runtime: ContentRuntime): Promise<void> {
-  if (runtime.transitioning || window.__DASTRESA_ACTIVE__) return;
+  if (runtime.transitioning) return;
+  if (window.__DASTRESA_ACTIVE__) {
+    // Already on — still re-broadcast settings so Look/zoom refresh after popup edits.
+    const settings = settingsService().get();
+    if (shouldRunOnPage(settings)) {
+      runtime.container.bus.emit(EVENTS.SETTINGS_CHANGED, { settings });
+    }
+    return;
+  }
   const settings = settingsService().get();
   if (!shouldRunOnPage(settings)) return;
   runtime.transitioning = true;

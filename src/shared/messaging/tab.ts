@@ -6,16 +6,34 @@ export type ContentMessageType =
   | 'dastresa-reset'
   | 'dastresa-apply-settings';
 
+async function resolveTargetTabId(): Promise<number | undefined> {
+  try {
+    const [active] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (active?.id != null) return active.id;
+  } catch {
+    // ignore
+  }
+  try {
+    const [focused] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (focused?.id != null) return focused.id;
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
+
 /** Notify the active tab's content script; no-op on restricted pages. */
 export async function notifyActiveTab(
   type: ContentMessageType,
   payload?: { settings?: DastresaSettings } & Record<string, unknown>,
-): Promise<void> {
+): Promise<boolean> {
+  const tabId = await resolveTargetTabId();
+  if (tabId == null) return false;
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab?.id) return;
-    await chrome.tabs.sendMessage(tab.id, { type, ...payload });
+    await chrome.tabs.sendMessage(tabId, { type, ...payload });
+    return true;
   } catch {
     // Content script may be missing on chrome:// and other restricted pages.
+    return false;
   }
 }

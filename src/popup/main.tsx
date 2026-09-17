@@ -6,17 +6,23 @@ import {
   markOnboardingComplete,
 } from '@/features/onboarding/onboarding-storage';
 import { SettingsForm } from '@/features/settings/components/SettingsForm';
-import { isSiteDisabled, withSiteDisabled } from '@/core/settings';
+import { isSiteDisabled, withSiteDisabled, type UiChrome } from '@/core/settings';
 import { useSettingsStore } from '@/shared/hooks/useSettingsStore';
 import { notifyActiveTab } from '@/shared/messaging/tab';
 import { t } from '@/shared/i18n/messages';
-import { PublisherCredit, Switch } from '@/shared/ui';
+import { ChromeToggle, PublisherCredit, Switch } from '@/shared/ui';
 import '@/shared/styles/globals.css';
 import './popup.css';
 
 function syncDocumentLang(locale: 'en' | 'fa', dir: 'ltr' | 'rtl') {
   document.documentElement.lang = locale;
   document.documentElement.dir = dir;
+}
+
+function applyChrome(chrome: UiChrome) {
+  document.documentElement.classList.add('popup-shell');
+  document.documentElement.dataset.chrome = chrome;
+  document.body.style.background = chrome === 'dark' ? '#0b1220' : '#f1f5f9';
 }
 
 function LightningIcon() {
@@ -55,16 +61,18 @@ function PopupApp() {
     void hydrate();
   }, [hydrate]);
 
+  const panelChrome: UiChrome = settings.uiChrome === 'dark' ? 'dark' : 'light';
+
   useEffect(() => {
     if (!hydrated) return;
     syncDocumentLang(settings.locale === 'en' ? 'en' : 'fa', settings.dir);
-    document.documentElement.classList.add('popup-light');
-    document.body.style.background = '#f1f5f9';
+    applyChrome(panelChrome);
     return () => {
-      document.documentElement.classList.remove('popup-light');
+      document.documentElement.classList.remove('popup-shell');
+      delete document.documentElement.dataset.chrome;
       document.body.style.background = '';
     };
-  }, [hydrated, settings.locale, settings.dir]);
+  }, [hydrated, settings.locale, settings.dir, panelChrome]);
 
   useEffect(() => {
     void (async () => {
@@ -116,6 +124,10 @@ function PopupApp() {
     else await exitNow();
   };
 
+  const setUiChrome = async (next: UiChrome) => {
+    await update({ uiChrome: next });
+  };
+
   const toggleSite = async () => {
     if (!hostname) return;
     setBusy(true);
@@ -139,23 +151,37 @@ function PopupApp() {
   };
 
   return (
-    <main className="dastresa-popup" dir={settings.dir} lang={locale} aria-busy={busy}>
+    <main
+      className="dastresa-popup"
+      data-chrome={panelChrome}
+      dir={settings.dir}
+      lang={locale}
+      aria-busy={busy}
+    >
       <header className="pop-header">
         <div className="pop-top">
           <div className="pop-brand-block">
             <p className="pop-eyebrow">{t(locale, 'accessibility')}</p>
             <h1 className="pop-brand">{t(locale, 'brand')}</h1>
           </div>
-          {hydrated ? (
-            <div className="pop-switch">
-              <Switch
-                checked={settings.extensionActive}
-                onCheckedChange={(checked) => void toggleMaster(checked)}
-                disabled={busy}
-                aria-label={t(locale, 'masterToggle')}
-              />
-            </div>
-          ) : null}
+          <div className="pop-controls">
+            {hydrated ? (
+              <>
+                <Switch
+                  checked={settings.extensionActive}
+                  onCheckedChange={(checked) => void toggleMaster(checked)}
+                  disabled={busy}
+                  aria-label={t(locale, 'masterToggle')}
+                />
+                <ChromeToggle
+                  value={panelChrome}
+                  onChange={(next) => void setUiChrome(next)}
+                  lightLabel={t(locale, 'chromeLight')}
+                  darkLabel={t(locale, 'chromeDark')}
+                />
+              </>
+            ) : null}
+          </div>
         </div>
         <p className="pop-tagline">{t(locale, 'tagline')}</p>
 
@@ -166,17 +192,15 @@ function PopupApp() {
         ) : null}
 
         {hydrated && showTourCta ? (
-          <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-3.5">
-            <p className="text-base font-semibold text-blue-900">{t(locale, 'tourTitle')}</p>
-            <div className="pop-row mt-3">
+          <div className="pop-actions" style={{ marginTop: '0.85rem' }}>
+            <p className="pop-hint" style={{ borderRadius: '0.85rem' }}>
+              {t(locale, 'tourTitle')}
+            </p>
+            <div className="pop-row">
               <button type="button" className="pop-cta" onClick={() => void openTour()}>
                 {t(locale, 'tourPopupCta')}
               </button>
-              <button
-                type="button"
-                className="pop-secondary"
-                onClick={() => void dismissTourCta()}
-              >
+              <button type="button" className="pop-secondary" onClick={() => void dismissTourCta()}>
                 {t(locale, 'tourPopupDismiss')}
               </button>
             </div>
@@ -239,7 +263,7 @@ function PopupApp() {
           <GearIcon />
           <span>{t(locale, 'openFullSettings')}</span>
         </button>
-        <PublisherCredit locale={locale} compact className="!text-slate-500" />
+        <PublisherCredit locale={locale} compact />
       </div>
     </main>
   );
