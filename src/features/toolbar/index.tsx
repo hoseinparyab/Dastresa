@@ -111,7 +111,7 @@ export class ToolbarFeature implements IFeature {
     this.host.id = 'Dastresa-toolbar-host';
     this.host.setAttribute('data-Dastresa', 'toolbar');
     this.host.style.cssText =
-      'all:initial;position:fixed;inset:0;width:0;height:0;overflow:visible;pointer-events:none;z-index:2147483646;';
+      'all:initial;position:fixed;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:2147483646;';
     const shadow = this.host.attachShadow({ mode: 'open' });
     const style = this.ctx.document.createElement('style');
     style.textContent = TOOLBAR_CSS;
