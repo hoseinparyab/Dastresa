@@ -2,13 +2,7 @@ import type { ReactNode } from 'react';
 import { cn } from '@/shared/ui/cn';
 import type { TourStepId } from '@/features/onboarding/tour-steps';
 
-function Icon({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+function Icon({ children }: { children: ReactNode }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -17,7 +11,6 @@ function Icon({
       strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={cn('relative size-12 text-sky-200', className)}
       aria-hidden
     >
       {children}
@@ -82,16 +75,8 @@ export function TourStepVisual({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        'relative mx-auto flex size-28 items-center justify-center overflow-hidden rounded-[1.75rem]',
-        'border border-sky-400/25 bg-gradient-to-br from-sky-500/20 via-slate-900/40 to-cyan-500/10',
-        'shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]',
-        className,
-      )}
-      aria-hidden
-    >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(56,189,248,0.35),transparent_55%)]" />
+    <div className={cn('tour-visual', className)} aria-hidden>
+      <div className="tour-visual-glow" />
       <StepIcon stepId={stepId} />
     </div>
   );
