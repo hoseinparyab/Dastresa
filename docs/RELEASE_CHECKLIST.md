@@ -1,31 +1,26 @@
-# Release Checklist — Dastresa 1.2.0 (Understand)
+# Release Checklist — Dastresa 1.2.1 (Accessible Chrome)
 
-**Goal:** Ship Understand layer while keeping 1.1.x MVP behavior: offline, private, opt-in accessibility.
+**Goal:** Ship UI chrome polish on top of 1.2.0 Understand — same trust rules: offline, private, opt-in.
 
 ## A. Product truth (must match listing)
 
 - [x] Opt-in activation (`extensionActive` default false)
 - [x] Safe visual defaults (theme `normal`, no forced large buttons/zoom)
 - [x] Per-site disable (`disabledSites` + `sitePreferences.enabled`)
-- [x] Accessibility profiles (presets → settings, Custom preserves tweaks)
-- [x] Semantic analysis / forms / page type stay local (no analytics)
-- [x] Persian + English UI strings
-- [x] Settings persisted only via `chrome.storage.local`
-- [x] Schema migration v2 preserves 1.1.x settings
+- [x] Accessibility profiles
+- [x] Semantic analysis / forms / page type stay local
+- [x] Persian + English UI; default settings locale `fa`
+- [x] Chrome `default_locale` = `fa`
+- [x] `uiChrome` light/dark for popup / toolbar / tour / options
+- [x] Settings via `chrome.storage.local` only
 
 ## B. Brand & store assets
 
-- [x] Brand foundation locked — `docs/BRAND.md`
-- [x] Store copy EN/FA — `docs/STORE_LISTING.md`
-- [x] Privacy policy draft — `docs/PRIVACY.md`
-- [x] Extension icons 16/32/48/128 — `public/icons/`
-- [ ] Host privacy policy on HTTPS and paste URL into CWS
-- [ ] Capture 3–5 screenshots (popup, toolbar, reader TOC, focus, profiles)
-- [ ] Optional: 440×280 small promo tile from `docs/brand/icon-master.png`
+- [x] Brand / store / privacy docs present
+- [ ] Host privacy policy HTTPS URL in CWS
+- [ ] Fresh screenshots: popup light+dark, toolbar chip+panel, options, reader TOC
 
 ## C. Engineering gate
-
-Run from repo root:
 
 ```bash
 npm ci
@@ -36,47 +31,28 @@ npm run build
 npm run pack:mvp
 ```
 
-- [ ] All commands pass on a clean machine
-- [ ] Load `dist/` unpacked in Chrome and smoke-test:
-  - Fresh install → page unchanged until Enable
-  - Enable → toolbar appears
-  - Theme Normal → page not wrecked
-  - Reader → TOC / prev-next / progress
-  - Profile Low vision → larger text + high contrast
-  - Disable site → stays off after reload
-  - Upgrade from 1.1.1 storage → settings preserved
-  - Disable on this site → toolbar gone on that host only
-  - Exit → global off
-  - FA locale → popup/toolbar RTL labels
-  - Reading Focus cursor visible above site dialogs
+Smoke `dist/` unpacked:
 
-## D. Package for upload
+- [ ] Enable → toolbar chip + panel (light/dark)
+- [ ] Language in Look & profile updates popup + toolbar labels
+- [ ] More panel scrolls; system actions reachable
+- [ ] Options page matches chrome; tour replay works
+- [ ] Upgrade from 1.2.0 storage → settings preserved
+
+## D. Package
 
 ```bash
 npm run build
 npm run pack:mvp
 ```
 
-Upload the generated zip from `release/` (not the whole repo).
+Upload `release/dastresa-mvp-1.2.1.zip` only.
 
-## E. Chrome Web Store form
+## E. CWS form
 
-- [ ] Single purpose statement matches STORE_LISTING
-- [ ] Permission justifications pasted
-- [ ] Privacy policy URL
-- [ ] “Not sold to third parties” / no remote code attestations
-- [ ] Distribution: Unlisted or Trusted testers first (recommended), then Public
+- [ ] Listing / permissions / privacy URL / no remote code
+- [ ] Prefer Trusted testers before Public
 
-## F. Post-submit brand guardrails
+## F. Guardrails
 
 - [ ] Do not announce AI/cloud features
-- [ ] Support replies use calm voice from `docs/BRAND.md`
-- [ ] File bugs for site breakage as P0 (trust > features)
-
-## Release owner sign-off
-
-| Role | Name | Date | OK |
-|------|------|------|----|
-| Product | | | ☐ |
-| Eng | | | ☐ |
-| Brand | | | ☐ |
