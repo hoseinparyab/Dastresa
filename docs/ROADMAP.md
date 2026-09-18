@@ -8,7 +8,7 @@
 - Per-site disable (`disabledSites`)
 - Persian / English UI · Offline-only Chrome MV3
 
-### 1.2.0 — Understand (current)
+### 1.2.0 — Understand
 - Semantic Page Analyzer + heading tree
 - Deterministic page-type detection
 - Form Analyzer (describe-only)
@@ -16,7 +16,12 @@
 - Accessibility profiles + `sitePreferences` + settings migration v2
 - AI provider interface stub (no AI dependency in core)
 
-## Near-term (after 1.2.0 trust)
+### 1.2.1 — Accessible Chrome (current)
+- Unified light/dark chrome across popup, toolbar, tour, options
+- Language in Look & profile; toolbar/page-type UX polish
+- Stronger instant apply to the active tab
+
+## Near-term (after 1.2.x trust)
 
 - Richer voice picker UI
 - Deeper per-site Look UI (local only)

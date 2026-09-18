@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.1 — Accessible Chrome — 2026-09-19
+
+### UI chrome (light / dark)
+- Popup, floating toolbar, onboarding tour, and full options page share the same mockup-aligned chrome
+- Panel light/dark toggle (`uiChrome`) with large, elderly-friendly controls
+- Toolbar chip + expanded panel polish; scroll fits viewport; themed scrollbar
+- Options page redesigned to match popup atmosphere
+
+### Product UX
+- Page type visible in toolbar
+- Default language selector in Look & profile (popup + options)
+- Instant settings apply more reliably to the open tab
+- Toolbar brand label follows FA/EN locale
+
 ## 1.2.0 — Understand — 2026-09-17
 
 ### Understand layer
