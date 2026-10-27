@@ -20,6 +20,7 @@
 - Unified light/dark chrome across popup, toolbar, tour, options
 - Language in Look & profile; toolbar/page-type UX polish
 - Stronger instant apply to the active tab
+- Parallel Firefox/AMO pack (`build:firefox` / `pack:firefox`) alongside Chrome
 
 ## Near-term (after 1.2.x trust)
 

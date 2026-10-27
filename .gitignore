@@ -1,4 +1,5 @@
 dist
+dist-firefox
 node_modules
 coverage
 .DS_Store
@@ -13,4 +14,3 @@ test-results
 .cursor
 release
 build-najino-svg.py
-scripts
