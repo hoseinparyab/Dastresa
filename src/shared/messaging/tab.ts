@@ -1,10 +1,7 @@
 import type { DastresaSettings } from '@/core/settings';
 
 export type ContentMessageType =
-  | 'dastresa-exit'
-  | 'dastresa-activate'
-  | 'dastresa-reset'
-  | 'dastresa-apply-settings';
+  'dastresa-exit' | 'dastresa-activate' | 'dastresa-reset' | 'dastresa-apply-settings';
 
 async function resolveTargetTabId(): Promise<number | undefined> {
   try {
@@ -33,7 +30,7 @@ export async function notifyActiveTab(
     await chrome.tabs.sendMessage(tabId, { type, ...payload });
     return true;
   } catch {
-    // Content script may be missing on chrome:// and other restricted pages.
+    // Content script may be missing on browser-restricted pages (chrome://, about:, etc.).
     return false;
   }
 }

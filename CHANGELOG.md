@@ -14,6 +14,10 @@
 - Instant settings apply more reliably to the open tab
 - Toolbar brand label follows FA/EN locale
 
+### Firefox (parallel pack)
+- `npm run build:firefox` / `pack:firefox` produce an AMO zip alongside the Chrome CWS zip
+- See `docs/FIREFOX_RELEASE.md`
+
 ## 1.2.0 — Understand — 2026-09-17
 
 ### Understand layer

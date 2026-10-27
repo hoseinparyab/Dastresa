@@ -14,14 +14,14 @@
 
 **Make every website easier to read and use.**
 
-Dastresa is an **offline-first** Chrome extension (Manifest V3) that adds a calm accessibility layer to any website. It helps older adults, low-vision users, and people with low digital literacy browse more independently.
+Dastresa is an **offline-first** browser extension (Manifest V3) for **Chrome and Firefox** that adds a calm accessibility layer to any website. It helps older adults, low-vision users, and people with low digital literacy browse more independently.
 
 This is **not** a screen reader. Core reading tools (themes, zoom, reader, TTS, focus, toolbar) run **locally** — no tracking, no analytics.
 
 **Optional:** Page Summary can call a small Dastresa backend (or your own Luma key) **only when you tap Summary**.
 
 > Brand, store copy, and privacy: [`docs/BRAND.md`](docs/BRAND.md) · [`docs/STORE_LISTING.md`](docs/STORE_LISTING.md) · [`docs/PRIVACY.md`](docs/PRIVACY.md)  
-> Release steps: [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md)
+> Release steps: [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md) · Firefox/AMO: [`docs/FIREFOX_RELEASE.md`](docs/FIREFOX_RELEASE.md)
 
 **Current version:** `1.2.1`
 
@@ -66,6 +66,23 @@ Then in Chrome:
 3. **Load unpacked** → select the `dist/` folder
 4. Open the popup → **Enable Dastresa**
 5. Use the on-page toolbar
+
+Firefox (temporary load):
+
+```bash
+npm run build:firefox
+```
+
+1. Open `about:debugging#/runtime/this-firefox`
+2. **Load Temporary Add-on** → `dist-firefox/manifest.json`
+3. Enable from the toolbar button
+
+Store zips:
+
+```bash
+npm run pack:mvp        # Chrome Web Store → release/dastresa-mvp-<version>.zip
+npm run pack:firefox    # AMO → release/dastresa-firefox-<version>.zip
+```
 
 Development watch mode:
 

@@ -29,7 +29,11 @@ npm run typecheck
 npm test
 npm run build
 npm run pack:mvp
+npm run build:firefox
+npm run pack:firefox
 ```
+
+Firefox details: `docs/FIREFOX_RELEASE.md` (Chrome zip unchanged; Firefox zip is separate for AMO).
 
 Smoke `dist/` unpacked:
 
