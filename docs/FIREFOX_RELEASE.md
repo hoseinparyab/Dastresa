@@ -10,6 +10,8 @@ npm run build:firefox
 npm run pack:firefox
 ```
 
+`pack:firefox` writes zip entries with `/` path separators (AMO rejects Windows `\\` paths from `Compress-Archive`) and omits `*.map` files.
+
 Outputs:
 
 | Target | Zip |
@@ -19,8 +21,11 @@ Outputs:
 
 `build:firefox` runs the normal Chrome Vite/CRX build, copies `dist/` → `dist-firefox/`, then patches `manifest.json`:
 
-- Adds `browser_specific_settings.gecko.id` = `dastresa@najino.com`
-- Sets `strict_min_version` = `121.0` (MV3 service worker)
+- Adds `browser_specific_settings.gecko.id` = `dastresa-extension@najino.com`
+- Sets `strict_min_version` = `140.0` (needed for `data_collection_permissions`)
+- Sets `gecko_android.strict_min_version` = `142.0`
+- Sets `gecko.data_collection_permissions.required` = `["none"]` (AMO data-consent; offline tool)
+- Replaces Chrome `background.service_worker` with Firefox `background.scripts` (event page)
 - Removes `minimum_chrome_version`
 
 ## Local smoke test
@@ -47,3 +52,6 @@ Do **not** create a second Chrome listing for Firefox — this zip is AMO-only.
 
 - Runtime APIs use the `chrome.*` namespace (supported by Firefox for compatibility).
 - Keep Chrome and Firefox version numbers in sync via `package.json` / built manifest.
+- Avoid `.innerHTML =` in extension code (AMO may reject). Use `setTrustedHtml` / DOM APIs; Readability is rewritten at build time.
+- AMO may still warn on React’s own `innerHTML` in `messages-*.js` (popup/options). Suggested **Notes to Reviewer**:
+  > Remaining `innerHTML` warnings are inside the vendored React 19 runtime used only on extension pages (popup/options/onboarding), not content scripts. No untrusted HTML is assigned; user strings use React text nodes / our `setTrustedHtml` helper.

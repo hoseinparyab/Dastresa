@@ -4,10 +4,40 @@ import { safeQueryAll } from '@/core/utils';
 import { parseSettings } from '@/core/settings';
 import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 import {
-  buildFocusPointerSvg,
+  createFocusPointerSvg,
   FOCUS_CURSOR_PALETTE,
   type FocusCursorColor,
 } from '@/features/reading-focus/cursor';
+const CURSOR_SHADOW_CSS = `
+:host { all: initial; }
+#layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 72px;
+  height: 72px;
+  pointer-events: none;
+  will-change: transform;
+}
+#halo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  box-sizing: border-box;
+}
+#pointer {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 40px;
+  height: 40px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+#pointer svg { display: block; width: 40px; height: 40px; }
+`;
 
 const CURSOR_HOST_ID = 'Dastresa-focus-cursor';
 const HTML_CURSOR_CLASS = 'dastresa-focus-cursor-on';
@@ -270,42 +300,16 @@ export class ReadingFocusFeature implements IFeature {
     `;
 
     const shadow = host.attachShadow({ mode: 'closed' });
-    shadow.innerHTML = `
-      <style>
-        :host { all: initial; }
-        #layer {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 72px;
-          height: 72px;
-          pointer-events: none;
-          will-change: transform;
-        }
-        #halo {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 56px;
-          height: 56px;
-          border-radius: 999px;
-          box-sizing: border-box;
-        }
-        #pointer {
-          position: absolute;
-          top: 10px;
-          left: 10px;
-          width: 40px;
-          height: 40px;
-          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-        }
-        #pointer svg { display: block; width: 40px; height: 40px; }
-      </style>
-      <div id="layer">
-        <div id="halo"></div>
-        <div id="pointer"></div>
-      </div>
-    `;
+    const style = this.ctx.document.createElement('style');
+    style.textContent = CURSOR_SHADOW_CSS;
+    const layer = this.ctx.document.createElement('div');
+    layer.id = 'layer';
+    const halo = this.ctx.document.createElement('div');
+    halo.id = 'halo';
+    const pointer = this.ctx.document.createElement('div');
+    pointer.id = 'pointer';
+    layer.append(halo, pointer);
+    shadow.append(style, layer);
 
     (this.ctx.document.body ?? this.ctx.document.documentElement).appendChild(host);
     this.cursorHost = host;
@@ -350,7 +354,7 @@ export class ReadingFocusFeature implements IFeature {
       halo.style.background = palette.halo;
     }
     if (pointer) {
-      pointer.innerHTML = buildFocusPointerSvg(this.cursorColor);
+      pointer.replaceChildren(createFocusPointerSvg(this.ctx.document, this.cursorColor));
     }
     this.positionCursor(this.lastX, this.lastY);
     this.elevateCursor();

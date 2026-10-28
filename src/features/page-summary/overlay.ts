@@ -1,3 +1,4 @@
+import { setTrustedHtml } from '@/core/utils';
 import type { AppLocale } from '@/shared/i18n/messages';
 import { t } from '@/shared/i18n/messages';
 
@@ -15,7 +16,10 @@ function toHtmlParagraphs(summary: string): string {
     .map((block) => block.trim())
     .filter(Boolean)
     .map((block) => {
-      const lines = block.split('\n').map((line) => escapeHtml(line)).join('<br/>');
+      const lines = block
+        .split('\n')
+        .map((line) => escapeHtml(line))
+        .join('<br/>');
       return `<p>${lines}</p>`;
     })
     .join('');
@@ -77,7 +81,9 @@ export class SummaryOverlay {
     const shadow = this.host.attachShadow({ mode: 'open' });
     const wrap = doc.createElement('div');
     const showCopy = opts.status === 'ready' && Boolean(opts.copyText?.trim());
-    wrap.innerHTML = `
+    setTrustedHtml(
+      wrap,
+      `
       <style>
         :host, * { box-sizing: border-box; }
         .wrap {
@@ -171,7 +177,8 @@ export class SummaryOverlay {
               : ''
         }
       </div>
-    `;
+    `,
+    );
     shadow.appendChild(wrap);
     wrap.querySelector('.close')?.addEventListener('click', () => this.close());
 
@@ -225,7 +232,13 @@ export class SummaryOverlay {
     });
   }
 
-  showError(doc: Document, locale: AppLocale, dir: 'ltr' | 'rtl', title: string, message: string): void {
+  showError(
+    doc: Document,
+    locale: AppLocale,
+    dir: 'ltr' | 'rtl',
+    title: string,
+    message: string,
+  ): void {
     this.show(doc, {
       locale,
       dir,

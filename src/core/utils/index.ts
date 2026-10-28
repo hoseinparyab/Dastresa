@@ -1,3 +1,5 @@
+export { setTrustedHtml } from '@/core/utils/trusted-html';
+
 export function debounce<T extends (...args: never[]) => void>(fn: T, waitMs: number): T {
   let timer: ReturnType<typeof setTimeout> | undefined;
   return ((...args: Parameters<T>) => {
