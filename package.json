@@ -10,6 +10,7 @@
     "build:firefox": "npm run build && node scripts/prepare-firefox.mjs",
     "pack:mvp": "node scripts/pack-mvp.mjs",
     "pack:firefox": "node scripts/pack-firefox.mjs",
+    "pack:firefox-source": "node scripts/pack-firefox-source.mjs",
     "preview": "vite preview",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",

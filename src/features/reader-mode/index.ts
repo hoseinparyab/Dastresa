@@ -8,7 +8,7 @@ import type {
 import { EVENTS, FEATURE_IDS, STORAGE_KEYS } from '@/core/constants';
 import { buildHeadingTree } from '@/core/semantics';
 import { parseSettings } from '@/core/settings';
-import { splitParagraphs } from '@/core/utils';
+import { setTrustedHtml, splitParagraphs } from '@/core/utils';
 import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 
 const NOISE_SELECTORS = [
@@ -58,15 +58,18 @@ function enrichHtmlWithHeadingIds(html: string): {
 } {
   const toc: Array<{ id: string; level: number; text: string }> = [];
   let i = 0;
-  const next = html.replace(/<h([1-6])(\b[^>]*)>([\s\S]*?)<\/h\1>/gi, (full, level, attrs, inner) => {
-    const text = inner.replace(/<[^>]+>/g, '').trim();
-    if (!text) return full;
-    const idMatch = /\bid\s*=\s*["']([^"']+)["']/i.exec(attrs);
-    const id = idMatch?.[1] || slugify(text, i++);
-    toc.push({ id, level: Number(level), text });
-    if (idMatch) return full;
-    return `<h${level}${attrs} id="${escapeHtml(id)}">${inner}</h${level}>`;
-  });
+  const next = html.replace(
+    /<h([1-6])(\b[^>]*)>([\s\S]*?)<\/h\1>/gi,
+    (full, level, attrs, inner) => {
+      const text = inner.replace(/<[^>]+>/g, '').trim();
+      if (!text) return full;
+      const idMatch = /\bid\s*=\s*["']([^"']+)["']/i.exec(attrs);
+      const id = idMatch?.[1] || slugify(text, i++);
+      toc.push({ id, level: Number(level), text });
+      if (idMatch) return full;
+      return `<h${level}${attrs} id="${escapeHtml(id)}">${inner}</h${level}>`;
+    },
+  );
   return { html: next, toc };
 }
 
@@ -208,7 +211,9 @@ export class ReaderModeService implements IReadableContentProvider {
         </nav>`
       : '';
 
-    this.overlay.innerHTML = `
+    setTrustedHtml(
+      this.overlay,
+      `
       <style>
         :host, * { box-sizing: border-box; }
         .scrim { position: fixed; inset: 0; background: #020617; z-index: 0; }
@@ -290,7 +295,8 @@ export class ReaderModeService implements IReadableContentProvider {
           <div class="article">${content.html}</div>
         </div>
       </div>
-    `;
+    `,
+    );
     shadow.appendChild(this.overlay);
     doc.documentElement.appendChild(this.host);
     doc.documentElement.style.setProperty('overflow', 'hidden', 'important');

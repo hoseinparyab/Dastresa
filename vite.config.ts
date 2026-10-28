@@ -3,13 +3,12 @@ import react from '@vitejs/plugin-react';
 import { crx } from '@crxjs/vite-plugin';
 import { fileURLToPath, URL } from 'node:url';
 import manifest from './manifest.json';
+import { readabilityNoInnerHtml } from './scripts/vite-readability-no-innerhtml';
 
-const onboardingHtml = fileURLToPath(
-  new URL('./src/onboarding/index.html', import.meta.url),
-);
+const onboardingHtml = fileURLToPath(new URL('./src/onboarding/index.html', import.meta.url));
 
 export default defineConfig({
-  plugins: [react(), crx({ manifest })],
+  plugins: [readabilityNoInnerHtml(), react(), crx({ manifest })],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

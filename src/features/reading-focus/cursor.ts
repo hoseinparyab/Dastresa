@@ -18,11 +18,22 @@ export const FOCUS_CURSOR_PALETTE: Record<
   white: { fill: '#ffffff', stroke: '#000000', halo: 'rgba(255, 255, 255, 0.55)', label: 'White' },
 };
 
+const POINTER_PATH = 'M8 4 L8 40 L18 30 L26 44 L32 41 L24 27 L38 27 Z';
+
 /** Inline SVG arrow used as a DOM cursor (Chrome-safe, unlike CSS url() SVG cursors). */
-export function buildFocusPointerSvg(color: FocusCursorColor): string {
+export function createFocusPointerSvg(doc: Document, color: FocusCursorColor): SVGSVGElement {
   const { fill, stroke } = FOCUS_CURSOR_PALETTE[color];
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 48 48" aria-hidden="true">
-  <path fill="${fill}" stroke="${stroke}" stroke-width="3.5" stroke-linejoin="round"
-    d="M8 4 L8 40 L18 30 L26 44 L32 41 L24 27 L38 27 Z"/>
-</svg>`;
+  const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '40');
+  svg.setAttribute('height', '40');
+  svg.setAttribute('viewBox', '0 0 48 48');
+  svg.setAttribute('aria-hidden', 'true');
+  const path = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('fill', fill);
+  path.setAttribute('stroke', stroke);
+  path.setAttribute('stroke-width', '3.5');
+  path.setAttribute('stroke-linejoin', 'round');
+  path.setAttribute('d', POINTER_PATH);
+  svg.appendChild(path);
+  return svg;
 }
