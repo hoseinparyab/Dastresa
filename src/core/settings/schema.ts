@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { normalizeSiteKey } from './site-key';
 
-export const SETTINGS_SCHEMA_VERSION = 2;
+export const SETTINGS_SCHEMA_VERSION = 3;
 
 export const ThemeIdSchema = z.enum([
   'normal',
@@ -110,8 +110,9 @@ export const DastresaSettingsSchema = z.object({
     autoReadOnEnable: true,
   }),
   toolbarPosition: ToolbarPositionSchema.default({ x: 24, y: 24 }),
-  locale: z.enum(['en', 'fa']).default('fa'),
-  dir: z.enum(['ltr', 'rtl']).default('rtl'),
+  /** Persian-first product default (fa before en in enum too). */
+  locale: z.enum(['fa', 'en']).default('fa'),
+  dir: z.enum(['rtl', 'ltr']).default('rtl'),
   /** Popup / options chrome: light or dark (from design mockups). */
   uiChrome: UiChromeSchema.default('light'),
   /**
@@ -275,8 +276,8 @@ export function parseSettings(input: unknown): DastresaSettings {
   assignIfValid('readingFocus', z.boolean(), raw.readingFocus);
   assignIfValid('readingRuler', z.boolean(), raw.readingRuler);
   assignIfValid('focusCursorColor', FocusCursorColorSchema, raw.focusCursorColor);
-  assignIfValid('locale', z.enum(['en', 'fa']), raw.locale);
-  assignIfValid('dir', z.enum(['ltr', 'rtl']), raw.dir);
+  assignIfValid('locale', z.enum(['fa', 'en']), raw.locale);
+  assignIfValid('dir', z.enum(['rtl', 'ltr']), raw.dir);
   assignIfValid('uiChrome', UiChromeSchema, raw.uiChrome);
   assignIfValid('summaryProvider', z.enum(['free', 'luma', 'gemini']), raw.summaryProvider);
   assignIfValid('summaryModel', z.string().min(1), raw.summaryModel);
