@@ -7,6 +7,9 @@ export type DastresaSecrets = {
   geminiApiKey?: string;
   /** @deprecated migrated to lumaApiKey */
   summaryApiKey?: string;
+  /** Optional override for private Persian TTS Gradio auth */
+  persianTtsUsername?: string;
+  persianTtsPassword?: string;
 };
 
 export async function readSecrets(): Promise<DastresaSecrets> {
@@ -19,11 +22,20 @@ export async function readSecrets(): Promise<DastresaSecrets> {
       (typeof data.lumaApiKey === 'string' && data.lumaApiKey.trim()) ||
       (typeof data.summaryApiKey === 'string' && data.summaryApiKey.trim()) ||
       undefined;
-    const gemini =
-      (typeof data.geminiApiKey === 'string' && data.geminiApiKey.trim()) || undefined;
+    const gemini = (typeof data.geminiApiKey === 'string' && data.geminiApiKey.trim()) || undefined;
+    const persianTtsUsername =
+      typeof data.persianTtsUsername === 'string' && data.persianTtsUsername.trim()
+        ? data.persianTtsUsername.trim()
+        : undefined;
+    const persianTtsPassword =
+      typeof data.persianTtsPassword === 'string' && data.persianTtsPassword.trim()
+        ? data.persianTtsPassword.trim()
+        : undefined;
     return {
       lumaApiKey: luma,
       geminiApiKey: gemini,
+      persianTtsUsername,
+      persianTtsPassword,
     };
   } catch {
     return {};
@@ -42,6 +54,13 @@ export async function writeSecrets(partial: DastresaSecrets): Promise<DastresaSe
 
   if (partial.geminiApiKey !== undefined) {
     next.geminiApiKey = partial.geminiApiKey.trim() || undefined;
+  }
+
+  if (partial.persianTtsUsername !== undefined) {
+    next.persianTtsUsername = partial.persianTtsUsername.trim() || undefined;
+  }
+  if (partial.persianTtsPassword !== undefined) {
+    next.persianTtsPassword = partial.persianTtsPassword.trim() || undefined;
   }
 
   delete next.summaryApiKey;

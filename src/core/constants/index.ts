@@ -32,12 +32,10 @@ export const GEMINI_API = {
   DEFAULT_MODEL: 'gemini-2.0-flash',
 } as const;
 
-export {
-  SUMMARY_API,
-  summaryApiUrl,
-  isSummaryApiError,
-} from '@/core/api/summary-api';
+export { SUMMARY_API, summaryApiUrl, isSummaryApiError } from '@/core/api/summary-api';
 export type { SummaryApiDocs, SummaryApiErrorCode } from '@/core/api/summary-api';
+
+export { PERSIAN_TTS } from '@/core/api/persian-tts';
 
 /** Bump when tour content changes so returning users can see an updated intro. */
 export const ONBOARDING_VERSION = 1;

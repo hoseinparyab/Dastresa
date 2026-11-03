@@ -28,6 +28,13 @@ export const SpeechSettingsSchema = z.object({
   volume: z.number().min(0).max(1).default(1),
   voiceURI: z.string().default(''),
   preferPersian: z.boolean().default(true),
+  /**
+   * persian-server = Gradio Persian TTS (Najino)
+   * browser = SpeechSynthesis fallback
+   */
+  provider: z.enum(['persian-server', 'browser']).default('persian-server'),
+  /** Start reading page text when Dastresa is enabled on a page. */
+  autoReadOnEnable: z.boolean().default(true),
 });
 
 export const ToolbarPositionSchema = z.object({
@@ -99,6 +106,8 @@ export const DastresaSettingsSchema = z.object({
     volume: 1,
     voiceURI: '',
     preferPersian: true,
+    provider: 'persian-server',
+    autoReadOnEnable: true,
   }),
   toolbarPosition: ToolbarPositionSchema.default({ x: 24, y: 24 }),
   locale: z.enum(['en', 'fa']).default('fa'),
@@ -178,10 +187,13 @@ export function createPageResetSettings(current?: Partial<DastresaSettings>): Da
       volume: current?.speech?.volume ?? 1,
       voiceURI: current?.speech?.voiceURI ?? '',
       preferPersian: current?.speech?.preferPersian ?? true,
+      provider: current?.speech?.provider ?? 'persian-server',
+      autoReadOnEnable: current?.speech?.autoReadOnEnable ?? true,
     },
     toolbarPosition: current?.toolbarPosition ?? { x: 24, y: 24 },
     locale,
     dir,
+    uiChrome: current?.uiChrome ?? 'light',
     summaryProvider: current?.summaryProvider ?? 'free',
     summaryModel: current?.summaryModel ?? 'openai/gpt-4o-mini',
   });
@@ -197,7 +209,8 @@ export function isSiteDisabled(settings: DastresaSettings, hostname: string): bo
   ) {
     return true;
   }
-  const prefs = settings.sitePreferences?.[key] ?? settings.sitePreferences?.[hostname.toLowerCase()];
+  const prefs =
+    settings.sitePreferences?.[key] ?? settings.sitePreferences?.[hostname.toLowerCase()];
   return prefs?.enabled === false;
 }
 
