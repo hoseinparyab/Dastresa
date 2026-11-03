@@ -10,7 +10,7 @@ import {
   SETTINGS_SCHEMA_VERSION,
 } from '@/core/settings';
 
-describe('settings migration v2', () => {
+describe('settings migration', () => {
   it('upgrades legacy 1.1 settings without wiping fields', () => {
     const migrated = migrateSettings({
       extensionActive: true,
@@ -24,6 +24,18 @@ describe('settings migration v2', () => {
     expect(migrated.theme).toBe('dark');
     expect(migrated.extensionActive).toBe(true);
     expect(migrated.disabledSites).toContain('example.com');
+  });
+
+  it('v3 forces Persian locale/dir when upgrading from English seed', () => {
+    const migrated = migrateSettings({
+      schemaVersion: 2,
+      locale: 'en',
+      dir: 'ltr',
+      extensionActive: true,
+    });
+    expect(migrated.schemaVersion).toBe(3);
+    expect(migrated.locale).toBe('fa');
+    expect(migrated.dir).toBe('rtl');
   });
 });
 

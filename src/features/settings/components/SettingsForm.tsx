@@ -129,7 +129,12 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
   const textSizePercent = Math.round((textScale ?? 1) * 100);
 
   return (
-    <form className="flex flex-col gap-4" dir={settings.dir} onSubmit={(e) => e.preventDefault()}>
+    <form
+      className="flex flex-col gap-4"
+      dir={locale === 'fa' ? 'rtl' : 'ltr'}
+      lang={locale}
+      onSubmit={(e) => e.preventDefault()}
+    >
       {!compact && (
         <Section title={t(locale, 'general')} description={t(locale, 'generalDesc')}>
           <Controller
@@ -189,9 +194,11 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
         </SelectField>
         <SelectField
           label={t(locale, 'languageDefault')}
-          value={localeWatch ?? 'fa'}
+          value={locale}
           onChange={(e) => {
-            const nextLocale = e.target.value as 'en' | 'fa';
+            const nextLocale = e.target.value === 'en' ? 'en' : 'fa';
+            form.setValue('locale', nextLocale, { shouldDirty: true });
+            form.setValue('dir', nextLocale === 'fa' ? 'rtl' : 'ltr', { shouldDirty: true });
             applyNow({ locale: nextLocale, dir: nextLocale === 'fa' ? 'rtl' : 'ltr' });
           }}
         >
