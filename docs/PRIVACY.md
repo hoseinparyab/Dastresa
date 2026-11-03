@@ -33,15 +33,19 @@ Settings are saved with Chrome’s `chrome.storage.local`, for example:
 
 This data stays on your device unless you sync Chrome settings through your own Google account (that sync is controlled by Google Chrome, not by Dastresa servers — Dastresa has none).
 
+## Optional Persian neural speech
+
+When **Speech engine** is set to the Persian neural voice (default), short excerpts of page text you choose to hear are sent to a private Najino TTS server to generate audio, then played locally. You can switch to **Browser voices** anytime (fully on-device, no network).
+
 ## What we do not collect
 
 Dastresa’s extension code does **not**:
 
 - Run analytics or advertising trackers
 - Record the websites you visit to a Dastresa backend
-- Upload page content, passwords, or form data
+- Upload passwords or form data
 - Require an account
-- Use remote AI APIs
+- Use remote AI for summarization unless you opt into Summary features
 
 ## Permissions (why they exist)
 

@@ -1,22 +1,26 @@
 # Text To Speech
 
-**Status:** MVP
+**Status:** MVP + Persian neural voice
 
 ## Boundary
 
-Browser `SpeechSynthesis` only. Play / Pause / Resume / Stop, voice, rate, pitch, volume. Paragraph highlight + auto-scroll. Persian voice priority.
+1. **persian-server** (default): Gradio synthesize API (`/synthesize`) via background worker  
+2. **browser**: `SpeechSynthesis` fallback (Play / Pause / Resume / Stop)
+
+Paragraph highlight + auto-scroll. Optional **auto-read on enable**.
 
 ## Public surface
 
 - Implements `IFeature` + `ISpeechEngine`
 - Emits: `speech:state`, `speech:paragraph`
-- Listens: `reader:content-ready`, `toolbar:command`
+- Listens: `reader:content-ready`, `toolbar:command`, `extension:activated`
 
 ## Depends on
 
-- `IReadableContentProvider` (contract)
+- Background message `dastresa-persian-tts`
+- `src/core/api/persian-tts.ts`
 - Settings / Storage
 
 ## Must not
 
-- Use cloud TTS or external APIs
+- Call Gradio auth from the page origin (cookies stay in background)

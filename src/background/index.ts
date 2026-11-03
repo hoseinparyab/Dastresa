@@ -2,12 +2,8 @@
  * Dastresa MV3 service worker — lean coordinator only.
  */
 
-import {
-  GEMINI_API,
-  LUMA_API,
-  ONBOARDING_VERSION,
-  STORAGE_KEYS,
-} from '@/core/constants';
+import { PERSIAN_TTS, synthesizePersianSpeech } from '@/core/api/persian-tts';
+import { GEMINI_API, LUMA_API, ONBOARDING_VERSION, STORAGE_KEYS } from '@/core/constants';
 import { parseSettings } from '@/core/settings';
 import type { OnboardingState } from '@/features/onboarding/onboarding-storage';
 import {
@@ -49,6 +45,29 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
   if (message?.type === 'ping') {
     sendResponse({ ok: true, version: '1.1.1' });
+    return true;
+  }
+  if (message?.type === 'dastresa-persian-tts') {
+    void (async () => {
+      try {
+        const text = String(message.text ?? '').trim();
+        if (!text) {
+          sendResponse({ ok: false, error: 'persian_tts_empty' });
+          return;
+        }
+        const secrets = await readSecrets();
+        const result = await synthesizePersianSpeech(text, {
+          username: secrets.persianTtsUsername?.trim() || PERSIAN_TTS.DEFAULT_USERNAME,
+          password: secrets.persianTtsPassword?.trim() || PERSIAN_TTS.DEFAULT_PASSWORD,
+        });
+        sendResponse({ ok: true, dataUrl: result.dataUrl, meta: result.meta });
+      } catch (error) {
+        sendResponse({
+          ok: false,
+          error: error instanceof Error ? error.message : 'persian_tts_failed',
+        });
+      }
+    })();
     return true;
   }
   if (message?.type === 'dastresa-summarize') {
@@ -101,8 +120,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         sendResponse({ ok: true, summary });
       } catch (error) {
         const errMessage = error instanceof Error ? error.message : 'summary_failed';
-        const isOffline =
-          /failed to fetch|networkerror|load failed|could not connect/i.test(errMessage);
+        const isOffline = /failed to fetch|networkerror|load failed|could not connect/i.test(
+          errMessage,
+        );
         const known = [
           'missing_api_key',
           'rate_limited',
@@ -111,9 +131,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           'invalid_json',
           'summary_failed',
         ] as const;
-        const code = isOffline
-          ? 'offline'
-          : (known.find((k) => k === errMessage) ?? 'api_error');
+        const code = isOffline ? 'offline' : (known.find((k) => k === errMessage) ?? 'api_error');
         sendResponse({
           ok: false,
           code,

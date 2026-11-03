@@ -75,6 +75,10 @@ const EN = {
   textSize: 'Change text size',
   speechRate: 'Speech rate',
   preferPersian: 'Prefer Persian voices',
+  speechProvider: 'Speech engine',
+  speechProviderServer: 'Persian neural voice (server)',
+  speechProviderBrowser: 'Browser voices',
+  autoReadOnEnable: 'Read the page aloud when Dastresa turns on',
   language: 'Language',
   languageDefault: 'Default language',
   languageDefaultDesc: 'Interface language for popup, toolbar, and settings.',
@@ -131,8 +135,10 @@ const EN = {
   summaryLoading: 'Summarizing…',
   summaryFailed: 'Could not summarize this page.',
   summaryNeedKey: 'Add your Luma or Gemini API key in Settings, or switch back to Free.',
-  summaryOffline: 'Cannot reach the summary server. Start Dastresa-Summary-API (Docker or npm run dev).',
-  summaryPrivacyHint: 'Nothing is sent until you ask for a summary. Your privacy stays in your control.',
+  summaryOffline:
+    'Cannot reach the summary server. Start Dastresa-Summary-API (Docker or npm run dev).',
+  summaryPrivacyHint:
+    'Nothing is sent until you ask for a summary. Your privacy stays in your control.',
   summarySection: 'Page summary',
   summarySectionDesc:
     'Free: a few summaries per day via Dastresa. Need more? Use your own Luma or Gemini API key.',
@@ -141,7 +147,8 @@ const EN = {
   summaryProviderLuma: 'Luma (your API key)',
   summaryProviderGemini: 'Gemini (your API key)',
   summaryLumaKey: 'Luma API key',
-  summaryLumaKeyDesc: 'Stored only on this browser. Required for Luma mode; bypasses the free daily limit.',
+  summaryLumaKeyDesc:
+    'Stored only on this browser. Required for Luma mode; bypasses the free daily limit.',
   summaryGeminiKey: 'Gemini API key',
   summaryGeminiKeyDesc:
     'From Google AI Studio. Stored only on this browser. Required for Gemini mode.',
@@ -189,7 +196,7 @@ const EN = {
   tourStep6Title: 'You are ready',
   tourStep6Body:
     'Click the Dastresa icon in your toolbar, Enable on a webpage, and explore the floating tools. You can replay this tour from Settings.',
-}
+};
 
 type MessageKey = keyof typeof EN;
 
@@ -268,6 +275,10 @@ const FA: Record<MessageKey, string> = {
   textSize: 'تغییر اندازه فونت',
   speechRate: 'سرعت گفتار',
   preferPersian: 'ترجیح صدای فارسی',
+  speechProvider: 'موتور گفتار',
+  speechProviderServer: 'صدای عصبی فارسی (سرور)',
+  speechProviderBrowser: 'صداهای مرورگر',
+  autoReadOnEnable: 'با روشن شدن دسترسا، متن صفحه خوانده شود',
   language: 'زبان',
   languageDefault: 'زبان پیش‌فرض',
   languageDefaultDesc: 'زبان رابط پاپ‌آپ، تولبار و تنظیمات.',
@@ -324,7 +335,8 @@ const FA: Record<MessageKey, string> = {
   summaryLoading: 'در حال خلاصه‌سازی…',
   summaryFailed: 'خلاصه‌سازی این صفحه ممکن نشد.',
   summaryNeedKey: 'در تنظیمات کلید لوما یا جمینای را وارد کنید، یا به حالت رایگان برگردید.',
-  summaryOffline: 'به سرور خلاصه وصل نشد. Dastresa-Summary-API را با Docker یا npm run dev اجرا کنید.',
+  summaryOffline:
+    'به سرور خلاصه وصل نشد. Dastresa-Summary-API را با Docker یا npm run dev اجرا کنید.',
   summaryPrivacyHint: 'تا وقتی خودتان خلاصه نخواهید، چیزی از صفحه فرستاده نمی‌شود.',
   summarySection: 'خلاصه صفحه',
   summarySectionDesc:
@@ -407,9 +419,7 @@ const PAGE_TYPE_KEYS = {
   UNKNOWN: 'pageTypeUnknown',
 } as const satisfies Record<string, MessageKey>;
 
-export function pageTypeMessageKey(
-  type: keyof typeof PAGE_TYPE_KEYS | string,
-): MessageKey {
+export function pageTypeMessageKey(type: keyof typeof PAGE_TYPE_KEYS | string): MessageKey {
   return PAGE_TYPE_KEYS[type as keyof typeof PAGE_TYPE_KEYS] ?? 'pageTypeUnknown';
 }
 
