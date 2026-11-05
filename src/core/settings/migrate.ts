@@ -14,11 +14,11 @@ type LegacySettings = Partial<DastresaSettings> & {
 /**
  * Migrate stored settings from older schemas without erasing valid fields.
  * v1 → v2: schemaVersion, activeProfile, sitePreferences
- * v2 → v3: Persian-first locale/dir (fixes installs seeded with English)
+ * v2 → v4: Persian locale unless the user explicitly pinned a language.
  */
 export function migrateSettings(raw: unknown): DastresaSettings {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-    return parseSettings({ schemaVersion: SETTINGS_SCHEMA_VERSION });
+    return parseSettings({ schemaVersion: SETTINGS_SCHEMA_VERSION, locale: 'fa', dir: 'rtl' });
   }
 
   const input = { ...(raw as LegacySettings) };
@@ -29,10 +29,10 @@ export function migrateSettings(raw: unknown): DastresaSettings {
     input.sitePreferences = input.sitePreferences ?? {};
   }
 
-  if (version < 3) {
-    // Product default is Persian; older builds / English browser UI often left locale=en.
+  if (version < 4 && input.localePinned !== true) {
     input.locale = 'fa';
     input.dir = 'rtl';
+    input.localePinned = false;
   }
 
   if ((input.schemaVersion ?? 1) < SETTINGS_SCHEMA_VERSION) {

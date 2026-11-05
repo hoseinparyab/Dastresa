@@ -169,6 +169,9 @@ export class SpeechEngine implements ISpeechEngine {
     utterance.volume = this.settings.volume;
     const voice = this.pickVoice();
     if (voice) utterance.voice = voice;
+    utterance.lang =
+      voice?.lang ||
+      (/[\u0600-\u06FF]/.test(text) ? 'fa-IR' : document.documentElement.lang || 'en-US');
 
     utterance.onstart = () => {
       this.setState('playing');

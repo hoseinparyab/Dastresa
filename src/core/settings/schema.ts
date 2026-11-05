@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { normalizeSiteKey } from './site-key';
 
-export const SETTINGS_SCHEMA_VERSION = 3;
+export const SETTINGS_SCHEMA_VERSION = 4;
 
 export const ThemeIdSchema = z.enum([
   'normal',
@@ -113,6 +113,8 @@ export const DastresaSettingsSchema = z.object({
   /** Persian-first product default (fa before en in enum too). */
   locale: z.enum(['fa', 'en']).default('fa'),
   dir: z.enum(['rtl', 'ltr']).default('rtl'),
+  /** True after the user picks a language. Until then, upgrades reset to Persian. */
+  localePinned: z.boolean().default(false),
   /** Popup / options chrome: light or dark (from design mockups). */
   uiChrome: UiChromeSchema.default('light'),
   /**
@@ -278,6 +280,7 @@ export function parseSettings(input: unknown): DastresaSettings {
   assignIfValid('focusCursorColor', FocusCursorColorSchema, raw.focusCursorColor);
   assignIfValid('locale', z.enum(['fa', 'en']), raw.locale);
   assignIfValid('dir', z.enum(['rtl', 'ltr']), raw.dir);
+  assignIfValid('localePinned', z.boolean(), raw.localePinned);
   assignIfValid('uiChrome', UiChromeSchema, raw.uiChrome);
   assignIfValid('summaryProvider', z.enum(['free', 'luma', 'gemini']), raw.summaryProvider);
   assignIfValid('summaryModel', z.string().min(1), raw.summaryModel);

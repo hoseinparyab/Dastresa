@@ -31,32 +31,14 @@ export type PersianTtsResult = {
   meta?: string;
 };
 
-type TokenCache = {
-  cookie: string;
-  /** epoch ms */
-  at: number;
-};
+let loggedInAt = 0;
 
-let tokenCache: TokenCache | null = null;
-
-function pickCookie(setCookie: string[]): string {
-  const parts: string[] = [];
-  for (const raw of setCookie) {
-    const pair = raw.split(';')[0]?.trim();
-    if (!pair) continue;
-    if (pair.startsWith('access-token-unsecure-') || pair.startsWith('access-token-')) {
-      parts.push(pair);
-    }
-  }
-  // Prefer unsecure token for plain HTTP origin.
-  const unsecure = parts.find((p) => p.startsWith('access-token-unsecure-'));
-  return unsecure ?? parts[0] ?? '';
-}
-
-async function login(auth: PersianTtsAuth): Promise<string> {
-  if (tokenCache && Date.now() - tokenCache.at < 25 * 60 * 1000) {
-    return tokenCache.cookie;
-  }
+/**
+ * Browsers forbid setting/reading the Cookie header from fetch, so we rely on the
+ * browser cookie jar (credentials: 'include' + host permission) instead.
+ */
+async function login(auth: PersianTtsAuth): Promise<void> {
+  if (loggedInAt && Date.now() - loggedInAt < 25 * 60 * 1000) return;
 
   const body = new URLSearchParams({
     username: auth.username,
@@ -66,22 +48,12 @@ async function login(auth: PersianTtsAuth): Promise<string> {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body,
+    credentials: 'include',
   });
   if (!res.ok) {
     throw new Error(`persian_tts_login_${res.status}`);
   }
-
-  const setCookie =
-    typeof res.headers.getSetCookie === 'function'
-      ? res.headers.getSetCookie()
-      : [res.headers.get('set-cookie') ?? ''].filter(Boolean);
-
-  const cookie = pickCookie(setCookie);
-  if (!cookie) {
-    throw new Error('persian_tts_login_no_cookie');
-  }
-  tokenCache = { cookie, at: Date.now() };
-  return cookie;
+  loggedInAt = Date.now();
 }
 
 function parseCompletePayload(streamText: string): {
@@ -104,12 +76,9 @@ function parseCompletePayload(streamText: string): {
   throw new Error('persian_tts_no_audio');
 }
 
-async function waitForAudioUrl(
-  cookie: string,
-  eventId: string,
-): Promise<{ url: string; meta?: string }> {
+async function waitForAudioUrl(eventId: string): Promise<{ url: string; meta?: string }> {
   const res = await fetch(`${PERSIAN_TTS.BASE_URL}${PERSIAN_TTS.SYNTHESIZE_PATH}/${eventId}`, {
-    headers: { Cookie: cookie },
+    credentials: 'include',
   });
   if (!res.ok) {
     throw new Error(`persian_tts_poll_${res.status}`);
@@ -120,8 +89,8 @@ async function waitForAudioUrl(
   return { url, meta };
 }
 
-async function audioUrlToDataUrl(cookie: string, url: string): Promise<string> {
-  const res = await fetch(url, { headers: { Cookie: cookie } });
+async function audioUrlToDataUrl(url: string): Promise<string> {
+  const res = await fetch(url, { credentials: 'include' });
   if (!res.ok) throw new Error(`persian_tts_audio_${res.status}`);
   const buf = await res.arrayBuffer();
   const bytes = new Uint8Array(buf);
@@ -145,7 +114,7 @@ export async function synthesizePersianSpeech(
   const trimmed = text.trim();
   if (!trimmed) throw new Error('persian_tts_empty');
 
-  let cookie = await login(auth);
+  await login(auth);
   const d = PERSIAN_TTS.DEFAULTS;
   const payload = {
     data: [
@@ -162,23 +131,19 @@ export async function synthesizePersianSpeech(
 
   let call = await fetch(`${PERSIAN_TTS.BASE_URL}${PERSIAN_TTS.SYNTHESIZE_PATH}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Cookie: cookie,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
+    credentials: 'include',
   });
 
   if (call.status === 401 || call.status === 403) {
-    tokenCache = null;
-    cookie = await login(auth);
+    loggedInAt = 0;
+    await login(auth);
     call = await fetch(`${PERSIAN_TTS.BASE_URL}${PERSIAN_TTS.SYNTHESIZE_PATH}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: cookie,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+      credentials: 'include',
     });
   }
 
@@ -189,8 +154,8 @@ export async function synthesizePersianSpeech(
   const json = (await call.json()) as { event_id?: string };
   if (!json.event_id) throw new Error('persian_tts_no_event');
 
-  const { url, meta } = await waitForAudioUrl(cookie, json.event_id);
-  const dataUrl = await audioUrlToDataUrl(cookie, url);
+  const { url, meta } = await waitForAudioUrl(json.event_id);
+  const dataUrl = await audioUrlToDataUrl(url);
   return { dataUrl, meta };
 }
 
