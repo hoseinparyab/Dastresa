@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import {
   createDefaultSettings,
   mergeSettings,
-  parseSettings,
+  migrateSettings,
   type DastresaSettings,
 } from '@/core/settings';
 import { STORAGE_KEYS } from '@/core/constants';
@@ -18,7 +18,13 @@ interface SettingsStore {
 async function readSettings(): Promise<DastresaSettings> {
   try {
     const result = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
-    return parseSettings(result[STORAGE_KEYS.SETTINGS]);
+    const settings = migrateSettings(result[STORAGE_KEYS.SETTINGS]);
+    const raw = result[STORAGE_KEYS.SETTINGS] as
+      { schemaVersion?: number; locale?: string } | undefined;
+    if (!raw || raw.schemaVersion !== settings.schemaVersion || raw.locale !== settings.locale) {
+      await chrome.storage.local.set({ [STORAGE_KEYS.SETTINGS]: settings });
+    }
+    return settings;
   } catch {
     return createDefaultSettings();
   }
@@ -42,7 +48,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     await chrome.storage.local.set({ [STORAGE_KEYS.SETTINGS]: settings });
   },
   replace: async (next) => {
-    const settings = parseSettings(next);
+    const settings = migrateSettings(next);
     set({ settings });
     await chrome.storage.local.set({ [STORAGE_KEYS.SETTINGS]: settings });
   },

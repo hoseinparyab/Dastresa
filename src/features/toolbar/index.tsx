@@ -2,10 +2,16 @@ import { createRoot, type Root } from 'react-dom/client';
 import type { FeatureContext, IFeature } from '@/core/contracts';
 import { EVENTS, FEATURE_IDS, STORAGE_KEYS } from '@/core/constants';
 import { analyzePage, classifyPage, type PageType } from '@/core/semantics';
-import { parseSettings, type DastresaSettings, type UiChrome } from '@/core/settings';
+import { migrateSettings, type DastresaSettings, type UiChrome } from '@/core/settings';
 import { patchStoredSettings } from '@/features/settings/services/patch-settings';
 import { ToolbarApp } from '@/features/toolbar/ToolbarApp';
-import { clampPos, CHIP_H, CHIP_W, isLegacyTopLeft, resolveToolbarPosition } from '@/features/toolbar/geometry';
+import {
+  clampPos,
+  CHIP_H,
+  CHIP_W,
+  isLegacyTopLeft,
+  resolveToolbarPosition,
+} from '@/features/toolbar/geometry';
 import { TOOLBAR_CSS } from '@/features/toolbar/styles';
 import { pageTypeMessageKey, t, type AppLocale } from '@/shared/i18n/messages';
 
@@ -40,12 +46,7 @@ export class ToolbarFeature implements IFeature {
       ctx.bus.on(EVENTS.SETTINGS_CHANGED, ({ settings }) => {
         this.applySettings(settings);
         // Keep saved XY; only re-clamp so locale/chrome refreshes don't jump the chip.
-        this.pos = clampPos(
-          ctx.window,
-          settings.toolbarPosition ?? this.pos,
-          CHIP_W,
-          CHIP_H,
-        );
+        this.pos = clampPos(ctx.window, settings.toolbarPosition ?? this.pos, CHIP_W, CHIP_H);
         this.render();
       }),
     );
@@ -95,7 +96,7 @@ export class ToolbarFeature implements IFeature {
   private async hydrateFromStorage(): Promise<void> {
     if (!this.ctx) return;
     const raw = await this.ctx.storage.get<unknown>(STORAGE_KEYS.SETTINGS);
-    const settings = parseSettings(raw);
+    const settings = migrateSettings(raw);
     this.applySettings(settings);
     const resolved = resolveToolbarPosition(this.ctx.window, settings.toolbarPosition, false);
     this.pos = resolved;

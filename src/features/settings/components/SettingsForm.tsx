@@ -199,7 +199,12 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
             const nextLocale = e.target.value === 'en' ? 'en' : 'fa';
             form.setValue('locale', nextLocale, { shouldDirty: true });
             form.setValue('dir', nextLocale === 'fa' ? 'rtl' : 'ltr', { shouldDirty: true });
-            applyNow({ locale: nextLocale, dir: nextLocale === 'fa' ? 'rtl' : 'ltr' });
+            form.setValue('localePinned', true, { shouldDirty: true });
+            applyNow({
+              locale: nextLocale,
+              dir: nextLocale === 'fa' ? 'rtl' : 'ltr',
+              localePinned: true,
+            });
           }}
         >
           <option value="fa">فارسی</option>
