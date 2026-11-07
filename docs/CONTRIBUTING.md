@@ -43,10 +43,12 @@ docs: clarify conventional commit scopes
 | Hook | What it runs |
 | --- | --- |
 | `pre-commit` | `lint-staged` (ESLint + Prettier on staged files) |
-| `commit-msg` | `commitlint` (conventional message) |
+| `commit-msg` | Strip Cursor Agent attribution trailers, then `commitlint` |
 | `pre-push` | `typecheck` + `lint` |
 
 After `npm install`, `prepare` wires Husky automatically (`core.hooksPath=.husky/_`).
+
+**No Cursor on GitHub Contributors:** the `commit-msg` hook removes `Co-authored-by: Cursor` / `Made-with: Cursor` before the commit is created. Also turn off **Cursor Settings → Git & Pull Requests → Attribution** (Commit + PR).
 
 ## Do not implement (yet)
 

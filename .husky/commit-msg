@@ -13,6 +13,14 @@ if [ -z "$MSG_FILE" ] || [ ! -f "$MSG_FILE" ]; then
   exit 1
 fi
 
+# Strip Cursor Agent attribution so it never lands on GitHub Contributors.
+# Cursor injects these trailers before hooks; removing them here is the durable fix.
+sed -i.bak -E \
+  -e '/^[Cc][Oo]-[Aa]uthor[Ee]d-[Bb]y:[[:space:]]*[Cc]ursor([[:space:]]|<|$)/d' \
+  -e '/^[Mm]ade-[Ww]ith:[[:space:]]*[Cc]ursor\b/d' \
+  "$MSG_FILE"
+rm -f "$MSG_FILE.bak"
+
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 BIN="$ROOT/node_modules/.bin"
 
