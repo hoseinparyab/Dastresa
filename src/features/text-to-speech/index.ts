@@ -8,6 +8,7 @@ import {
   highlightSpeechText,
   removeSpeechHighlightStyles,
 } from '@/features/text-to-speech/highlight';
+import { collectArticleParagraphs } from '@/features/text-to-speech/page-text';
 import { SelectionCapture } from '@/features/text-to-speech/selection';
 
 type SynthResponse = { ok: true; dataUrl: string } | { ok: false; error?: string };
@@ -482,9 +483,7 @@ export class TextToSpeechFeature implements IFeature {
   }
 
   private fromPage(): string[] {
-    return Array.from(document.querySelectorAll('p, article p, main p'))
-      .map((p) => p.textContent?.trim() ?? '')
-      .filter((t) => t.length > 20);
+    return collectArticleParagraphs(document);
   }
 
   dispose(): void {

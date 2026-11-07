@@ -80,8 +80,9 @@ export function highlightSpeechText(
     if (!content || content.length < 2) continue;
     const idx = content.indexOf(probe);
     if (idx < 0) continue;
-    // Prefer the tightest matching block.
-    const score = (idx === 0 ? 200 : 0) - content.length;
+    // Prefer article body matches, then the tightest matching block.
+    const inArticle = Boolean(node.closest('article'));
+    const score = (inArticle ? 1000 : 0) + (idx === 0 ? 200 : 0) - content.length;
     if (score > bestScore) {
       bestScore = score;
       match = node;
