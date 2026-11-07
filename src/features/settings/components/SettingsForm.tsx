@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Controller, useWatch } from 'react-hook-form';
 import { GEMINI_API, LUMA_API } from '@/core/constants';
-import { createPageResetSettings, applyProfileSettings, type DastresaSettings, type ProfileId } from '@/core/settings';
+import {
+  createPageResetSettings,
+  applyProfileSettings,
+  type DastresaSettings,
+  type ProfileId,
+} from '@/core/settings';
 import { readSecrets, writeSecrets } from '@/features/storage/secrets';
 import { useInstantSettings } from '@/shared/hooks/useInstantSettings';
 import { notifyActiveTab } from '@/shared/messaging/tab';
@@ -10,7 +15,15 @@ import { Button, Section, SelectField, SwitchRow } from '@/shared/ui';
 
 function PersonIcon() {
   return (
-    <svg aria-hidden viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2">
+    <svg
+      aria-hidden
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+    >
       <circle cx="12" cy="8" r="3.5" />
       <path d="M5 19c1.5-3.5 4-5 7-5s5.5 1.5 7 5" strokeLinecap="round" />
     </svg>
@@ -19,7 +32,15 @@ function PersonIcon() {
 
 function TextIcon() {
   return (
-    <svg aria-hidden viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2">
+    <svg
+      aria-hidden
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+    >
       <path d="M4 7h16M4 12h12M4 17h14" strokeLinecap="round" />
     </svg>
   );
@@ -108,7 +129,12 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
   const textSizePercent = Math.round((textScale ?? 1) * 100);
 
   return (
-    <form className="flex flex-col gap-4" dir={settings.dir} onSubmit={(e) => e.preventDefault()}>
+    <form
+      className="flex flex-col gap-4"
+      dir={locale === 'fa' ? 'rtl' : 'ltr'}
+      lang={locale}
+      onSubmit={(e) => e.preventDefault()}
+    >
       {!compact && (
         <Section title={t(locale, 'general')} description={t(locale, 'generalDesc')}>
           <Controller
@@ -154,7 +180,10 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
           label={t(locale, 'theme')}
           value={theme}
           onChange={(e) => {
-            applyNow({ theme: e.target.value as DastresaSettings['theme'], activeProfile: 'custom' });
+            applyNow({
+              theme: e.target.value as DastresaSettings['theme'],
+              activeProfile: 'custom',
+            });
           }}
         >
           {themeOptions.map((opt) => (
@@ -165,10 +194,17 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
         </SelectField>
         <SelectField
           label={t(locale, 'languageDefault')}
-          value={localeWatch ?? 'fa'}
+          value={locale}
           onChange={(e) => {
-            const nextLocale = e.target.value as 'en' | 'fa';
-            applyNow({ locale: nextLocale, dir: nextLocale === 'fa' ? 'rtl' : 'ltr' });
+            const nextLocale = e.target.value === 'en' ? 'en' : 'fa';
+            form.setValue('locale', nextLocale, { shouldDirty: true });
+            form.setValue('dir', nextLocale === 'fa' ? 'rtl' : 'ltr', { shouldDirty: true });
+            form.setValue('localePinned', true, { shouldDirty: true });
+            applyNow({
+              locale: nextLocale,
+              dir: nextLocale === 'fa' ? 'rtl' : 'ltr',
+              localePinned: true,
+            });
           }}
         >
           <option value="fa">فارسی</option>
@@ -310,44 +346,80 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
         )}
       </Section>
 
-      {!compact && (
-        <Section title={t(locale, 'textSpeech')} description={t(locale, 'textSpeechDesc')}>
-          <label className="block px-1 py-2">
-            <span className="mb-2 block text-sm font-semibold text-slate-200">
-              {t(locale, 'speechRate')} ({speechRate})
-            </span>
-            <input
-              type="range"
-              min={0.5}
-              max={2}
-              step={0.05}
-              className="w-full accent-dastresa-accent"
-              value={speechRate ?? 1}
-              aria-label={t(locale, 'speechRate')}
-              aria-valuetext={String(speechRate ?? 1)}
-              onChange={(e) => {
-                form.setValue('speech.rate', Number(e.target.value), { shouldDirty: true });
-                applyDebounced();
+      <Section
+        title={t(locale, 'textSpeech')}
+        description={compact ? undefined : t(locale, 'textSpeechDesc')}
+        icon={compact ? <TextIcon /> : undefined}
+      >
+        <SelectField
+          label={t(locale, 'speechProvider')}
+          value={form.watch('speech.provider') ?? 'persian-server'}
+          onChange={(e) => {
+            const provider = e.target.value as 'persian-server' | 'browser';
+            applyNow({
+              speech: { ...form.getValues().speech, provider },
+            });
+          }}
+        >
+          <option value="persian-server">{t(locale, 'speechProviderServer')}</option>
+          <option value="browser">{t(locale, 'speechProviderBrowser')}</option>
+        </SelectField>
+        <Controller
+          name="speech.autoReadOnEnable"
+          control={form.control}
+          render={({ field }) => (
+            <SwitchRow
+              id="autoReadOnEnable"
+              label={t(locale, 'autoReadOnEnable')}
+              checked={Boolean(field.value)}
+              onCheckedChange={(checked) => {
+                field.onChange(checked);
+                applyNow({
+                  speech: { ...form.getValues().speech, autoReadOnEnable: checked },
+                });
               }}
             />
-          </label>
-          <Controller
-            name="speech.preferPersian"
-            control={form.control}
-            render={({ field }) => (
-              <SwitchRow
-                id="preferPersian"
-                label={t(locale, 'preferPersian')}
-                checked={field.value}
-                onCheckedChange={(checked) => {
-                  field.onChange(checked);
-                  applyNow({ speech: { ...form.getValues().speech, preferPersian: checked } });
+          )}
+        />
+        {!compact ? (
+          <>
+            <label className="block px-1 py-2">
+              <span className="mb-2 block text-sm font-semibold text-slate-200">
+                {t(locale, 'speechRate')} ({speechRate})
+              </span>
+              <input
+                type="range"
+                min={0.5}
+                max={2}
+                step={0.05}
+                className="w-full accent-dastresa-accent"
+                value={speechRate ?? 1}
+                aria-label={t(locale, 'speechRate')}
+                aria-valuetext={String(speechRate ?? 1)}
+                onChange={(e) => {
+                  form.setValue('speech.rate', Number(e.target.value), { shouldDirty: true });
+                  applyDebounced();
                 }}
               />
-            )}
-          />
-        </Section>
-      )}
+            </label>
+            <Controller
+              name="speech.preferPersian"
+              control={form.control}
+              render={({ field }) => (
+                <SwitchRow
+                  id="preferPersian"
+                  label={t(locale, 'preferPersian')}
+                  checked={field.value}
+                  onCheckedChange={(checked) => {
+                    field.onChange(checked);
+                    applyNow({ speech: { ...form.getValues().speech, preferPersian: checked } });
+                  }}
+                />
+              )}
+            />
+          </>
+        ) : null}
+      </Section>
 
       {!compact && (
         <Section title={t(locale, 'summarySection')} description={t(locale, 'summarySectionDesc')}>
@@ -361,7 +433,7 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
                   ? GEMINI_API.DEFAULT_MODEL
                   : next === 'luma'
                     ? LUMA_API.DEFAULT_MODEL
-                    : summaryModel ?? LUMA_API.DEFAULT_MODEL;
+                    : (summaryModel ?? LUMA_API.DEFAULT_MODEL);
               applyNow({
                 summaryProvider: next,
                 ...(next === 'free' ? {} : { summaryModel: nextModel }),
@@ -379,7 +451,9 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
             <>
               <label className="block px-1 py-2">
                 <span className="mb-2 block text-sm font-semibold text-slate-200">
-                  {provider === 'gemini' ? t(locale, 'summaryGeminiKey') : t(locale, 'summaryLumaKey')}
+                  {provider === 'gemini'
+                    ? t(locale, 'summaryGeminiKey')
+                    : t(locale, 'summaryLumaKey')}
                 </span>
                 <p className="mb-2 text-sm text-slate-400">
                   {provider === 'gemini'
@@ -400,7 +474,9 @@ export function SettingsForm({ compact = false }: { compact?: boolean }) {
                   value={apiKeyDraft}
                   onChange={(e) => setApiKeyDraft(e.target.value)}
                   aria-label={
-                    provider === 'gemini' ? t(locale, 'summaryGeminiKey') : t(locale, 'summaryLumaKey')
+                    provider === 'gemini'
+                      ? t(locale, 'summaryGeminiKey')
+                      : t(locale, 'summaryLumaKey')
                   }
                 />
               </label>

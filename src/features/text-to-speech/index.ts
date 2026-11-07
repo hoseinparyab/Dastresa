@@ -1,6 +1,22 @@
 import type { FeatureContext, IFeature, ISpeechEngine, SpeechState } from '@/core/contracts';
-import { EVENTS, FEATURE_IDS } from '@/core/constants';
-import type { SpeechSettings } from '@/core/settings';
+import { EVENTS, FEATURE_IDS, STORAGE_KEYS } from '@/core/constants';
+import { chunkTextForTts } from '@/core/api/persian-tts';
+import { parseSettings, type SpeechSettings } from '@/core/settings';
+
+type SynthResponse = { ok: true; dataUrl: string } | { ok: false; error?: string };
+
+async function requestPersianAudio(text: string): Promise<string> {
+  const response = (await chrome.runtime.sendMessage({
+    type: 'dastresa-persian-tts',
+    text,
+  })) as SynthResponse | undefined;
+  if (!response?.ok || !('dataUrl' in response) || !response.dataUrl) {
+    throw new Error(
+      response && 'error' in response ? String(response.error) : 'persian_tts_failed',
+    );
+  }
+  return response.dataUrl;
+}
 
 export class SpeechEngine implements ISpeechEngine {
   private state: SpeechState = 'idle';
@@ -12,7 +28,11 @@ export class SpeechEngine implements ISpeechEngine {
     volume: 1,
     voiceURI: '',
     preferPersian: true,
+    provider: 'persian-server',
+    autoReadOnEnable: true,
   };
+  private audio: HTMLAudioElement | null = null;
+  private cancelled = false;
 
   constructor(
     private readonly synth: SpeechSynthesis,
@@ -25,27 +45,50 @@ export class SpeechEngine implements ISpeechEngine {
   }
 
   async play(paragraphs: string[] = this.paragraphs): Promise<void> {
-    this.paragraphs = paragraphs.filter((p) => p.trim().length > 0);
+    this.cancelled = false;
+    this.stopPlaybackOnly();
+    this.paragraphs = paragraphs
+      .flatMap((p) => chunkTextForTts(p))
+      .filter((p) => p.trim().length > 0);
     if (this.paragraphs.length === 0) return;
-    this.synth.cancel();
     this.index = 0;
-    this.speakCurrent();
+
+    if (this.settings.provider === 'persian-server') {
+      try {
+        await this.speakRemoteCurrent();
+        return;
+      } catch (error) {
+        console.warn('[Dastresa] Persian TTS failed, falling back to browser', error);
+      }
+    }
+    this.synth.cancel();
+    this.speakBrowserCurrent();
   }
 
   pause(): void {
     if (this.state !== 'playing') return;
+    if (this.audio && !this.audio.paused) {
+      this.audio.pause();
+      this.setState('paused');
+      return;
+    }
     this.synth.pause();
     this.setState('paused');
   }
 
   resume(): void {
     if (this.state !== 'paused') return;
+    if (this.audio) {
+      void this.audio.play().then(() => this.setState('playing'));
+      return;
+    }
     this.synth.resume();
     this.setState('playing');
   }
 
   stop(): void {
-    this.synth.cancel();
+    this.cancelled = true;
+    this.stopPlaybackOnly();
     this.index = 0;
     this.setState('stopped');
   }
@@ -70,7 +113,50 @@ export class SpeechEngine implements ISpeechEngine {
     return this.state;
   }
 
-  private speakCurrent(): void {
+  private stopPlaybackOnly(): void {
+    this.synth.cancel();
+    if (this.audio) {
+      this.audio.onended = null;
+      this.audio.onerror = null;
+      this.audio.pause();
+      this.audio.src = '';
+      this.audio = null;
+    }
+  }
+
+  private async speakRemoteCurrent(): Promise<void> {
+    if (this.cancelled) return;
+    const text = this.paragraphs[this.index];
+    if (!text) {
+      this.setState('idle');
+      return;
+    }
+
+    this.setState('playing');
+    this.onParagraph(this.index, text);
+    this.scrollToHighlight(text);
+
+    const dataUrl = await requestPersianAudio(text);
+    if (this.cancelled) return;
+
+    await new Promise<void>((resolve, reject) => {
+      const audio = new Audio(dataUrl);
+      this.audio = audio;
+      audio.volume = Math.min(1, Math.max(0, this.settings.volume));
+      // Map speech rate roughly onto playbackRate (0.5–2).
+      audio.playbackRate = Math.min(2, Math.max(0.5, this.settings.rate));
+      audio.onended = () => resolve();
+      audio.onerror = () => reject(new Error('persian_tts_play_error'));
+      void audio.play().catch(reject);
+    });
+
+    if (this.cancelled) return;
+    this.index += 1;
+    if (this.index < this.paragraphs.length) await this.speakRemoteCurrent();
+    else this.setState('idle');
+  }
+
+  private speakBrowserCurrent(): void {
     const text = this.paragraphs[this.index];
     if (!text) {
       this.setState('idle');
@@ -83,6 +169,9 @@ export class SpeechEngine implements ISpeechEngine {
     utterance.volume = this.settings.volume;
     const voice = this.pickVoice();
     if (voice) utterance.voice = voice;
+    utterance.lang =
+      voice?.lang ||
+      (/[\u0600-\u06FF]/.test(text) ? 'fa-IR' : document.documentElement.lang || 'en-US');
 
     utterance.onstart = () => {
       this.setState('playing');
@@ -91,7 +180,7 @@ export class SpeechEngine implements ISpeechEngine {
     };
     utterance.onend = () => {
       this.index += 1;
-      if (this.index < this.paragraphs.length) this.speakCurrent();
+      if (this.index < this.paragraphs.length) this.speakBrowserCurrent();
       else this.setState('idle');
     };
     utterance.onerror = () => this.setState('stopped');
@@ -134,11 +223,12 @@ export class SpeechEngine implements ISpeechEngine {
 export class TextToSpeechFeature implements IFeature {
   readonly id = FEATURE_IDS.TEXT_TO_SPEECH;
   readonly name = 'Text To Speech';
-  readonly version = '0.1.0';
+  readonly version = '1.3.0';
   private enabled = true;
   private engine?: SpeechEngine;
   private paragraphs: string[] = [];
   private unsubs: Array<() => void> = [];
+  private autoReadTimer: ReturnType<typeof setTimeout> | undefined;
 
   initialize(ctx: FeatureContext): void {
     this.engine = new SpeechEngine(
@@ -160,22 +250,61 @@ export class TextToSpeechFeature implements IFeature {
     this.unsubs.push(
       ctx.bus.on(EVENTS.TOOLBAR_COMMAND, ({ command }) => {
         if (!this.enabled || !this.engine) return;
-        if (command === 'read')
-          void this.engine.play(this.paragraphs.length ? this.paragraphs : this.fromPage());
+        if (command === 'read') void this.startReading();
         if (command === 'pause') this.engine.pause();
         if (command === 'resume') this.engine.resume();
         if (command === 'stop') this.engine.stop();
       }),
     );
+    this.unsubs.push(
+      ctx.bus.on(EVENTS.EXTENSION_ACTIVATED, () => {
+        void this.maybeAutoRead(ctx);
+      }),
+    );
+    this.unsubs.push(
+      ctx.bus.on(EVENTS.EXTENSION_EXITED, () => {
+        this.clearAutoRead();
+        this.engine?.stop();
+      }),
+    );
+  }
+
+  private async maybeAutoRead(ctx: FeatureContext): Promise<void> {
+    this.clearAutoRead();
+    // Delay so DOM + toolbar settle after enable.
+    this.autoReadTimer = setTimeout(() => {
+      void (async () => {
+        try {
+          const raw = await ctx.storage.get<unknown>(STORAGE_KEYS.SETTINGS);
+          const settings = parseSettings(raw);
+          this.engine?.configure(settings.speech);
+          if (!this.enabled || !settings.speech.autoReadOnEnable) return;
+          await this.startReading();
+        } catch (error) {
+          console.warn('[Dastresa] auto-read failed', error);
+        }
+      })();
+    }, 700);
+  }
+
+  private clearAutoRead(): void {
+    if (this.autoReadTimer) clearTimeout(this.autoReadTimer);
+    this.autoReadTimer = undefined;
+  }
+
+  private async startReading(): Promise<void> {
+    if (!this.engine) return;
+    await this.engine.play(this.paragraphs.length ? this.paragraphs : this.fromPage());
   }
 
   private fromPage(): string[] {
-    return Array.from(document.querySelectorAll('p'))
+    return Array.from(document.querySelectorAll('p, article p, main p'))
       .map((p) => p.textContent?.trim() ?? '')
-      .filter(Boolean);
+      .filter((t) => t.length > 20);
   }
 
   dispose(): void {
+    this.clearAutoRead();
     this.engine?.stop();
     this.unsubs.forEach((u) => u());
     this.unsubs = [];
@@ -187,6 +316,7 @@ export class TextToSpeechFeature implements IFeature {
   }
 
   disable(): void {
+    this.clearAutoRead();
     this.engine?.stop();
     this.enabled = false;
   }

@@ -15,6 +15,15 @@ describe('SpeechEngine', () => {
       (state) => states.push(state),
       () => undefined,
     );
+    engine.configure({
+      rate: 1,
+      pitch: 1,
+      volume: 1,
+      voiceURI: '',
+      preferPersian: true,
+      provider: 'browser',
+      autoReadOnEnable: false,
+    });
 
     await engine.play(['First paragraph']);
     expect(speakSpy).toHaveBeenCalled();
@@ -27,6 +36,15 @@ describe('SpeechEngine', () => {
       () => undefined,
       () => undefined,
     );
+    engine.configure({
+      rate: 1,
+      pitch: 1,
+      volume: 1,
+      voiceURI: '',
+      preferPersian: true,
+      provider: 'browser',
+      autoReadOnEnable: false,
+    });
     await engine.play(['Hello']);
     engine.stop();
     expect(engine.getState()).toBe('stopped');

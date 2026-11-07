@@ -10,7 +10,7 @@ import {
   SETTINGS_SCHEMA_VERSION,
 } from '@/core/settings';
 
-describe('settings migration v2', () => {
+describe('settings migration', () => {
   it('upgrades legacy 1.1 settings without wiping fields', () => {
     const migrated = migrateSettings({
       extensionActive: true,
@@ -24,6 +24,30 @@ describe('settings migration v2', () => {
     expect(migrated.theme).toBe('dark');
     expect(migrated.extensionActive).toBe(true);
     expect(migrated.disabledSites).toContain('example.com');
+  });
+
+  it('v4 forces Persian when language was never pinned', () => {
+    const migrated = migrateSettings({
+      schemaVersion: 3,
+      locale: 'en',
+      dir: 'ltr',
+      extensionActive: true,
+    });
+    expect(migrated.schemaVersion).toBe(4);
+    expect(migrated.locale).toBe('fa');
+    expect(migrated.dir).toBe('rtl');
+    expect(migrated.localePinned).toBe(false);
+  });
+
+  it('keeps English after the user pins it', () => {
+    const migrated = migrateSettings({
+      schemaVersion: 4,
+      locale: 'en',
+      dir: 'ltr',
+      localePinned: true,
+    });
+    expect(migrated.locale).toBe('en');
+    expect(migrated.dir).toBe('ltr');
   });
 });
 

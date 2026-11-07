@@ -2,13 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { EventMap } from '@/core/types/events';
 import { prefersReducedMotion } from '@/core/utils';
 import { t, type AppLocale } from '@/shared/i18n/messages';
-import {
-  CHIP_H,
-  CHIP_W,
-  PANEL_W,
-  clampPos,
-  panelHeight,
-} from '@/features/toolbar/geometry';
+import { CHIP_H, CHIP_W, PANEL_W, clampPos, panelHeight } from '@/features/toolbar/geometry';
 
 type Command = EventMap['toolbar:command']['command'];
 
@@ -33,6 +27,9 @@ function primaryButtons(
       pressed: state.readerMode,
     },
     { command: 'read', label: t(locale, 'cmdSpeak'), aria: t(locale, 'ariaSpeak') },
+    { command: 'pause', label: t(locale, 'cmdPause'), aria: t(locale, 'ariaPause') },
+    { command: 'resume', label: t(locale, 'cmdResume'), aria: t(locale, 'ariaResume') },
+    { command: 'stop', label: t(locale, 'cmdStop'), aria: t(locale, 'ariaStop') },
     { command: 'zoom-in', label: t(locale, 'cmdZoomIn'), aria: t(locale, 'ariaZoomIn') },
     { command: 'zoom-out', label: t(locale, 'cmdZoomOut'), aria: t(locale, 'ariaZoomOut') },
     { command: 'contrast', label: t(locale, 'cmdTheme'), aria: t(locale, 'ariaTheme') },
@@ -49,14 +46,6 @@ function primaryButtons(
       pressed: state.summarizing,
       soft: state.summarizing,
     },
-  ];
-}
-
-function speechButtons(locale: AppLocale): ToolbarBtn[] {
-  return [
-    { command: 'pause', label: t(locale, 'cmdPause'), aria: t(locale, 'ariaPause') },
-    { command: 'resume', label: t(locale, 'cmdResume'), aria: t(locale, 'ariaResume') },
-    { command: 'stop', label: t(locale, 'cmdStop'), aria: t(locale, 'ariaStop') },
   ];
 }
 
@@ -156,7 +145,6 @@ export function ToolbarApp({
     () => primaryButtons(locale, { readerMode, readingFocus, summarizing }),
     [locale, readerMode, readingFocus, summarizing],
   );
-  const speech = useMemo(() => speechButtons(locale), [locale]);
   const system = useMemo(() => systemButtons(locale), [locale]);
 
   const liveHeight = useCallback(() => {
@@ -188,7 +176,10 @@ export function ToolbarApp({
     if (!el || !open) return;
 
     const run = () => {
-      const height = Math.min(el.getBoundingClientRect().height || panelHeight(true, moreOpen), window.innerHeight - 24);
+      const height = Math.min(
+        el.getBoundingClientRect().height || panelHeight(true, moreOpen),
+        window.innerHeight - 24,
+      );
       const next = clampPos(window, { x: pos.x, y: pos.y }, PANEL_W, height);
       if (next.x === pos.x && next.y === pos.y) return;
       setDragPos(next);
@@ -427,11 +418,7 @@ export function ToolbarApp({
             </p>
           ) : null}
 
-          <BtnGrid
-            items={primary}
-            onCommand={onCommand}
-            label={t(locale, 'toolbarPrimaryGroup')}
-          />
+          <BtnGrid items={primary} onCommand={onCommand} label={t(locale, 'toolbarPrimaryGroup')} />
 
           <button
             type="button"
@@ -445,12 +432,6 @@ export function ToolbarApp({
 
           {moreOpen && (
             <div id={moreId}>
-              <p className="panel-title">{t(locale, 'toolbarSpeech')}</p>
-              <BtnGrid
-                items={speech}
-                onCommand={onCommand}
-                label={t(locale, 'toolbarSpeechGroup')}
-              />
               <p className="panel-title">{t(locale, 'toolbarSystem')}</p>
               <BtnGrid
                 items={system}

@@ -4,7 +4,7 @@ import type { IFeature } from '@/core/contracts';
 import {
   createPageResetSettings,
   isSiteDisabled,
-  parseSettings,
+  migrateSettings,
   type DastresaSettings,
 } from '@/core/settings';
 import type { SettingsFeature } from '@/features/settings';
@@ -231,7 +231,7 @@ export async function applySettingsFromMessage(
   runtime: ContentRuntime,
   raw: unknown,
 ): Promise<boolean> {
-  const next = parseSettings(raw);
+  const next = migrateSettings(raw);
   try {
     await settingsService().replace(next);
   } catch {

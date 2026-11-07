@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { normalizeSiteKey } from './site-key';
 
-export const SETTINGS_SCHEMA_VERSION = 2;
+export const SETTINGS_SCHEMA_VERSION = 4;
 
 export const ThemeIdSchema = z.enum([
   'normal',
@@ -28,6 +28,13 @@ export const SpeechSettingsSchema = z.object({
   volume: z.number().min(0).max(1).default(1),
   voiceURI: z.string().default(''),
   preferPersian: z.boolean().default(true),
+  /**
+   * persian-server = Gradio Persian TTS (Najino)
+   * browser = SpeechSynthesis fallback
+   */
+  provider: z.enum(['persian-server', 'browser']).default('persian-server'),
+  /** Start reading page text when Dastresa is enabled on a page. */
+  autoReadOnEnable: z.boolean().default(true),
 });
 
 export const ToolbarPositionSchema = z.object({
@@ -99,10 +106,15 @@ export const DastresaSettingsSchema = z.object({
     volume: 1,
     voiceURI: '',
     preferPersian: true,
+    provider: 'persian-server',
+    autoReadOnEnable: true,
   }),
   toolbarPosition: ToolbarPositionSchema.default({ x: 24, y: 24 }),
-  locale: z.enum(['en', 'fa']).default('fa'),
-  dir: z.enum(['ltr', 'rtl']).default('rtl'),
+  /** Persian-first product default (fa before en in enum too). */
+  locale: z.enum(['fa', 'en']).default('fa'),
+  dir: z.enum(['rtl', 'ltr']).default('rtl'),
+  /** True after the user picks a language. Until then, upgrades reset to Persian. */
+  localePinned: z.boolean().default(false),
   /** Popup / options chrome: light or dark (from design mockups). */
   uiChrome: UiChromeSchema.default('light'),
   /**
@@ -178,10 +190,13 @@ export function createPageResetSettings(current?: Partial<DastresaSettings>): Da
       volume: current?.speech?.volume ?? 1,
       voiceURI: current?.speech?.voiceURI ?? '',
       preferPersian: current?.speech?.preferPersian ?? true,
+      provider: current?.speech?.provider ?? 'persian-server',
+      autoReadOnEnable: current?.speech?.autoReadOnEnable ?? true,
     },
     toolbarPosition: current?.toolbarPosition ?? { x: 24, y: 24 },
     locale,
     dir,
+    uiChrome: current?.uiChrome ?? 'light',
     summaryProvider: current?.summaryProvider ?? 'free',
     summaryModel: current?.summaryModel ?? 'openai/gpt-4o-mini',
   });
@@ -197,7 +212,8 @@ export function isSiteDisabled(settings: DastresaSettings, hostname: string): bo
   ) {
     return true;
   }
-  const prefs = settings.sitePreferences?.[key] ?? settings.sitePreferences?.[hostname.toLowerCase()];
+  const prefs =
+    settings.sitePreferences?.[key] ?? settings.sitePreferences?.[hostname.toLowerCase()];
   return prefs?.enabled === false;
 }
 
@@ -262,8 +278,9 @@ export function parseSettings(input: unknown): DastresaSettings {
   assignIfValid('readingFocus', z.boolean(), raw.readingFocus);
   assignIfValid('readingRuler', z.boolean(), raw.readingRuler);
   assignIfValid('focusCursorColor', FocusCursorColorSchema, raw.focusCursorColor);
-  assignIfValid('locale', z.enum(['en', 'fa']), raw.locale);
-  assignIfValid('dir', z.enum(['ltr', 'rtl']), raw.dir);
+  assignIfValid('locale', z.enum(['fa', 'en']), raw.locale);
+  assignIfValid('dir', z.enum(['rtl', 'ltr']), raw.dir);
+  assignIfValid('localePinned', z.boolean(), raw.localePinned);
   assignIfValid('uiChrome', UiChromeSchema, raw.uiChrome);
   assignIfValid('summaryProvider', z.enum(['free', 'luma', 'gemini']), raw.summaryProvider);
   assignIfValid('summaryModel', z.string().min(1), raw.summaryModel);
