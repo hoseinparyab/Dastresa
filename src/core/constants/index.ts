@@ -51,6 +51,7 @@ export const EVENTS = {
   READER_CONTENT_READY: 'reader:content-ready',
   SPEECH_STATE: 'speech:state',
   SPEECH_PARAGRAPH: 'speech:paragraph',
+  SPEECH_NOTICE: 'speech:notice',
   FOCUS_PARAGRAPH: 'focus:paragraph',
   THEME_APPLIED: 'theme:applied',
   ZOOM_APPLIED: 'zoom:applied',

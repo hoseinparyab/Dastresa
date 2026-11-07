@@ -13,7 +13,7 @@ import {
   resolveToolbarPosition,
 } from '@/features/toolbar/geometry';
 import { TOOLBAR_CSS } from '@/features/toolbar/styles';
-import { pageTypeMessageKey, t, type AppLocale } from '@/shared/i18n/messages';
+import { pageTypeMessageKey, t, tFormat, type AppLocale } from '@/shared/i18n/messages';
 
 export class ToolbarFeature implements IFeature {
   readonly id = FEATURE_IDS.TOOLBAR;
@@ -29,6 +29,9 @@ export class ToolbarFeature implements IFeature {
   private readerMode = false;
   private readingFocus = false;
   private summarizing = false;
+  private speechLoading = false;
+  private speechStatus: { text: string; level: 'info' | 'warn' | 'error' } | null = null;
+  private speechStatusTimer: ReturnType<typeof setTimeout> | undefined;
   private pageType: PageType = 'UNKNOWN';
   private uiChrome: UiChrome = 'dark';
   private unsubs: Array<() => void> = [];
@@ -74,6 +77,50 @@ export class ToolbarFeature implements IFeature {
         this.render();
       }),
     );
+    this.unsubs.push(
+      ctx.bus.on(EVENTS.SPEECH_STATE, ({ state }) => {
+        this.speechLoading = state === 'loading';
+        if (state === 'idle' || state === 'stopped') {
+          // Keep error/warn visible a bit; clear soft "playing" chatter.
+          if (this.speechStatus?.level === 'info') this.clearSpeechStatus(false);
+        }
+        this.render();
+      }),
+    );
+    this.unsubs.push(
+      ctx.bus.on(EVENTS.SPEECH_NOTICE, ({ level, code }) => {
+        this.setSpeechStatus(level, t(this.locale, code));
+      }),
+    );
+    this.unsubs.push(
+      ctx.bus.on(EVENTS.SPEECH_PARAGRAPH, ({ text }) => {
+        const preview = text.replace(/\s+/g, ' ').trim().slice(0, 90);
+        if (!preview) return;
+        const suffix = text.trim().length > 90 ? '…' : '';
+        this.setSpeechStatus(
+          'info',
+          tFormat(this.locale, 'speechReadingLine', { text: `${preview}${suffix}` }),
+        );
+      }),
+    );
+  }
+
+  private setSpeechStatus(level: 'info' | 'warn' | 'error', text: string): void {
+    if (this.speechStatusTimer) clearTimeout(this.speechStatusTimer);
+    this.speechStatusTimer = undefined;
+    this.speechStatus = { level, text };
+    this.render();
+    // Info follows speech state; only auto-dismiss warnings/errors.
+    if (level === 'info') return;
+    const ms = level === 'error' ? 10000 : 8000;
+    this.speechStatusTimer = setTimeout(() => this.clearSpeechStatus(true), ms);
+  }
+
+  private clearSpeechStatus(rerender: boolean): void {
+    if (this.speechStatusTimer) clearTimeout(this.speechStatusTimer);
+    this.speechStatusTimer = undefined;
+    this.speechStatus = null;
+    if (rerender) this.render();
   }
 
   private applySettings(settings: DastresaSettings): void {
@@ -141,6 +188,8 @@ export class ToolbarFeature implements IFeature {
         readerMode={this.readerMode}
         readingFocus={this.readingFocus}
         summarizing={this.summarizing}
+        speechLoading={this.speechLoading}
+        speechStatus={this.speechStatus}
         uiChrome={this.uiChrome}
         pageTypeLabel={pageTypeLabel}
         onCommand={(command) => {
@@ -163,6 +212,7 @@ export class ToolbarFeature implements IFeature {
   }
 
   dispose(): void {
+    this.clearSpeechStatus(false);
     this.unsubs.forEach((u) => u());
     this.unsubs = [];
     this.root?.unmount();

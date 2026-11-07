@@ -17,7 +17,12 @@ interface ToolbarBtn {
 
 function primaryButtons(
   locale: AppLocale,
-  state: { readerMode: boolean; readingFocus: boolean; summarizing: boolean },
+  state: {
+    readerMode: boolean;
+    readingFocus: boolean;
+    summarizing: boolean;
+    speechLoading: boolean;
+  },
 ): ToolbarBtn[] {
   return [
     {
@@ -26,7 +31,13 @@ function primaryButtons(
       aria: t(locale, 'ariaReader'),
       pressed: state.readerMode,
     },
-    { command: 'read', label: t(locale, 'cmdSpeak'), aria: t(locale, 'ariaSpeak') },
+    {
+      command: 'read',
+      label: state.speechLoading ? t(locale, 'cmdSpeakBusy') : t(locale, 'cmdSpeak'),
+      aria: state.speechLoading ? t(locale, 'speechLoading') : t(locale, 'ariaSpeak'),
+      soft: state.speechLoading,
+      pressed: state.speechLoading,
+    },
     { command: 'pause', label: t(locale, 'cmdPause'), aria: t(locale, 'ariaPause') },
     { command: 'resume', label: t(locale, 'cmdResume'), aria: t(locale, 'ariaResume') },
     { command: 'stop', label: t(locale, 'cmdStop'), aria: t(locale, 'ariaStop') },
@@ -75,6 +86,9 @@ export interface ToolbarAppProps {
   readerMode: boolean;
   readingFocus: boolean;
   summarizing?: boolean;
+  speechLoading?: boolean;
+  /** Localized speech status line (loading / playing / error). */
+  speechStatus?: { text: string; level: 'info' | 'warn' | 'error' } | null;
   /** Popup/toolbar chrome: light | dark */
   uiChrome?: 'light' | 'dark';
   /** Friendly page-type label already localized (e.g. "مقاله") */
@@ -119,6 +133,8 @@ export function ToolbarApp({
   readerMode,
   readingFocus,
   summarizing = false,
+  speechLoading = false,
+  speechStatus = null,
   uiChrome = 'dark',
   pageTypeLabel,
   onCommand,
@@ -142,10 +158,15 @@ export function ToolbarApp({
   const reduceMotion = useMemo(() => prefersReducedMotion(), []);
   const pos = useMemo(() => dragPos ?? { x, y }, [dragPos, x, y]);
   const primary = useMemo(
-    () => primaryButtons(locale, { readerMode, readingFocus, summarizing }),
-    [locale, readerMode, readingFocus, summarizing],
+    () => primaryButtons(locale, { readerMode, readingFocus, summarizing, speechLoading }),
+    [locale, readerMode, readingFocus, summarizing, speechLoading],
   );
   const system = useMemo(() => systemButtons(locale), [locale]);
+
+  /** Keep the panel visible while speech is busy or needs a warning/error. */
+  const speechNeedsPanel =
+    speechLoading || speechStatus?.level === 'warn' || speechStatus?.level === 'error';
+  const panelOpen = open || speechNeedsPanel;
 
   const liveHeight = useCallback(() => {
     const el = dockRef.current;
@@ -153,17 +174,17 @@ export function ToolbarApp({
       const h = el.getBoundingClientRect().height;
       if (h > 0) return Math.min(h, window.innerHeight - 24);
     }
-    return panelHeight(open, moreOpen);
-  }, [moreOpen, open]);
+    return panelHeight(panelOpen, moreOpen);
+  }, [moreOpen, panelOpen]);
 
   const reclampToViewport = useCallback(() => {
-    const width = open ? PANEL_W : CHIP_W;
+    const width = panelOpen ? PANEL_W : CHIP_W;
     const height = liveHeight();
     const next = clampPos(window, pos, width, height);
     if (next.x === pos.x && next.y === pos.y) return;
     setDragPos(next);
     onMoved(next.x, next.y);
-  }, [liveHeight, onMoved, open, pos]);
+  }, [liveHeight, onMoved, panelOpen, pos]);
 
   useEffect(() => {
     window.addEventListener('resize', reclampToViewport);
@@ -173,7 +194,7 @@ export function ToolbarApp({
   /** After open/more toggles, measure real dock height and keep it on-screen. */
   useEffect(() => {
     const el = dockRef.current;
-    if (!el || !open) return;
+    if (!el || !panelOpen) return;
 
     const run = () => {
       const height = Math.min(
@@ -191,13 +212,13 @@ export function ToolbarApp({
     ro?.observe(el);
     return () => ro?.disconnect();
     // Intentionally depend on expand state only; pos is read fresh inside run via closure update each effect.
-  }, [moreOpen, open, onMoved, pos.x, pos.y]);
+  }, [moreOpen, panelOpen, onMoved, pos.x, pos.y]);
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (e.button !== 0) return;
       const target = e.target as HTMLElement;
-      const fromChip = !open && Boolean(target.closest('.chip'));
+      const fromChip = !panelOpen && Boolean(target.closest('.chip'));
       // Open panel: drag only from non-button chrome. Collapsed chip: always draggable.
       if (!fromChip && target.closest('button')) return;
 
@@ -213,7 +234,7 @@ export function ToolbarApp({
       };
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     },
-    [open, pos.x, pos.y],
+    [panelOpen, pos.x, pos.y],
   );
 
   const onPointerMove = useCallback(
@@ -225,7 +246,7 @@ export function ToolbarApp({
       if (!drag.moved && dist < 6) return;
       drag.moved = true;
 
-      const width = open ? PANEL_W : CHIP_W;
+      const width = panelOpen ? PANEL_W : CHIP_W;
       const height = liveHeight();
       const next = clampPos(
         window,
@@ -240,7 +261,7 @@ export function ToolbarApp({
       drag.y = next.y;
       setDragPos(next);
     },
-    [liveHeight, open],
+    [liveHeight, panelOpen],
   );
 
   const endPointer = useCallback(
@@ -305,7 +326,7 @@ export function ToolbarApp({
   }, [onMoved, pos]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!panelOpen) return;
     const onKey = (e: KeyboardEvent) => {
       const dock = dockRef.current;
       const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
@@ -335,7 +356,7 @@ export function ToolbarApp({
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
-  }, [liveHeight, open, onMoved, pos, collapseToolbar]);
+  }, [liveHeight, panelOpen, onMoved, pos, collapseToolbar]);
 
   const moreId = 'dastresa-toolbar-more';
 
@@ -344,10 +365,10 @@ export function ToolbarApp({
       ref={dockRef}
       role="toolbar"
       aria-label={t(locale, 'toolbarAria')}
-      className={`dock${open ? '' : ' collapsed'}`}
+      className={`dock${panelOpen ? '' : ' collapsed'}`}
       data-chrome={uiChrome === 'light' ? 'light' : 'dark'}
       dir={dir}
-      tabIndex={open ? 0 : -1}
+      tabIndex={panelOpen ? 0 : -1}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={endPointer}
@@ -358,7 +379,7 @@ export function ToolbarApp({
         transition: reduceMotion ? undefined : 'box-shadow 120ms ease',
       }}
     >
-      {!open ? (
+      {!panelOpen ? (
         <button
           type="button"
           className="chip"
@@ -415,6 +436,16 @@ export function ToolbarApp({
           {pageTypeLabel ? (
             <p className="page-type" role="status" aria-live="polite">
               {t(locale, 'pageType')}: <strong>{pageTypeLabel}</strong>
+            </p>
+          ) : null}
+
+          {speechStatus ? (
+            <p
+              className={`speech-status level-${speechStatus.level}${speechLoading ? ' busy' : ''}`}
+              role="status"
+              aria-live={speechStatus.level === 'error' ? 'assertive' : 'polite'}
+            >
+              {speechStatus.text}
             </p>
           ) : null}
 

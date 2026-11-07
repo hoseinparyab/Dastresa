@@ -39,9 +39,23 @@ export type EventMap = {
   };
   'reader:structure-ready': { structure: ReaderStructure };
   'speech:state': {
-    state: 'idle' | 'playing' | 'paused' | 'stopped';
+    state: 'idle' | 'loading' | 'playing' | 'paused' | 'stopped';
   };
   'speech:paragraph': { index: number; text: string };
+  'speech:notice': {
+    level: 'info' | 'warn' | 'error';
+    /** i18n message key resolved by the toolbar */
+    code:
+      | 'speechLoading'
+      | 'speechPlaying'
+      | 'speechPaused'
+      | 'speechEmpty'
+      | 'speechFallbackBrowser'
+      | 'speechReloadPage'
+      | 'speechNoPersianVoice'
+      | 'speechErrorPlay'
+      | 'speechErrorGeneric';
+  };
   'focus:paragraph': { index: number };
   'theme:applied': { theme: string };
   'zoom:applied': { scale: number };

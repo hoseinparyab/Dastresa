@@ -1,10 +1,6 @@
 import type { EventMap, EventName, Unsubscribe } from '@/core/types/events';
 import type { FeatureId } from '@/core/constants';
-import type {
-  FormAnalysisResult,
-  PageStructure,
-  PageTypeResult,
-} from '@/core/semantics';
+import type { FormAnalysisResult, PageStructure, PageTypeResult } from '@/core/semantics';
 
 export interface FeatureContext {
   bus: IEventBus;
@@ -75,7 +71,7 @@ export interface IReadableContentProvider {
   getContent(): ReadableDocument | null;
 }
 
-export type SpeechState = 'idle' | 'playing' | 'paused' | 'stopped';
+export type SpeechState = 'idle' | 'loading' | 'playing' | 'paused' | 'stopped';
 
 export interface ISpeechEngine {
   play(paragraphs?: string[]): Promise<void>;
