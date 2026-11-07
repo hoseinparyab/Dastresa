@@ -260,6 +260,44 @@ export const TOOLBAR_CSS = `
     color: var(--tb-accent);
   }
 
+  .speech-status {
+    margin: 0;
+    padding: 11px 12px;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+    border: 1px solid color-mix(in srgb, var(--tb-accent) 35%, transparent);
+    background: var(--tb-accent-soft);
+    color: var(--tb-text);
+  }
+  .speech-status.level-warn {
+    border-color: color-mix(in srgb, #f59e0b 45%, transparent);
+    background: color-mix(in srgb, #f59e0b 16%, transparent);
+  }
+  .speech-status.level-error {
+    border-color: color-mix(in srgb, #ef4444 45%, transparent);
+    background: color-mix(in srgb, #ef4444 16%, transparent);
+  }
+  .speech-status.busy::after {
+    content: "";
+    display: inline-block;
+    width: 0.55em;
+    height: 0.55em;
+    margin-inline-start: 0.45em;
+    border-radius: 999px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    vertical-align: -0.05em;
+    animation: dastresa-spin 0.8s linear infinite;
+  }
+  @keyframes dastresa-spin {
+    to { transform: rotate(360deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .speech-status.busy::after { animation: none; opacity: 0.7; }
+  }
+
   .strip {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
